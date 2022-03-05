@@ -2,11 +2,16 @@
 name = "tucan-search"
 version = "0.1.0"
 authors = ["Christian Friedow <christian@friedow.com>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ferris-says = "0.2"
-file-matcher = "0.7.0"
 walkdir = "2"
+
+cairo-rs = "0.15.1"
+gio = "0.15.1"
+glib = "0.15.1"
+pango = "0.15.1"
+
+gtk4 = "0.4.6"

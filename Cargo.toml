@@ -1,0 +1,12 @@
+[package]
+name = "tucan-search"
+version = "0.1.0"
+authors = ["Christian Friedow <christian@friedow.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ferris-says = "0.2"
+file-matcher = "0.7.0"
+walkdir = "2"

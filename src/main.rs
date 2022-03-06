@@ -1,9 +1,11 @@
-// use walkdir::{DirEntry, WalkDir};
+use walkdir::{DirEntry, WalkDir};
 
-use glib::clone;
-// glib and other dependencies are re-exported by the gtk crate
-use gtk4::glib;
 use gtk4::prelude::*;
+
+struct OmniboxOption {
+    title: String,
+    action_text: String,
+}
 
 fn main() {
     // Create a new application with the builder pattern
@@ -21,49 +23,70 @@ fn build_ui(application: &gtk4::Application) {
     let window = gtk4::ApplicationWindow::builder()
         .application(application)
         .title("Tucan Search")
-        .default_height(500)
-        .default_width(500)
+        // .default_height(500)
+        // .default_width(500)
         .modal(true)
         .build();
 
-    let button = gtk4::Button::builder()
-        .label("close")
-        .margin_top(12)
-        .margin_bottom(12)
-        .margin_start(12)
-        .margin_end(12)
-        .hexpand_set(true)
-        .vexpand_set(true)
-        .build();
+    let vbox = gtk4::Box::new(gtk4::Orientation::Vertical, 0);
 
-    button.connect_clicked(clone!(@weak window => move |_| window.close()));
+    let search_bar = gtk4::SearchEntry::new();
 
-    window.set_child(Some(&button));
+    let option_list = build_option_list();
+
+    vbox.append(&search_bar);
+    vbox.append(&option_list);
+
+    window.set_child(Some(&vbox));
 
     window.present();
 }
 
-// fn main() {
-//     list_git_directories();
-// }
+fn build_option_list() -> gtk4::ScrolledWindow {
+    let options: Vec<gtk4::Label> = list_git_directories()
+        .into_iter()
+        .map(|e| build_option(e))
+        .collect();
 
-// fn is_dir(entry: &DirEntry) -> bool {
-//     let is_dir = entry.file_type().is_dir();
-//     let is_hidden = entry.file_name().to_str().unwrap().starts_with(".");
-//     return is_dir && (!is_hidden || is_git_dir(entry));
-// }
+    let option_list = gtk4::ListBox::new();
+    for option in options {
+        option_list.append(&option);
+    }
 
-// fn is_git_dir(entry: &DirEntry) -> bool {
-//     return entry.file_name().to_str().unwrap().eq(".git");
-// }
+    return gtk4::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk4::PolicyType::Never) // Disable horizontal scrolling
+        .min_content_width(500)
+        .height_request(500)
+        .child(&option_list)
+        .build();
+}
 
-// fn list_git_directories() {
-//     let walker = WalkDir::new("/home/christian").into_iter();
-//     for entry in walker
-//         .filter_entry(|e| is_dir(e))
-//         .filter_map(|e| e.ok())
-//         .filter(|e| is_git_dir(e))
-//     {
-//         println!("{}", entry.path().display());
-//     }
-// }
+fn build_option(label: String) -> gtk4::Label {
+    return gtk4::Label::new(Some(&label));
+}
+
+fn is_dir(entry: &DirEntry) -> bool {
+    let is_dir = entry.file_type().is_dir();
+    let is_hidden = entry.file_name().to_str().unwrap().starts_with(".");
+    return is_dir && (!is_hidden || is_git_dir(entry));
+}
+
+fn is_git_dir(entry: &DirEntry) -> bool {
+    return entry.file_name().to_str().unwrap().eq(".git");
+}
+
+fn dir_name(entry: &DirEntry) -> String {
+    return entry.path().display().to_string();
+}
+
+fn list_git_directories() -> Vec<String> {
+    let walker = WalkDir::new("/home/christian").into_iter();
+    let test = walker
+        .filter_entry(|e| is_dir(e))
+        .filter_map(|e| e.ok())
+        .filter(|e| is_git_dir(e))
+        .map(|e| dir_name(&e));
+    let toast = test.collect();
+
+    return toast;
+}

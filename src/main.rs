@@ -1,7 +1,6 @@
-use glib::Quark;
 use walkdir::{DirEntry, WalkDir};
 
-use gtk4::{prelude::*, CenterBox, ListBoxRow, Orientation};
+use gtk4::{prelude::*, ListBoxRow, Orientation};
 
 struct OmniboxOption {
     group: String,
@@ -54,7 +53,7 @@ fn build_option_list() -> gtk4::ScrolledWindow {
     let option_list = gtk4::ListBox::new();
     option_list.set_margin_end(8);
     option_list.set_margin_start(8);
-    option_list.set_header_func(|row, before| build_header(row, before));
+    option_list.set_header_func(|row, before| set_group_header(row, before));
     for option in options.into_iter() {
         option_list.append(&option);
     }
@@ -67,30 +66,22 @@ fn build_option_list() -> gtk4::ScrolledWindow {
         .build();
 }
 
-fn build_header(row: &ListBoxRow, before: Option<&ListBoxRow>) {
-    if (before.is_some()) {
-        let row_before = before.unwrap();
-        let option_before = row_before.child().unwrap();
-        unsafe {
-            let omnibox_option = option_before
-                .data::<OmniboxOption>("omnibox_option")
-                .unwrap()
-                .as_ref();
-
-            let header_label = gtk4::Label::new(Some(&omnibox_option.group));
-
-            let vbox = gtk4::Box::new(Orientation::Horizontal, 0);
-            vbox.append(&header_label);
-
-            row.set_header(Some(&vbox));
-        }
+fn set_group_header(row: &ListBoxRow, before: Option<&ListBoxRow>) {
+    let row_data = get_row_data(row);
+    if before.is_none() || get_row_data(before.unwrap()).group != row_data.group {
+        let group_header = build_group_header(row_data);
+        row.set_header(Some(&group_header));
+        return;
     }
-    // let header_label = gtk4::Label::new(Some("test"));
+}
 
-    // let vbox = gtk4::Box::new(Orientation::Horizontal, 0);
-    // vbox.append(&header_label);
-
-    // row.set_header(Some(&vbox))
+fn build_group_header(option_data: &OmniboxOption) -> gtk4::Box {
+    let header_label = gtk4::Label::new(Some(&option_data.group));
+    let vbox = gtk4::Box::new(Orientation::Horizontal, 0);
+    vbox.set_margin_top(8);
+    vbox.set_margin_bottom(8);
+    vbox.append(&header_label);
+    return vbox;
 }
 
 fn build_option(option_data: OmniboxOption) -> gtk4::CenterBox {
@@ -110,6 +101,16 @@ fn build_option(option_data: OmniboxOption) -> gtk4::CenterBox {
     return hbox;
 }
 
+fn get_row_data(row: &ListBoxRow) -> &OmniboxOption {
+    unsafe {
+        let option = row.child().unwrap();
+        return option
+            .data::<OmniboxOption>("omnibox_option")
+            .unwrap()
+            .as_ref();
+    }
+}
+
 fn is_dir(entry: &DirEntry) -> bool {
     let is_dir = entry.file_type().is_dir();
     let is_hidden = entry.file_name().to_str().unwrap().starts_with(".");
@@ -121,15 +122,22 @@ fn is_git_dir(entry: &DirEntry) -> bool {
 }
 
 fn to_omnibox_option(entry: &DirEntry) -> OmniboxOption {
+    let home = std::env::var("HOME").unwrap();
     return OmniboxOption {
-        group: String::from("Git Projects"),
-        title: entry.path().display().to_string(),
+        group: String::from("Git Repositories"),
+        title: entry
+            .path()
+            .display()
+            .to_string()
+            .replace("/.git", "")
+            .replace(&home, "~"),
         action_text: String::from("open"),
     };
 }
 
 fn list_git_directories() -> Vec<OmniboxOption> {
-    return WalkDir::new("/home/christian")
+    let home = std::env::var("HOME").unwrap();
+    return WalkDir::new(home)
         .into_iter()
         .filter_entry(|e| is_dir(e))
         .filter_map(|e| e.ok())

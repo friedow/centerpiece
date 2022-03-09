@@ -1,11 +1,10 @@
-use gtk4::{prelude::*, Application, ApplicationWindow, Box, Entry, Orientation};
+use gtk4::{prelude::*, Application, ApplicationWindow, Box, Orientation};
 
 use crate::components::list;
+use crate::components::search_bar;
 
 pub fn build(application: &Application) {
-    let search_bar = Entry::new();
-    search_bar.set_placeholder_text(Some("Search or jump to..."));
-
+    let search_bar = search_bar::build();
     let option_list = list::build();
 
     let vbox = Box::new(Orientation::Vertical, 0);

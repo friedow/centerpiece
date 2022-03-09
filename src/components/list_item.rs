@@ -1,4 +1,4 @@
-use gtk4::{prelude::*, CenterBox, Label};
+use gtk4::{prelude::*, CenterBox, Label, ListBoxRow};
 
 use crate::structs::list_item_data::ListItemData;
 
@@ -13,9 +13,23 @@ pub fn build(data: ListItemData) -> CenterBox {
     hbox.set_margin_bottom(10);
     hbox.set_margin_end(8);
     hbox.set_margin_start(8);
-    unsafe {
-        hbox.set_data("omnibox_option", data);
-    }
+    set_row_data(&hbox, data);
 
     return hbox;
+}
+
+fn set_row_data(hbox: &CenterBox, data: ListItemData) {
+    unsafe {
+        hbox.set_data("list_item_data", data);
+    }
+}
+
+pub fn get_row_data(row: &ListBoxRow) -> &ListItemData {
+    unsafe {
+        let option = row.child().unwrap();
+        return option
+            .data::<ListItemData>("list_item_data")
+            .unwrap()
+            .as_ref();
+    }
 }

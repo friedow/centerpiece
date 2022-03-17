@@ -1,7 +1,6 @@
 mod app;
 mod components;
-mod stores;
-mod structs;
+mod plugins;
 
 use gtk4::{prelude::*, Application};
 

@@ -7,11 +7,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-walkdir = "2"
-
 cairo-rs = "0.15.1"
 gio = "0.15.1"
 glib = "0.15.1"
 pango = "0.15.1"
-
 gtk4 = "0.4.6"
+
+walkdir = "2"
+subprocess = "0.2.8"
+json = "0.12.4"

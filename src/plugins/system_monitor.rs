@@ -1,3 +1,5 @@
+use std::fmt::Error;
+
 use battery::units::ratio::percent;
 use glib::ObjectExt;
 use gtk4::gdk::Key;
@@ -16,7 +18,7 @@ impl Plugin for SystemMonitorPlugin {
     }
 
     fn build_items(&self) -> Vec<Box> {
-        get_battery_stats();
+        let battery_charge = get_battery_charge_level().unwrap();
         let home = std::env::var("HOME").unwrap();
         let git_directories = WalkDir::new(home)
             .into_iter()
@@ -37,25 +39,27 @@ impl Plugin for SystemMonitorPlugin {
     }
 }
 
-fn get_battery_stats() -> Result<(), battery::Error> {
+fn get_battery_charge_level() -> Result<f32, battery::Error> {
     let manager = battery::Manager::new()?;
+    let battery = manager.batteries()?.next().unwrap().unwrap();
+    let percentage = battery.state_of_charge().get::<percent>();
+    println!("Charge Level: {:?}%", percentage);
+    return Ok(percentage);
+    // return Result::from(percentage);
 
-    for (idx, maybe_battery) in manager.batteries()?.enumerate() {
-        let battery = maybe_battery?;
+    // for (idx, maybe_battery) in manager.batteries()?.enumerate() {
+    //     let battery = maybe_battery?;
 
-        let percentage = battery.state_of_charge().get::<percent>();
-        // let percentage = battery.state_of_charge() * 100;
-        println!("Battery #{}:", idx);
-        println!("B: {:?}", battery);
-        println!("Charge Level: {:?}%", percentage);
-        println!("Vendor: {:?}", battery.vendor());
-        println!("Model: {:?}", battery.model());
-        println!("State: {:?}", battery.state());
-        println!("Time to full charge: {:?}", battery.time_to_full());
-        println!("");
-    }
-
-    Ok(())
+    //     let percentage = battery.state_of_charge().get::<percent>();
+    //     println!("Battery #{}:", idx);
+    //     println!("B: {:?}", battery);
+    //     println!("Charge Level: {:?}%", percentage);
+    //     println!("Vendor: {:?}", battery.vendor());
+    //     println!("Model: {:?}", battery.model());
+    //     println!("State: {:?}", battery.state());
+    //     println!("Time to full charge: {:?}", battery.time_to_full());
+    //     println!("");
+    // }
 }
 
 fn is_dir(entry: &DirEntry) -> bool {

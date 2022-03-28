@@ -16,3 +16,5 @@ gtk4 = "0.4.6"
 walkdir = "2"
 subprocess = "0.2.8"
 json = "0.12.4"
+
+battery = "0.7.8"

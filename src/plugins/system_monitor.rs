@@ -1,9 +1,8 @@
-use std::fmt::Error;
-
 use battery::units::ratio::percent;
 use glib::ObjectExt;
 use gtk4::gdk::Key;
 use gtk4::{Box, Widget};
+use std::error::Error;
 use subprocess::Exec;
 use walkdir::{DirEntry, WalkDir};
 
@@ -41,7 +40,12 @@ impl Plugin for SystemMonitorPlugin {
 
 fn get_battery_charge_level() -> Result<f32, battery::Error> {
     let manager = battery::Manager::new()?;
-    let battery = manager.batteries()?.next().unwrap().unwrap();
+    let batteryOption = manager.batteries()?.next();
+
+    if batteryOption.is_none() {
+        return Err(battery::Error::from(Error::from("No battery found.")));
+    }
+
     let percentage = battery.state_of_charge().get::<percent>();
     println!("Charge Level: {:?}%", percentage);
     return Ok(percentage);

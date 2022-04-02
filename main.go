@@ -16,7 +16,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Unable to create window:", err)
 	}
-	win.SetTitle("Simple Example")
+	win.SetTitle("Tucan Search")
 	win.Connect("destroy", func() {
 		gtk.MainQuit()
 	})

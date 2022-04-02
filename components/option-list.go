@@ -14,8 +14,6 @@ func OptionListNew() *gtk.ListBox {
 	optionList.SetMarginEnd(8)
 	optionList.SetHeaderFunc(setHeader)
 
-	optionList.Connect("key_press_event", onOptionListKeyPress)
-
 	pluginList := plugins.Plugins()
 	for _, plugin := range pluginList {
 
@@ -30,20 +28,41 @@ func OptionListNew() *gtk.ListBox {
 	return optionList
 }
 
+func selectPreviousRow(optionList *gtk.ListBox) {
+	selectedRowIndex := optionList.GetSelectedRow().GetIndex()
+	previousRow := optionList.GetRowAtIndex(selectedRowIndex - 1)
+	optionList.SelectRow(previousRow)
+}
+
+func selectNextRow(optionList *gtk.ListBox) {
+	selectedRowIndex := optionList.GetSelectedRow().GetIndex()
+	nextRow := optionList.GetRowAtIndex(selectedRowIndex + 1)
+	optionList.SelectRow(nextRow)
+}
+
 func setHeader(row *gtk.ListBoxRow, before *gtk.ListBoxRow) {
 
 }
 
-func onOptionListKeyPress(optionList *gtk.ListBox, event *gdk.Event) {
+func OnOptionListKeyPress(optionList *gtk.ListBox, event *gdk.Event) {
 	key := gdk.EventKeyNewFromEvent(event)
 
-	if key.KeyVal() == gdk.KEY_Down || key.KeyVal() == gdk.KEY_Up {
+	if key.KeyVal() == gdk.KEY_Up {
+		selectPreviousRow(optionList)
 		return
 	}
 
-	// emit event on option
-	selectedOption := optionList.GetSelectedRow()
-	iBox, _ := selectedOption.GetChild()
-	box := iBox.ToWidget()
-	box.Event(event)
+	if key.KeyVal() == gdk.KEY_Down {
+		selectNextRow(optionList)
+		return
+	}
+
+	// Propagate key_press_event to option on activate
+	if key.KeyVal() == gdk.KEY_Return {
+		selectedListBoxRow := optionList.GetSelectedRow()
+		optionInterface, _ := selectedListBoxRow.GetChild()
+		option := optionInterface.ToWidget()
+		option.Event(event)
+		return
+	}
 }

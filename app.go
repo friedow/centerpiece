@@ -1,22 +1,19 @@
 package main
 
 import (
-	"friedow/tucan-search/components"
+	"friedow/tucan-search/widgets"
 
 	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
 )
 
 func App() *gtk.Box {
+	optionList := widgets.OptionListNew()
+	searchBar := widgets.SearchBarNew(func(_ *gtk.Entry, event *gdk.Event) bool { return onKeyPress(optionList, event) })
+
 	verticalBox, _ := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
-
-	searchBar := components.SearchBarNew()
 	verticalBox.Add(searchBar)
-
-	optionList := components.OptionListNew()
 	verticalBox.Add(optionList)
-
-	verticalBox.Connect("key_press_event", func(_ *gtk.Box, event *gdk.Event) bool { return onKeyPress(optionList, event) })
 
 	return verticalBox
 }
@@ -25,6 +22,12 @@ func App() *gtk.Box {
 // and do not propate them to childs widgets
 // to prevent the option list from picking up focus
 func onKeyPress(optionList *gtk.ListBox, event *gdk.Event) bool {
-	components.OnOptionListKeyPress(optionList, event)
-	return true
+	key := gdk.EventKeyNewFromEvent(event)
+
+	if key.KeyVal() == gdk.KEY_Up || key.KeyVal() == gdk.KEY_Down || key.KeyVal() == gdk.KEY_Return {
+		widgets.OnOptionListKeyPress(optionList, event)
+		return true
+	}
+
+	return false
 }

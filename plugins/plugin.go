@@ -1,14 +1,13 @@
 package plugins
 
 import (
-	"github.com/gotk3/gotk3/gdk"
-	"github.com/gotk3/gotk3/gtk"
+	"friedow/tucan-search/models"
 )
 
 type Plugin interface {
 	GetName() string
-	GetOptions() []*gtk.Box
-	OnKeyPressed(option *gtk.Box, key *gdk.Event)
+	GetOptionModels() []models.OptionModel
+	OnActivate(optionModel models.OptionModel)
 }
 
 func Plugins() []Plugin {

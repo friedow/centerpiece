@@ -1,10 +1,10 @@
-package plugins
+package widgets
 
 import (
 	"github.com/gotk3/gotk3/gtk"
 )
 
-func OptionNew(title string, actionText string) *gtk.Box {
+func OptionWidgetNew(title string, actionText string) *gtk.Box {
 	hbox, _ := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 10)
 
 	titleLabel, _ := gtk.LabelNew(title)

@@ -1,14 +1,14 @@
 package plugins
 
 import (
+	"fmt"
+	"friedow/tucan-search/models"
 	"io/fs"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
-
-	"github.com/gotk3/gotk3/gdk"
-	"github.com/gotk3/gotk3/gtk"
 )
 
 type GitRepositoriesPlugin struct{}
@@ -17,21 +17,32 @@ func (m GitRepositoriesPlugin) GetName() string {
 	return "Git Repositories"
 }
 
-func (m GitRepositoriesPlugin) GetOptions() []*gtk.Box {
-
+func (m GitRepositoriesPlugin) GetOptionModels() []models.OptionModel {
 	gitRepositories := getGitRepositories()
 
-	options := []*gtk.Box{}
+	options := []models.OptionModel{}
 	for _, gitRepository := range gitRepositories {
-		option := OptionNew(gitRepository, "enter to open")
+
+		option := models.OptionModel{
+			PluginName: m.GetName(),
+			Title:      gitRepository,
+			ActionText: "enter to open",
+		}
 		options = append(options, option)
 	}
 
 	return options
 }
 
-func (m GitRepositoriesPlugin) OnKeyPressed(option *gtk.Box, key *gdk.Event) {
-	log.Print("ehello")
+func (m GitRepositoriesPlugin) OnActivate(optionModel models.OptionModel) {
+
+	log.Print("activated", optionModel.Title)
+	// let _result = Exec::cmd("code").arg(path).join();
+	home := os.Getenv("HOME")
+	repositoryPath := strings.Replace(optionModel.Title, "~", home, 1)
+	command := fmt.Sprintf(`code "%s"`, repositoryPath)
+	log.Print(command)
+	exec.Command(command).Run()
 }
 
 func getGitRepositories() []string {

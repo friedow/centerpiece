@@ -17,6 +17,7 @@ func main() {
 		log.Fatal("Unable to create window:", err)
 	}
 	win.SetTitle("Tucan Search")
+	win.SetModal(true)
 	win.Connect("destroy", func() {
 		gtk.MainQuit()
 	})

@@ -10,6 +10,9 @@ import (
 func App() *gtk.Box {
 	optionList := widgets.OptionListNew()
 	searchBar := widgets.SearchBarNew(func(_ *gtk.Entry, event *gdk.Event) bool { return onKeyPress(optionList, event) })
+	searchBar.Connect("changed", func() { onQueryChanged(optionList) })
+
+	widgets.SetFilterFunction(optionList, searchBar)
 
 	verticalBox, _ := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
 	verticalBox.Add(searchBar)
@@ -30,4 +33,8 @@ func onKeyPress(optionList *gtk.ListBox, event *gdk.Event) bool {
 	}
 
 	return false
+}
+
+func onQueryChanged(optionList *gtk.ListBox) {
+	optionList.InvalidateFilter()
 }

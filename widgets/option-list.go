@@ -10,13 +10,11 @@ import (
 import (
 	"encoding/json"
 	"friedow/tucan-search/models"
-	"log"
+	"strings"
 )
 
 func OptionListNew() *gtk.ListBox {
 	optionList, _ := gtk.ListBoxNew()
-	optionList.SetMarginStart(8)
-	optionList.SetMarginEnd(8)
 	optionList.SetHeaderFunc(setHeader)
 
 	pluginList := plugins.Plugins()
@@ -37,11 +35,11 @@ func OptionListNew() *gtk.ListBox {
 		}
 	}
 
-	selectFirstRow(optionList)
+	SelectFirstRow(optionList)
 	return optionList
 }
 
-func selectFirstRow(optionList *gtk.ListBox) {
+func SelectFirstRow(optionList *gtk.ListBox) {
 	firstRow := optionList.GetRowAtIndex(0)
 	if firstRow != nil {
 		optionList.SelectRow(firstRow)
@@ -70,22 +68,26 @@ func selectNextRow(optionList *gtk.ListBox) {
 }
 
 func setHeader(currentRow *gtk.ListBoxRow, previousRow *gtk.ListBoxRow) {
-	if previousRow != nil && getPluginName(currentRow) == getPluginName(previousRow) {
-		return
-	}
-
 	currentHeader, _ := currentRow.GetHeader()
-	if currentHeader != nil {
-		return
+
+	if previousRow != nil && getPluginName(currentRow) == getPluginName(previousRow) {
+		if currentHeader == nil {
+			return
+		}
+		currentRow.SetHeader(nil)
+
+	} else {
+		if currentHeader != nil {
+			return
+		}
+		headerLabel, _ := gtk.LabelNew(getPluginName(currentRow))
+		currentRow.SetHeader(headerLabel)
 	}
 
-	headerLabel, _ := gtk.LabelNew(getPluginName(currentRow))
-	currentRow.SetHeader(headerLabel)
 }
 
 func setOptionModel(optionWidget *gtk.Box, optionModel models.OptionModel) {
 	optionModelEncoded, _ := json.Marshal(optionModel)
-	log.Print(string(optionModelEncoded))
 	optionWidget.SetName(string(optionModelEncoded))
 }
 
@@ -97,9 +99,13 @@ func getOptionModel(optionWidget *gtk.Widget) models.OptionModel {
 	return optionModel
 }
 
-func getPluginName(row *gtk.ListBoxRow) string {
+func getOptionWidget(row *gtk.ListBoxRow) *gtk.Widget {
 	currentOptionInterface, _ := row.GetChild()
-	optionWidget := currentOptionInterface.ToWidget()
+	return currentOptionInterface.ToWidget()
+}
+
+func getPluginName(row *gtk.ListBoxRow) string {
+	optionWidget := getOptionWidget(row)
 	optionModel := getOptionModel(optionWidget)
 	return optionModel.PluginName
 }
@@ -125,4 +131,31 @@ func OnOptionListKeyPress(optionList *gtk.ListBox, event *gdk.Event) {
 		option.Event(event)
 		return
 	}
+}
+
+// func Filter(optionList *gtk.ListBox, query string) {
+// 	optionList.Remove()
+// }
+
+func SetFilterFunction(optionList *gtk.ListBox, searchBar *gtk.Entry) {
+	optionList.SetFilterFunc(func(row *gtk.ListBoxRow) bool {
+		query, _ := searchBar.GetText()
+		query = strings.ToLower(query)
+
+		optionWidget := getOptionWidget(row)
+		optionModel := getOptionModel(optionWidget)
+
+		searchTerms := []string{
+			strings.ToLower(optionModel.PluginName),
+			strings.ToLower(optionModel.Title),
+		}
+
+		for _, searchTerm := range searchTerms {
+			if strings.Contains(searchTerm, query) {
+				return true
+			}
+		}
+
+		return false
+	})
 }

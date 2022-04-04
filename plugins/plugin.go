@@ -13,5 +13,6 @@ type Plugin interface {
 func Plugins() []Plugin {
 	return []Plugin{
 		GitRepositoriesPlugin{},
+		OpenWindowsPlugin{},
 	}
 }

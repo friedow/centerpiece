@@ -1,10 +1,8 @@
 package plugins
 
 import (
-	"fmt"
 	"friedow/tucan-search/models"
 	"io/fs"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -35,14 +33,9 @@ func (m GitRepositoriesPlugin) GetOptionModels() []models.OptionModel {
 }
 
 func (m GitRepositoriesPlugin) OnActivate(optionModel models.OptionModel) {
-
-	log.Print("activated", optionModel.Title)
-	// let _result = Exec::cmd("code").arg(path).join();
 	home := os.Getenv("HOME")
 	repositoryPath := strings.Replace(optionModel.Title, "~", home, 1)
-	command := fmt.Sprintf(`code "%s"`, repositoryPath)
-	log.Print(command)
-	exec.Command(command).Run()
+	exec.Command("code", repositoryPath).Output()
 }
 
 func getGitRepositories() []string {

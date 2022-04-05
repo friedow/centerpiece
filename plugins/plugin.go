@@ -14,5 +14,6 @@ func Plugins() []Plugin {
 	return []Plugin{
 		GitRepositoriesPlugin{},
 		OpenWindowsPlugin{},
+		ApplicationsPlugin{},
 	}
 }

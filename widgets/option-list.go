@@ -133,10 +133,6 @@ func OnOptionListKeyPress(optionList *gtk.ListBox, event *gdk.Event) {
 	}
 }
 
-// func Filter(optionList *gtk.ListBox, query string) {
-// 	optionList.Remove()
-// }
-
 func SetFilterFunction(optionList *gtk.ListBox, searchBar *gtk.Entry) {
 	optionList.SetFilterFunc(func(row *gtk.ListBoxRow) bool {
 		query, _ := searchBar.GetText()

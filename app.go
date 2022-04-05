@@ -8,7 +8,11 @@ import (
 )
 
 func App() *gtk.Box {
+	scrolledWindow, _ := gtk.ScrolledWindowNew(nil, nil)
 	optionList := widgets.OptionListNew()
+	scrolledWindow.Add(optionList)
+	scrolledWindow.SetMinContentHeight(700)
+
 	searchBar := widgets.SearchBarNew(func(_ *gtk.Entry, event *gdk.Event) bool { return onKeyPress(optionList, event) })
 	searchBar.Connect("changed", func() { onQueryChanged(optionList) })
 
@@ -16,7 +20,7 @@ func App() *gtk.Box {
 
 	verticalBox, _ := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
 	verticalBox.Add(searchBar)
-	verticalBox.Add(optionList)
+	verticalBox.Add(scrolledWindow)
 
 	return verticalBox
 }

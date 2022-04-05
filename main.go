@@ -31,6 +31,16 @@ func main() {
 
 	// Set the default window size.
 	win.SetDefaultSize(800, 600)
+	// win.SetHExpand(false)
+	// win.GetAllocation().SetHeight(600)
+
+	// win.SetSizeRequest(-1, 500)
+	// win.SetHExpand(false)
+	// win.SetVExpand(false)
+	// win.GetAllocation().SetHeight(500)
+
+	// win.GetClip().SetHeight(500)
+	// win.GetAllocation().SetHeight(500)
 
 	// Recursively show all widgets contained in this window.
 	win.ShowAll()

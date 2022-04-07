@@ -8,12 +8,15 @@ import (
 )
 
 func App() *gtk.Box {
+	searchBar := widgets.SearchBarNew()
+
 	scrolledWindow, _ := gtk.ScrolledWindowNew(nil, nil)
+
 	optionList := widgets.OptionListNew()
 	scrolledWindow.Add(optionList)
 	scrolledWindow.SetMinContentHeight(700)
 
-	searchBar := widgets.SearchBarNew(func(_ *gtk.Entry, event *gdk.Event) bool { return onKeyPress(optionList, event) })
+	searchBar.Connect("key_press_event", func(_ *gtk.Entry, event *gdk.Event) bool { return onKeyPress(searchBar, optionList, event) })
 	searchBar.Connect("changed", func() { onQueryChanged(optionList) })
 
 	widgets.SetFilterFunction(optionList, searchBar)
@@ -28,11 +31,22 @@ func App() *gtk.Box {
 // Handle keypress events manually for the option list
 // and do not propate them to childs widgets
 // to prevent the option list from picking up focus
-func onKeyPress(optionList *gtk.ListBox, event *gdk.Event) bool {
+func onKeyPress(searchBar *gtk.Entry, optionList *gtk.ListBox, event *gdk.Event) bool {
 	key := gdk.EventKeyNewFromEvent(event)
 
-	if key.KeyVal() == gdk.KEY_Up || key.KeyVal() == gdk.KEY_Down || key.KeyVal() == gdk.KEY_Return {
-		widgets.OnOptionListKeyPress(optionList, event)
+	if key.KeyVal() == gdk.KEY_Up || key.KeyVal() == gdk.KEY_Down {
+		selectedRow := optionList.GetSelectedRow()
+		selectedRow.GrabFocus()
+		optionList.Event(event)
+		searchBar.GrabFocus()
+		return true
+	}
+
+	if key.KeyVal() == gdk.KEY_Return {
+		selectedRow := optionList.GetSelectedRow()
+		optionInterface, _ := selectedRow.GetChild()
+		option := optionInterface.ToWidget()
+		option.Event(event)
 		return true
 	}
 

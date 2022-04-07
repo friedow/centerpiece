@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"friedow/tucan-search/models"
 	"io/fs"
+	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -26,7 +28,7 @@ func (m ApplicationsPlugin) GetOptionModels() []models.OptionModel {
 
 		option := models.OptionModel{
 			PluginName: m.GetName(),
-			Title:      desktopEntry.Name,
+			Title:      desktopEntry.entry.Name,
 			ActionText: "enter to launch",
 			Data:       desktopEntry,
 		}
@@ -37,20 +39,21 @@ func (m ApplicationsPlugin) GetOptionModels() []models.OptionModel {
 }
 
 func (m ApplicationsPlugin) OnActivate(optionModel models.OptionModel) {
-	// window := optionModel.Data.(I3MsgJsonPart)
-	// focusWindowArgument := fmt.Sprintf("[con_id=%d] focus", window.Id)
-	// exec.Command("i3-msg", focusWindowArgument).Run()
+	desktopEntry := optionModel.Data.(DesktopEntryWithPath)
+	log.Print(desktopEntry)
+	exec.Command("xdg-open", desktopEntry.path).Run()
 }
 
-func getDesktopEntries() []*desktop.Entry {
-	desktopEntries := []*desktop.Entry{}
+type DesktopEntryWithPath struct {
+	path  string
+	entry *desktop.Entry
+}
+
+func getDesktopEntries() []DesktopEntryWithPath {
+	desktopEntries := []DesktopEntryWithPath{}
 
 	for _, dataDir := range basedir.DataDirs {
 		err := filepath.WalkDir(dataDir+"/applications", func(path string, info fs.DirEntry, err error) error {
-			// if err != nil {
-			// 	panic(err)
-			// }
-
 			if !strings.HasSuffix(path, ".desktop") {
 				return nil
 			}
@@ -62,7 +65,12 @@ func getDesktopEntries() []*desktop.Entry {
 
 			reader := bufio.NewReader(file)
 			desktopEntry, _ := desktop.New(reader)
-			desktopEntries = append(desktopEntries, desktopEntry)
+			desktopEntryWithPath := DesktopEntryWithPath{
+				path:  path,
+				entry: desktopEntry,
+			}
+			desktopEntries = append(desktopEntries, desktopEntryWithPath)
+
 			return nil
 		})
 
@@ -71,5 +79,19 @@ func getDesktopEntries() []*desktop.Entry {
 		}
 	}
 
-	return desktopEntries
+	return filterDuplicateDesktopEntries(desktopEntries)
+}
+
+func filterDuplicateDesktopEntries(desktopEntries []DesktopEntryWithPath) []DesktopEntryWithPath {
+	desktopEntiesMap := map[string]DesktopEntryWithPath{}
+	for _, desktopEntry := range desktopEntries {
+		desktopEntiesMap[desktopEntry.entry.Name] = desktopEntry
+	}
+
+	uniqueDesktopEntries := []DesktopEntryWithPath{}
+	for _, desktopEntry := range desktopEntiesMap {
+		uniqueDesktopEntries = append(uniqueDesktopEntries, desktopEntry)
+	}
+
+	return uniqueDesktopEntries
 }

@@ -29,6 +29,7 @@ func OptionListNew() *gtk.ListBox {
 
 			optionWidget := OptionWidgetNew(optionModel.Title, optionModel.ActionText)
 			setOptionModel(optionWidget, optionModel)
+
 			optionWidget.Connect("key_press_event", func() { plugin.OnActivate(optionModel) })
 
 			optionList.Add(optionWidget)
@@ -44,27 +45,6 @@ func SelectFirstRow(optionList *gtk.ListBox) {
 	if firstRow != nil {
 		optionList.SelectRow(firstRow)
 	}
-}
-
-func selectPreviousRow(optionList *gtk.ListBox) {
-	selectedRowIndex := optionList.GetSelectedRow().GetIndex()
-	if selectedRowIndex == 0 {
-		return
-	}
-
-	previousRow := optionList.GetRowAtIndex(selectedRowIndex - 1)
-	optionList.SelectRow(previousRow)
-}
-
-func selectNextRow(optionList *gtk.ListBox) {
-	selectedRowIndex := optionList.GetSelectedRow().GetIndex()
-	nextRowIndex := selectedRowIndex + 1
-	if nextRowIndex == int(optionList.GetChildren().Length()) {
-		return
-	}
-
-	nextRow := optionList.GetRowAtIndex(nextRowIndex)
-	optionList.SelectRow(nextRow)
 }
 
 func setHeader(currentRow *gtk.ListBoxRow, previousRow *gtk.ListBoxRow) {
@@ -113,16 +93,6 @@ func getPluginName(row *gtk.ListBoxRow) string {
 func OnOptionListKeyPress(optionList *gtk.ListBox, event *gdk.Event) {
 	key := gdk.EventKeyNewFromEvent(event)
 
-	if key.KeyVal() == gdk.KEY_Up {
-		selectPreviousRow(optionList)
-		return
-	}
-
-	if key.KeyVal() == gdk.KEY_Down {
-		selectNextRow(optionList)
-		return
-	}
-
 	// Propagate key_press_event to option on activate
 	if key.KeyVal() == gdk.KEY_Return {
 		selectedListBoxRow := optionList.GetSelectedRow()
@@ -137,6 +107,7 @@ func SetFilterFunction(optionList *gtk.ListBox, searchBar *gtk.Entry) {
 	optionList.SetFilterFunc(func(row *gtk.ListBoxRow) bool {
 		query, _ := searchBar.GetText()
 		query = strings.ToLower(query)
+		queryParts := strings.Split(query, " ")
 
 		optionWidget := getOptionWidget(row)
 		optionModel := getOptionModel(optionWidget)
@@ -147,8 +118,10 @@ func SetFilterFunction(optionList *gtk.ListBox, searchBar *gtk.Entry) {
 		}
 
 		for _, searchTerm := range searchTerms {
-			if strings.Contains(searchTerm, query) {
-				return true
+			for _, queryPart := range queryParts {
+				if strings.Contains(searchTerm, queryPart) {
+					return true
+				}
 			}
 		}
 

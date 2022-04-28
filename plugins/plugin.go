@@ -1,19 +1,20 @@
 package plugins
 
-import (
-	"friedow/tucan-search/models"
-)
+import "github.com/diamondburned/gotk4/pkg/gtk/v4"
 
-type Plugin interface {
-	GetName() string
-	GetOptionModels() []models.OptionModel
-	OnActivate(optionModel models.OptionModel)
+type PluginOption interface {
+	gtk.Widgetter
+
+	OnActivate()
+	PluginName() string
+	IsVisible(queryPart string) bool
 }
 
-func Plugins() []Plugin {
-	return []Plugin{
-		GitRepositoriesPlugin{},
-		OpenWindowsPlugin{},
-		ApplicationsPlugin{},
-	}
+func PluginOptions() []PluginOption {
+	pluginOptions := []PluginOption{}
+	pluginOptions = append(pluginOptions, NewSystemMonitorPluginOptions()...)
+	pluginOptions = append(pluginOptions, NewOpenWindowsPluginOptions()...)
+	pluginOptions = append(pluginOptions, NewApplicationsPluginOptions()...)
+	pluginOptions = append(pluginOptions, NewGitRepositoriesPluginOptions()...)
+	return pluginOptions
 }

@@ -1,7 +1,7 @@
 package plugins
 
 import (
-	"friedow/tucan-search/models"
+	"friedow/tucan-search/components/options"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -9,38 +9,9 @@ import (
 	"strings"
 )
 
-type GitRepositoriesPlugin struct{}
-
-func (m GitRepositoriesPlugin) GetName() string {
-	return "Git Repositories"
-}
-
-func (m GitRepositoriesPlugin) GetOptionModels() []models.OptionModel {
-	gitRepositories := getGitRepositories()
-
-	options := []models.OptionModel{}
-	for _, gitRepository := range gitRepositories {
-
-		option := models.OptionModel{
-			PluginName: m.GetName(),
-			Title:      gitRepository,
-			ActionText: "enter to open",
-		}
-		options = append(options, option)
-	}
-
-	return options
-}
-
-func (m GitRepositoriesPlugin) OnActivate(optionModel models.OptionModel) {
+func NewGitRepositoriesPluginOptions() []PluginOption {
 	home := os.Getenv("HOME")
-	repositoryPath := strings.Replace(optionModel.Title, "~", home, 1)
-	exec.Command("code", repositoryPath).Output()
-}
-
-func getGitRepositories() []string {
-	home := os.Getenv("HOME")
-	gitRepositories := []string{}
+	gitRepositories := []*GitRepository{}
 
 	filepath.WalkDir(home,
 		func(path string, info fs.DirEntry, err error) error {
@@ -62,14 +33,52 @@ func getGitRepositories() []string {
 
 			// Add git directories to list
 			if strings.HasSuffix(path, ".git") {
-				gitRepository := strings.TrimSuffix(path, "/.git")
-				gitRepository = strings.Replace(gitRepository, home, "~", 1)
-				gitRepositories = append(gitRepositories, gitRepository)
+				gitRepositoryPath := strings.TrimSuffix(path, "/.git")
+				gitRepositoryTitle := strings.Replace(gitRepositoryPath, home, "~", 1)
+				gitRepository := NewGitRepository(gitRepositoryTitle, gitRepositoryPath)
+				gitRepositories = append(gitRepositories, &gitRepository)
 				return nil
 			}
 
 			return nil
-		})
+		},
+	)
 
-	return gitRepositories
+	pluginOptions := []PluginOption{}
+	for _, gitRepository := range gitRepositories {
+		pluginOptions = append(pluginOptions, gitRepository)
+	}
+	return pluginOptions
+}
+
+type GitRepository struct {
+	*options.TextOption
+
+	title string
+	path  string
+}
+
+var _ PluginOption = GitRepository{}
+
+func NewGitRepository(title string, path string) GitRepository {
+	this := GitRepository{}
+
+	this.TextOption = options.NewTextOption(title, "Enter to open")
+
+	this.title = title
+	this.path = path
+
+	return this
+}
+
+func (this GitRepository) PluginName() string {
+	return "Git Repositories"
+}
+
+func (this GitRepository) OnActivate() {
+	exec.Command("code", this.path).Output()
+}
+
+func (this GitRepository) IsVisible(queryPart string) bool {
+	return strings.Contains(strings.ToLower(this.title), queryPart)
 }

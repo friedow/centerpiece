@@ -1,9 +1,14 @@
 package plugins
 
+// #include <stdio.h>
+// #include <time.h>
+import "C"
+
 import (
 	"fmt"
 	"friedow/tucan-search/components/options"
 	"strings"
+	"time"
 
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/distatus/battery"
@@ -15,9 +20,17 @@ func NewSystemMonitorPluginOptions() []PluginOption {
 	if firstBattery() != nil {
 		systemStatistics = append(systemStatistics, newBatteryStatistic())
 	}
+	systemStatistics = append(systemStatistics, newCpuStatistic())
 
 	return systemStatistics
 }
+
+type BatteryStatistic struct {
+	*options.ProgressOption
+	*SystemStatistic
+}
+
+var _ PluginOption = BatteryStatistic{}
 
 func firstBattery() *battery.Battery {
 	batteries, err := battery.GetAll()
@@ -29,48 +42,40 @@ func firstBattery() *battery.Battery {
 	return batteries[0]
 }
 
-type BatteryStatistic struct {
-	*SystemStatistic
-}
-
 func newBatteryStatistic() *BatteryStatistic {
 	this := BatteryStatistic{}
 
-	this.SystemStatistic = NewSystemStatistic("Battery", this.CurrentValue(), this.MaximumCapacity(), "mWh")
+	this.SystemStatistic = newSystemStatistic("Battery")
+	this.ProgressOption = options.NewProgressOption(this.Title(), "", this.ChargeInDecimalFraction())
 
-	glib.TimeoutAdd(1000, func() bool {
-		this.SetCurrentValue(this.CurrentValue())
-		this.SetTitle(this.Title())
+	glib.TimeoutAdd(5000, func() bool {
+		this.Update()
 		return true
 	})
 
 	return &this
 }
 
-// func (this BatteryStatistic) SetCurrentValue(currentValue float64) {
-// 	this.currentValue = currentValue
-// 	this.SetTitle(this.Title())
-// 	this.SetProgress(this.currentProgress() * 0.01)
-// }
+func (this BatteryStatistic) Update() {
+	this.SetTitle(this.Title())
+	this.SetProgress(this.ChargeInDecimalFraction())
+}
 
 func (this BatteryStatistic) Title() string {
-	return fmt.Sprintf("%s %d%% %s", this.name, int(this.currentProgress()), this.State())
+	return fmt.Sprintf("%s %d%% %s", this.name, int(this.ChargeInPercent()), this.State())
 }
 
-func (this BatteryStatistic) CurrentValue() float64 {
+func (this BatteryStatistic) ChargeInDecimalFraction() float64 {
 	battery := firstBattery()
 	if battery == nil {
 		return 0
 	}
-	return battery.Current
+
+	return battery.Current / battery.Full
 }
 
-func (this BatteryStatistic) MaximumCapacity() float64 {
-	battery := firstBattery()
-	if battery == nil {
-		return 0
-	}
-	return battery.Full
+func (this BatteryStatistic) ChargeInPercent() float64 {
+	return this.ChargeInDecimalFraction() * 100
 }
 
 func (this BatteryStatistic) State() string {
@@ -81,26 +86,63 @@ func (this BatteryStatistic) State() string {
 	return battery.State.String()
 }
 
-type SystemStatistic struct {
+type CpuStatistic struct {
 	*options.ProgressOption
+	*SystemStatistic
 
-	name            string
-	currentValue    float64
-	maximumCapacity float64
-	unit            string
+	startTime  time.Time
+	startTicks float64
 }
 
-var _ PluginOption = SystemStatistic{}
+var _ PluginOption = CpuStatistic{}
 
-func NewSystemStatistic(name string, currentValue float64, maximumCapacity float64, unit string) *SystemStatistic {
+func newCpuStatistic() *CpuStatistic {
+	this := CpuStatistic{}
+
+	this.SystemStatistic = newSystemStatistic("CPU")
+
+	this.startTime = time.Now()
+	this.startTicks = float64(C.clock())
+	this.ProgressOption = options.NewProgressOption(this.Title(), "", this.CpuUsageInDecimalFraction())
+
+	glib.TimeoutAdd(3000, func() bool {
+		this.Update()
+		this.startTime = time.Now()
+		this.startTicks = float64(C.clock())
+		return true
+	})
+
+	return &this
+}
+
+func (this CpuStatistic) Update() {
+	this.SetTitle(this.Title())
+	this.SetProgress(this.CpuUsageInDecimalFraction())
+}
+
+func (this CpuStatistic) Title() string {
+	return fmt.Sprintf("%s %d%%", this.name, int(this.CpuUsageInPercent()))
+}
+
+func (this CpuStatistic) CpuUsageInDecimalFraction() float64 {
+	return this.CpuUsageInPercent() * 0.01
+}
+
+func (this CpuStatistic) CpuUsageInPercent() float64 {
+	clockSeconds := (float64(C.clock()) - this.startTicks) / float64(C.CLOCKS_PER_SEC)
+	realSeconds := time.Since(this.startTime).Seconds()
+	return (clockSeconds / realSeconds * 100)
+
+}
+
+type SystemStatistic struct {
+	name string
+}
+
+func newSystemStatistic(name string) *SystemStatistic {
 	this := SystemStatistic{}
 
 	this.name = name
-	this.maximumCapacity = maximumCapacity
-	this.unit = unit
-
-	this.ProgressOption = options.NewProgressOption(this.Title(), "", 0)
-	this.SetCurrentValue(currentValue)
 
 	return &this
 }
@@ -115,18 +157,4 @@ func (this SystemStatistic) OnActivate() {
 
 func (this SystemStatistic) IsVisible(queryPart string) bool {
 	return strings.Contains(strings.ToLower(this.name), queryPart)
-}
-
-func (this SystemStatistic) SetCurrentValue(currentValue float64) {
-	this.currentValue = currentValue
-	this.SetTitle(this.Title())
-	this.SetProgress(this.currentProgress() * 0.01)
-}
-
-func (this SystemStatistic) Title() string {
-	return fmt.Sprintf("%s %d%% (%d / %d %s)", this.name, int(this.currentProgress()), int(this.currentValue), int(this.maximumCapacity), this.unit)
-}
-
-func (this SystemStatistic) currentProgress() float64 {
-	return this.currentValue * 100 / this.maximumCapacity
 }

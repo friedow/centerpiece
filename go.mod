@@ -8,7 +8,16 @@ require (
 )
 
 require (
-	github.com/distatus/battery v0.10.0 // indirect
+	github.com/go-ole/go-ole v1.2.6 // indirect
+	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
+	github.com/tklauser/go-sysconf v0.3.10 // indirect
+	github.com/tklauser/numcpus v0.4.0 // indirect
+	github.com/yusufpapurcu/wmi v1.2.2 // indirect
+)
+
+require (
+	github.com/c9s/goprocinfo v0.0.0-20210130143923-c95fcf8c64a8
+	github.com/distatus/battery v0.10.0
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20211027215541-db492cf91b37 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 // indirect

@@ -26,7 +26,6 @@ func NewOptionList() *OptionList {
 	this.optionList.AddCSSClass("option-list")
 
 	this.optionList.options = plugins.PluginOptions()
-
 	for _, option := range this.optionList.options {
 		this.optionList.Append(option)
 	}
@@ -34,7 +33,7 @@ func NewOptionList() *OptionList {
 	this.selectFirstRow()
 
 	this.ScrolledWindow = gtk.NewScrolledWindow()
-	this.ScrolledWindow.SetChild(this.optionList)
+	this.SetChild(this.optionList)
 
 	return &this
 }
@@ -67,6 +66,7 @@ func (this *OptionList) setHeader(currentRow *gtk.ListBoxRow, previousRow *gtk.L
 }
 
 func (this *OptionList) OnActivate() {
+
 	row := this.optionList.SelectedRow()
 	this.pluginOption(row).OnActivate()
 }
@@ -115,6 +115,10 @@ func (this *OptionList) selectPreviousRow() {
 	}
 	previousRow := this.visibleRows()[previousRowIndex]
 	this.optionList.SelectRow(previousRow)
+
+	previousRow.SetCanFocus(true)
+	previousRow.GrabFocus()
+	previousRow.SetCanFocus(false)
 }
 
 func (this *OptionList) selectNextRow() {
@@ -131,6 +135,10 @@ func (this *OptionList) selectNextRow() {
 	}
 	nextRow := this.visibleRows()[nextRowIndex]
 	this.optionList.SelectRow(nextRow)
+
+	nextRow.SetCanFocus(true)
+	nextRow.GrabFocus()
+	nextRow.SetCanFocus(false)
 }
 
 func (this *OptionList) pluginOption(row *gtk.ListBoxRow) plugins.PluginOption {

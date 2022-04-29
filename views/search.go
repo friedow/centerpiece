@@ -18,14 +18,18 @@ func NewSearchView() *SearchView {
 	this := SearchView{}
 
 	this.searchBar = components.NewSearchBar()
+
 	searchBarKeyEventController := gtk.NewEventControllerKey()
-	searchBarKeyEventController.ConnectKeyPressed(func(keyVal uint, _ uint, _ gdk.ModifierType) bool { return this.optionList.OnKeyPress(keyVal) })
+	searchBarKeyEventController.ConnectKeyPressed(func(keyVal uint, _ uint, _ gdk.ModifierType) bool {
+		result := this.optionList.OnKeyPress(keyVal)
+		this.searchBar.GrabFocus()
+		return result
+	})
 	this.searchBar.AddController(searchBarKeyEventController)
 	this.searchBar.ConnectActivate(func() { this.optionList.OnActivate() })
 	this.searchBar.ConnectChanged(func() { this.optionList.FilterOptions(this.searchBar.Text()) })
 
 	this.optionList = components.NewOptionList()
-	// this.optionList.SetFilterFunction(this.searchBar)
 
 	scrolledWindow := gtk.NewScrolledWindow()
 	scrolledWindow.SetMinContentHeight(700)

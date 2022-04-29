@@ -23,6 +23,7 @@ func NewOptionList() *OptionList {
 
 	this.optionList.ListBox = gtk.NewListBox()
 	this.optionList.SetHeaderFunc(this.setHeader)
+	this.optionList.AddCSSClass("option-list")
 
 	this.optionList.options = plugins.PluginOptions()
 
@@ -51,8 +52,17 @@ func (this *OptionList) setHeader(currentRow *gtk.ListBoxRow, previousRow *gtk.L
 		if currentHeader != nil {
 			return
 		}
-		newHeader := gtk.NewLabel(this.pluginName(currentRow))
-		currentRow.SetHeader(newHeader)
+
+		header := gtk.NewLabel(this.pluginName(currentRow))
+
+		headerBox := gtk.NewBox(gtk.OrientationHorizontal, 0)
+		headerBox.Append(header)
+		headerBox.AddCSSClass("header")
+		if previousRow == nil {
+			headerBox.AddCSSClass("first-header")
+		}
+
+		currentRow.SetHeader(headerBox)
 	}
 }
 

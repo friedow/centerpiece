@@ -11,6 +11,7 @@ func NewSearchBar() *SearchBar {
 
 	this.Entry = gtk.NewEntry()
 	this.SetPlaceholderText("Search or jump to...")
+	this.AddCSSClass("search-bar")
 
 	return &this
 }

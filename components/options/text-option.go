@@ -3,7 +3,7 @@ package options
 import "github.com/diamondburned/gotk4/pkg/gtk/v4"
 
 type TextOption struct {
-	*gtk.Box
+	*gtk.CenterBox
 
 	titleLabel  *gtk.Label
 	actionLabel *gtk.Label
@@ -14,10 +14,11 @@ func NewTextOption(title string, action string) *TextOption {
 
 	this.titleLabel = gtk.NewLabel(title)
 	this.actionLabel = gtk.NewLabel(action)
+	this.actionLabel.AddCSSClass("action")
 
-	this.Box = gtk.NewBox(gtk.OrientationHorizontal, 20)
-	this.Append(this.titleLabel)
-	this.Append(this.actionLabel)
+	this.CenterBox = gtk.NewCenterBox()
+	this.SetStartWidget(this.titleLabel)
+	this.SetEndWidget(this.actionLabel)
 
 	return &this
 }

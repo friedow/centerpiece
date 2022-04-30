@@ -12,6 +12,7 @@ import (
 
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/distatus/battery"
+	"github.com/shirou/gopsutil/v3/mem"
 )
 
 func NewSystemMonitorPluginOptions() []PluginOption {
@@ -21,9 +22,12 @@ func NewSystemMonitorPluginOptions() []PluginOption {
 		systemStatistics = append(systemStatistics, newBatteryStatistic())
 	}
 	systemStatistics = append(systemStatistics, newCpuStatistic())
+	systemStatistics = append(systemStatistics, newMemoryStatistic())
 
 	return systemStatistics
 }
+
+// Battery Statistic
 
 type BatteryStatistic struct {
 	*options.ProgressOption
@@ -62,7 +66,7 @@ func (this BatteryStatistic) Update() {
 }
 
 func (this BatteryStatistic) Title() string {
-	return fmt.Sprintf("%s %d%% %s", this.name, int(this.ChargeInPercent()), this.State())
+	return fmt.Sprintf("%s %d%% – %s", this.name, int(this.ChargeInPercent()), this.State())
 }
 
 func (this BatteryStatistic) ChargeInDecimalFraction() float64 {
@@ -85,6 +89,8 @@ func (this BatteryStatistic) State() string {
 	}
 	return battery.State.String()
 }
+
+// CPU Statistic
 
 type CpuStatistic struct {
 	*options.ProgressOption
@@ -142,6 +148,56 @@ func (this CpuStatistic) CpuUsageInDecimalFraction() float64 {
 
 func (this CpuStatistic) CpuUsageInPercent() float64 {
 	return this.cpuUsageInPercent
+}
+
+// Memory Statistic
+
+type MemoryStatistic struct {
+	*options.ProgressOption
+	*SystemStatistic
+
+	memoryUsageInPercent float64
+}
+
+var _ PluginOption = MemoryStatistic{}
+
+func newMemoryStatistic() *MemoryStatistic {
+	this := MemoryStatistic{}
+
+	this.SystemStatistic = newSystemStatistic("Memory")
+
+	this.UpdateMemoryUsage()
+	this.ProgressOption = options.NewProgressOption(this.Title(), "", this.MemoryUsageAsDecimalFraction())
+
+	glib.TimeoutAdd(3000, func() bool {
+		this.UpdateMemoryUsage()
+		this.UpdateWidget()
+		return true
+	})
+
+	return &this
+}
+
+func (this *MemoryStatistic) UpdateMemoryUsage() {
+	v, _ := mem.VirtualMemory()
+	this.memoryUsageInPercent = v.UsedPercent
+}
+
+func (this MemoryStatistic) UpdateWidget() {
+	this.SetTitle(this.Title())
+	this.SetProgress(this.MemoryUsageAsDecimalFraction())
+}
+
+func (this MemoryStatistic) Title() string {
+	return fmt.Sprintf("%s %d%%", this.name, int(this.MemoryUsageInPercent()))
+}
+
+func (this MemoryStatistic) MemoryUsageAsDecimalFraction() float64 {
+	return this.MemoryUsageInPercent() * 0.01
+}
+
+func (this MemoryStatistic) MemoryUsageInPercent() float64 {
+	return this.memoryUsageInPercent
 }
 
 type SystemStatistic struct {

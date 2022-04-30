@@ -1,24 +1,63 @@
-# let
-  # Pinned nixpkgs, deterministic. Last updated: 2/12/21.
-  # pkgs = import (fetchTarball("https://github.com/NixOS/nixpkgs/archive/a58a0b5098f0c2a389ee70eb69422a052982d990.tar.gz")) {};
+{ systemPkgs ? import <nixpkgs> {} }:
 
-  # Rolling updates, not deterministic.
-  # pkgs = import (fetchTarball("channel:nixpkgs-unstable")) {};?
-{ pkgs ? import <nixpkgs> {} }:
-pkgs.mkShell {
-  buildInputs = [
-    pkgs.pkg-config
-    pkgs.gcc
-    pkgs.gtk4
+let unstable = import (systemPkgs.fetchFromGitHub {
+		owner = "NixOS";
+		repo  = "nixpkgs";
+		rev   = "3fdd780";
+		hash  = "sha256:0df9v2snlk9ag7jnmxiv31pzhd0rqx2h3kzpsxpj07xns8k8dghz";
+	}) {
+		overlays = [
+			(self: super: {
+				go = super.go.overrideAttrs (old: {
+					version = "1.18";
+					src = builtins.fetchurl {
+						url    = "https://golang.org/dl/go1.18.linux-amd64.tar.gz";
+						sha256 = "0kr6h1ddaazibxfkmw7b7jqyqhskvzjyc2c4zr8b3kapizlphlp8";
+					};
+					doCheck = false;
+					patches = [
+						# cmd/go/internal/work: concurrent ccompile routines
+						(builtins.fetchurl "https://github.com/diamondburned/go/commit/ec3e1c9471f170187b6a7c83ab0364253f895c28.patch")
+						# cmd/cgo: concurrent file generation
+						(builtins.fetchurl "https://github.com/diamondburned/go/commit/50e04befeca9ae63296a73c8d5d2870b904971b4.patch")
+					];
+				});
+			})
+		];
+	};
 
-    pkgs.cargo 
-    pkgs.rustc
-    pkgs.rustfmt
-    pkgs.rustup
-  ];
+	lib = systemPkgs.lib;
 
-  # Certain Rust tools won't work without this
-  # This can also be fixed by using oxalica/rust-overlay and specifying the rust-src extension
-  # See https://discourse.nixos.org/t/rust-src-not-found-and-other-misadventures-of-developing-rust-on-nixos/11570/3?u=samuela. for more details.
-  RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
+	gtkPkgs =
+		if ((systemPkgs.gtk4 or null) != null && lib.versionAtLeast systemPkgs.gtk4.version "4.4.0")
+		then systemPkgs
+		else unstable;
+
+in gtkPkgs.mkShell {
+	buildInputs = with gtkPkgs; [
+		glib
+		graphene
+		gdk-pixbuf
+		gnome3.gtk
+		gtk4
+		vulkan-headers
+	];
+
+	nativeBuildInputs = with gtkPkgs; [
+		# Build/generation dependencies.
+		gobjectIntrospection
+		pkgconfig
+
+		unstable.go
+
+		# Development tools.
+		# gopls
+		# goimports
+	];
+
+	NIX_DEBUG_INFO_DIRS = ''${gtkPkgs.gtk4.debug}/lib/debug:${gtkPkgs.glib.debug}/lib/debug'';
+	CGO_ENABLED = "1";
+
+	TMP    = "/tmp";
+	TMPDIR = "/tmp";
 }

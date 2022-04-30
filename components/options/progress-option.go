@@ -18,6 +18,7 @@ func NewProgressOption(title string, action string, progress float64) *ProgressO
 	this.SetProgress(progress)
 
 	this.Box = gtk.NewBox(gtk.OrientationVertical, 0)
+	this.AddCSSClass("progress-option")
 	this.Append(this.textOption)
 	this.Append(this.progressBar)
 

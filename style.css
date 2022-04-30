@@ -8,8 +8,6 @@
 @define-color option-text #1d1d1d;
 
 
-
-
 window {
     background-color: @background;
 }
@@ -64,6 +62,6 @@ window {
     border-color: @highlight-background;
 }
 
-/* *:focus {
-    background-color: blue;
-} */
+.progress-option progressbar {
+    margin-top: 0.3rem;
+}

@@ -12,6 +12,7 @@ type PluginOption interface {
 
 func PluginOptions() []PluginOption {
 	pluginOptions := []PluginOption{}
+	pluginOptions = append(pluginOptions, newClockPluginOptions()...)
 	pluginOptions = append(pluginOptions, newSystemMonitorPluginOptions()...)
 	pluginOptions = append(pluginOptions, newOpenWindowsPluginOptions()...)
 	pluginOptions = append(pluginOptions, newApplicationsPluginOptions()...)

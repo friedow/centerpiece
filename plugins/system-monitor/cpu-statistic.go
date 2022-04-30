@@ -33,7 +33,7 @@ func NewCpuStatistic() *CpuStatistic {
 
 	this.ProgressOption = options.NewProgressOption(this.title(), "", this.cpuUsageAsDecimalFraction())
 
-	glib.TimeoutAdd(3000, func() bool {
+	glib.TimeoutAdd(1000, func() bool {
 		this.updateCpuUsage()
 		this.updateWidget()
 		return true

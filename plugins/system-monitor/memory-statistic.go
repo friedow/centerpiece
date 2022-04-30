@@ -23,7 +23,7 @@ func NewMemoryStatistic() *MemoryStatistic {
 	this.updateMemoryUsage()
 	this.ProgressOption = options.NewProgressOption(this.title(), "", this.memoryUsageAsDecimalFraction())
 
-	glib.TimeoutAdd(3000, func() bool {
+	glib.TimeoutAdd(1000, func() bool {
 		this.updateMemoryUsage()
 		this.updateWidget()
 		return true

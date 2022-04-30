@@ -8,16 +8,16 @@ import (
 	"strings"
 )
 
-type I3MsgJsonPart struct {
+type i3MsgJsonPart struct {
 	Id         int             `json:"id"`
 	Name       string          `json:"name"`
 	WindowType string          `json:"window_type"`
-	Nodes      []I3MsgJsonPart `json:"nodes"`
+	Nodes      []i3MsgJsonPart `json:"nodes"`
 }
 
-func NewOpenWindowsPluginOptions() []PluginOption {
+func newOpenWindowsPluginOptions() []PluginOption {
 	i3MsgOutput, _ := exec.Command("i3-msg", "-t", "get_tree").Output()
-	i3MsgJson := I3MsgJsonPart{}
+	i3MsgJson := i3MsgJsonPart{}
 	json.Unmarshal(i3MsgOutput, &i3MsgJson)
 	windows := findWindows(i3MsgJson)
 
@@ -28,15 +28,15 @@ func NewOpenWindowsPluginOptions() []PluginOption {
 	return pluginOptions
 }
 
-func findWindows(i3MsgJsonPart I3MsgJsonPart) []*OpenWindow {
-	if i3MsgJsonPart.WindowType != "" {
-		window := NewOpenWindow(i3MsgJsonPart.Id, i3MsgJsonPart.Name)
-		return []*OpenWindow{window}
+func findWindows(i3MsgJson i3MsgJsonPart) []*openWindow {
+	if i3MsgJson.WindowType != "" {
+		window := newOpenWindow(i3MsgJson.Id, i3MsgJson.Name)
+		return []*openWindow{window}
 	}
 
-	if i3MsgJsonPart.Nodes != nil {
-		windows := []*OpenWindow{}
-		for _, i3MsgJsonChild := range i3MsgJsonPart.Nodes {
+	if i3MsgJson.Nodes != nil {
+		windows := []*openWindow{}
+		for _, i3MsgJsonChild := range i3MsgJson.Nodes {
 			childWindows := findWindows(i3MsgJsonChild)
 
 			windows = append(windows, childWindows...)
@@ -44,20 +44,20 @@ func findWindows(i3MsgJsonPart I3MsgJsonPart) []*OpenWindow {
 		return windows
 	}
 
-	return []*OpenWindow{}
+	return []*openWindow{}
 }
 
-type OpenWindow struct {
+type openWindow struct {
 	*options.TextOption
 
 	id    int
 	title string
 }
 
-var _ PluginOption = OpenWindow{}
+var _ PluginOption = openWindow{}
 
-func NewOpenWindow(id int, title string) *OpenWindow {
-	this := OpenWindow{}
+func newOpenWindow(id int, title string) *openWindow {
+	this := openWindow{}
 
 	this.TextOption = options.NewTextOption(title, "Enter to jump to")
 
@@ -67,15 +67,15 @@ func NewOpenWindow(id int, title string) *OpenWindow {
 	return &this
 }
 
-func (this OpenWindow) PluginName() string {
+func (this openWindow) PluginName() string {
 	return "Open Windows"
 }
 
-func (this OpenWindow) OnActivate() {
+func (this openWindow) OnActivate() {
 	focusWindowArgument := fmt.Sprintf("[con_id=%d] focus", this.id)
 	exec.Command("i3-msg", focusWindowArgument).Run()
 }
 
-func (this OpenWindow) IsVisible(queryPart string) bool {
+func (this openWindow) IsVisible(queryPart string) bool {
 	return strings.Contains(strings.ToLower(this.title), queryPart)
 }

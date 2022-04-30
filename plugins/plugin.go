@@ -12,9 +12,9 @@ type PluginOption interface {
 
 func PluginOptions() []PluginOption {
 	pluginOptions := []PluginOption{}
-	pluginOptions = append(pluginOptions, NewSystemMonitorPluginOptions()...)
-	pluginOptions = append(pluginOptions, NewOpenWindowsPluginOptions()...)
-	pluginOptions = append(pluginOptions, NewApplicationsPluginOptions()...)
-	pluginOptions = append(pluginOptions, NewGitRepositoriesPluginOptions()...)
+	pluginOptions = append(pluginOptions, newSystemMonitorPluginOptions()...)
+	pluginOptions = append(pluginOptions, newOpenWindowsPluginOptions()...)
+	pluginOptions = append(pluginOptions, newApplicationsPluginOptions()...)
+	pluginOptions = append(pluginOptions, newGitRepositoriesPluginOptions()...)
 	return pluginOptions
 }

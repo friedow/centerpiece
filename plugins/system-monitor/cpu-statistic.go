@@ -19,7 +19,7 @@ type CpuStatistic struct {
 	startTime  time.Time
 	startTicks float64
 
-	cpuUsageInPercent float64
+	cpuUsagePercent float64
 }
 
 func NewCpuStatistic() *CpuStatistic {
@@ -29,41 +29,41 @@ func NewCpuStatistic() *CpuStatistic {
 
 	this.startTime = time.Now()
 	this.startTicks = float64(C.clock())
-	this.UpdateCpuUsage()
+	this.updateCpuUsage()
 
-	this.ProgressOption = options.NewProgressOption(this.Title(), "", this.CpuUsageInDecimalFraction())
+	this.ProgressOption = options.NewProgressOption(this.title(), "", this.cpuUsageAsDecimalFraction())
 
 	glib.TimeoutAdd(3000, func() bool {
-		this.UpdateCpuUsage()
-		this.UpdateWidget()
+		this.updateCpuUsage()
+		this.updateWidget()
 		return true
 	})
 
 	return &this
 }
 
-func (this *CpuStatistic) UpdateCpuUsage() {
+func (this *CpuStatistic) updateCpuUsage() {
 	clockSeconds := (float64(C.clock()) - this.startTicks) / float64(C.CLOCKS_PER_SEC)
 	realSeconds := time.Since(this.startTime).Seconds()
-	this.cpuUsageInPercent = (clockSeconds / realSeconds * 100)
+	this.cpuUsagePercent = (clockSeconds / realSeconds * 100)
 
 	this.startTime = time.Now()
 	this.startTicks = float64(C.clock())
 }
 
-func (this CpuStatistic) UpdateWidget() {
-	this.SetTitle(this.Title())
-	this.SetProgress(this.CpuUsageInDecimalFraction())
+func (this CpuStatistic) updateWidget() {
+	this.SetTitle(this.title())
+	this.SetProgress(this.cpuUsageAsDecimalFraction())
 }
 
-func (this CpuStatistic) Title() string {
-	return fmt.Sprintf("%s %d%%", this.name, int(this.CpuUsageInPercent()))
+func (this CpuStatistic) title() string {
+	return fmt.Sprintf("%s %d%%", this.name, int(this.cpuUsageAsPercent()))
 }
 
-func (this CpuStatistic) CpuUsageInDecimalFraction() float64 {
-	return this.CpuUsageInPercent() * 0.01
+func (this CpuStatistic) cpuUsageAsDecimalFraction() float64 {
+	return this.cpuUsageAsPercent() * 0.01
 }
 
-func (this CpuStatistic) CpuUsageInPercent() float64 {
-	return this.cpuUsageInPercent
+func (this CpuStatistic) cpuUsageAsPercent() float64 {
+	return this.cpuUsagePercent
 }

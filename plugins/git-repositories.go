@@ -9,9 +9,9 @@ import (
 	"strings"
 )
 
-func NewGitRepositoriesPluginOptions() []PluginOption {
+func newGitRepositoriesPluginOptions() []PluginOption {
 	home := os.Getenv("HOME")
-	gitRepositories := []*GitRepository{}
+	gitRepositories := []*gitRepository{}
 
 	filepath.WalkDir(home,
 		func(path string, info fs.DirEntry, err error) error {
@@ -35,7 +35,7 @@ func NewGitRepositoriesPluginOptions() []PluginOption {
 			if strings.HasSuffix(path, ".git") {
 				gitRepositoryPath := strings.TrimSuffix(path, "/.git")
 				gitRepositoryTitle := strings.Replace(gitRepositoryPath, home, "~", 1)
-				gitRepository := NewGitRepository(gitRepositoryTitle, gitRepositoryPath)
+				gitRepository := newGitRepository(gitRepositoryTitle, gitRepositoryPath)
 				gitRepositories = append(gitRepositories, &gitRepository)
 				return nil
 			}
@@ -51,17 +51,17 @@ func NewGitRepositoriesPluginOptions() []PluginOption {
 	return pluginOptions
 }
 
-type GitRepository struct {
+type gitRepository struct {
 	*options.TextOption
 
 	title string
 	path  string
 }
 
-var _ PluginOption = GitRepository{}
+var _ PluginOption = gitRepository{}
 
-func NewGitRepository(title string, path string) GitRepository {
-	this := GitRepository{}
+func newGitRepository(title string, path string) gitRepository {
+	this := gitRepository{}
 
 	this.TextOption = options.NewTextOption(title, "Enter to open")
 
@@ -71,14 +71,14 @@ func NewGitRepository(title string, path string) GitRepository {
 	return this
 }
 
-func (this GitRepository) PluginName() string {
+func (this gitRepository) PluginName() string {
 	return "Git Repositories"
 }
 
-func (this GitRepository) OnActivate() {
+func (this gitRepository) OnActivate() {
 	exec.Command("code", this.path).Output()
 }
 
-func (this GitRepository) IsVisible(queryPart string) bool {
+func (this gitRepository) IsVisible(queryPart string) bool {
 	return strings.Contains(strings.ToLower(this.title), queryPart)
 }

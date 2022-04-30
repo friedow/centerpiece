@@ -31,26 +31,26 @@ func NewBatteryStatistic() *BatteryStatistic {
 	this := BatteryStatistic{}
 
 	this.SystemStatistic = newSystemStatistic("Battery")
-	this.ProgressOption = options.NewProgressOption(this.Title(), "", this.ChargeInDecimalFraction())
+	this.ProgressOption = options.NewProgressOption(this.title(), "", this.chargeAsDecimalFraction())
 
 	glib.TimeoutAdd(5000, func() bool {
-		this.Update()
+		this.update()
 		return true
 	})
 
 	return &this
 }
 
-func (this BatteryStatistic) Update() {
-	this.SetTitle(this.Title())
-	this.SetProgress(this.ChargeInDecimalFraction())
+func (this BatteryStatistic) update() {
+	this.SetTitle(this.title())
+	this.SetProgress(this.chargeAsDecimalFraction())
 }
 
-func (this BatteryStatistic) Title() string {
-	return fmt.Sprintf("%s %d%% – %s", this.name, int(this.ChargeInPercent()), this.State())
+func (this BatteryStatistic) title() string {
+	return fmt.Sprintf("%s %d%% – %s", this.name, int(this.chargeAsPercent()), this.state())
 }
 
-func (this BatteryStatistic) ChargeInDecimalFraction() float64 {
+func (this BatteryStatistic) chargeAsDecimalFraction() float64 {
 	battery := firstBattery()
 	if battery == nil {
 		return 0
@@ -59,11 +59,11 @@ func (this BatteryStatistic) ChargeInDecimalFraction() float64 {
 	return battery.Current / battery.Full
 }
 
-func (this BatteryStatistic) ChargeInPercent() float64 {
-	return this.ChargeInDecimalFraction() * 100
+func (this BatteryStatistic) chargeAsPercent() float64 {
+	return this.chargeAsDecimalFraction() * 100
 }
 
-func (this BatteryStatistic) State() string {
+func (this BatteryStatistic) state() string {
 	battery := firstBattery()
 	if battery == nil {
 		return ""

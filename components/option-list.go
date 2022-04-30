@@ -38,6 +38,40 @@ func NewOptionList() *OptionList {
 	return &this
 }
 
+func (this *OptionList) OnKeyPress(keyVal uint) bool {
+	if keyVal == gdk.KEY_Up {
+		this.selectPreviousRow()
+		return true
+	}
+
+	if keyVal == gdk.KEY_Down {
+		this.selectNextRow()
+		return true
+	}
+
+	this.optionList.InvalidateFilter()
+	return false
+}
+
+func (this *OptionList) OnActivate() {
+
+	row := this.optionList.SelectedRow()
+	this.pluginOption(row).OnActivate()
+}
+
+func (this *OptionList) FilterOptions(query string) {
+	preprocessedQuery := strings.ToLower(strings.Trim(query, " "))
+	queryParts := strings.Split(preprocessedQuery, " ")
+
+	for optionIndex, option := range this.optionList.options {
+		row := this.optionList.RowAtIndex(optionIndex)
+
+		this.setRowVisibility(row, option, queryParts)
+	}
+
+	this.selectFirstRow()
+}
+
 func (this *OptionList) setHeader(currentRow *gtk.ListBoxRow, previousRow *gtk.ListBoxRow) {
 	currentHeader := currentRow.Header()
 
@@ -63,12 +97,6 @@ func (this *OptionList) setHeader(currentRow *gtk.ListBoxRow, previousRow *gtk.L
 
 		currentRow.SetHeader(headerBox)
 	}
-}
-
-func (this *OptionList) OnActivate() {
-
-	row := this.optionList.SelectedRow()
-	this.pluginOption(row).OnActivate()
 }
 
 func (this *OptionList) visibleRows() []*gtk.ListBoxRow {
@@ -147,34 +175,6 @@ func (this *OptionList) pluginOption(row *gtk.ListBoxRow) plugins.PluginOption {
 
 func (this *OptionList) pluginName(row *gtk.ListBoxRow) string {
 	return this.pluginOption(row).PluginName()
-}
-
-func (this *OptionList) OnKeyPress(keyVal uint) bool {
-	if keyVal == gdk.KEY_Up {
-		this.selectPreviousRow()
-		return true
-	}
-
-	if keyVal == gdk.KEY_Down {
-		this.selectNextRow()
-		return true
-	}
-
-	this.optionList.InvalidateFilter()
-	return false
-}
-
-func (this *OptionList) FilterOptions(query string) {
-	preprocessedQuery := strings.ToLower(strings.Trim(query, " "))
-	queryParts := strings.Split(preprocessedQuery, " ")
-
-	for optionIndex, option := range this.optionList.options {
-		row := this.optionList.RowAtIndex(optionIndex)
-
-		this.setRowVisibility(row, option, queryParts)
-	}
-
-	this.selectFirstRow()
 }
 
 func (this *OptionList) setRowVisibility(row *gtk.ListBoxRow, option plugins.PluginOption, queryParts []string) {

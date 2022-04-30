@@ -20,36 +20,36 @@ func NewMemoryStatistic() *MemoryStatistic {
 
 	this.SystemStatistic = newSystemStatistic("Memory")
 
-	this.UpdateMemoryUsage()
-	this.ProgressOption = options.NewProgressOption(this.Title(), "", this.MemoryUsageAsDecimalFraction())
+	this.updateMemoryUsage()
+	this.ProgressOption = options.NewProgressOption(this.title(), "", this.memoryUsageAsDecimalFraction())
 
 	glib.TimeoutAdd(3000, func() bool {
-		this.UpdateMemoryUsage()
-		this.UpdateWidget()
+		this.updateMemoryUsage()
+		this.updateWidget()
 		return true
 	})
 
 	return &this
 }
 
-func (this *MemoryStatistic) UpdateMemoryUsage() {
+func (this *MemoryStatistic) updateMemoryUsage() {
 	v, _ := mem.VirtualMemory()
 	this.memoryUsageInPercent = v.UsedPercent
 }
 
-func (this MemoryStatistic) UpdateWidget() {
-	this.SetTitle(this.Title())
-	this.SetProgress(this.MemoryUsageAsDecimalFraction())
+func (this MemoryStatistic) updateWidget() {
+	this.SetTitle(this.title())
+	this.SetProgress(this.memoryUsageAsDecimalFraction())
 }
 
-func (this MemoryStatistic) Title() string {
-	return fmt.Sprintf("%s %d%%", this.name, int(this.MemoryUsageInPercent()))
+func (this MemoryStatistic) title() string {
+	return fmt.Sprintf("%s %d%%", this.name, int(this.memoryUsageAsPercent()))
 }
 
-func (this MemoryStatistic) MemoryUsageAsDecimalFraction() float64 {
-	return this.MemoryUsageInPercent() * 0.01
+func (this MemoryStatistic) memoryUsageAsDecimalFraction() float64 {
+	return this.memoryUsageAsPercent() * 0.01
 }
 
-func (this MemoryStatistic) MemoryUsageInPercent() float64 {
+func (this MemoryStatistic) memoryUsageAsPercent() float64 {
 	return this.memoryUsageInPercent
 }

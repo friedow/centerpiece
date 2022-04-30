@@ -4,7 +4,7 @@ import (
 	system_monitor "friedow/tucan-search/plugins/system-monitor"
 )
 
-func NewSystemMonitorPluginOptions() []PluginOption {
+func newSystemMonitorPluginOptions() []PluginOption {
 	systemStatistics := []PluginOption{}
 
 	if system_monitor.DeviceHasBattery() {

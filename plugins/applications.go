@@ -13,8 +13,8 @@ import (
 	"github.com/rkoesters/xdg/desktop"
 )
 
-func NewApplicationsPluginOptions() []PluginOption {
-	applications := []*Application{}
+func newApplicationsPluginOptions() []PluginOption {
+	applications := []*application{}
 
 	for _, dataDir := range basedir.DataDirs {
 		err := filepath.WalkDir(dataDir+"/applications", func(path string, info fs.DirEntry, _ error) error {
@@ -29,7 +29,7 @@ func NewApplicationsPluginOptions() []PluginOption {
 
 			reader := bufio.NewReader(file)
 			desktopEntry, _ := desktop.New(reader)
-			application := NewApplication(desktopEntry.Name, path)
+			application := newApplication(desktopEntry.Name, path)
 			applications = append(applications, application)
 
 			return nil
@@ -49,13 +49,13 @@ func NewApplicationsPluginOptions() []PluginOption {
 	return pluginOptions
 }
 
-func filterDuplicateApplications(applications []*Application) []*Application {
-	applicationsMap := map[string]*Application{}
+func filterDuplicateApplications(applications []*application) []*application {
+	applicationsMap := map[string]*application{}
 	for _, application := range applications {
 		applicationsMap[application.title] = application
 	}
 
-	uniqueApplications := []*Application{}
+	uniqueApplications := []*application{}
 	for _, application := range applicationsMap {
 		uniqueApplications = append(uniqueApplications, application)
 	}
@@ -63,17 +63,17 @@ func filterDuplicateApplications(applications []*Application) []*Application {
 	return uniqueApplications
 }
 
-type Application struct {
+type application struct {
 	*options.TextOption
 
 	title string
 	path  string
 }
 
-var _ PluginOption = Application{}
+var _ PluginOption = application{}
 
-func NewApplication(title string, path string) *Application {
-	this := Application{}
+func newApplication(title string, path string) *application {
+	this := application{}
 
 	this.TextOption = options.NewTextOption(title, "Enter to launch")
 
@@ -83,14 +83,14 @@ func NewApplication(title string, path string) *Application {
 	return &this
 }
 
-func (this Application) PluginName() string {
+func (this application) PluginName() string {
 	return "Applications"
 }
 
-func (this Application) OnActivate() {
+func (this application) OnActivate() {
 	exec.Command("xdg-open", this.path).Run()
 }
 
-func (this Application) IsVisible(queryPart string) bool {
+func (this application) IsVisible(queryPart string) bool {
 	return strings.Contains(strings.ToLower(this.title), queryPart)
 }

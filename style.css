@@ -62,6 +62,10 @@ window {
     border-color: @highlight-background;
 }
 
+.text-option .title {
+    margin-right: 2rem;
+}
+
 .progress-option progressbar {
     margin-top: 0.3rem;
 }

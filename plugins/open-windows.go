@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"friedow/tucan-search/components/options"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -74,6 +75,7 @@ func (this openWindow) PluginName() string {
 func (this openWindow) OnActivate() {
 	focusWindowArgument := fmt.Sprintf("[con_id=%d] focus", this.id)
 	exec.Command("i3-msg", focusWindowArgument).Run()
+	os.Exit(0)
 }
 
 func (this openWindow) IsVisible(queryPart string) bool {

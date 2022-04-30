@@ -77,6 +77,7 @@ func (this gitRepository) PluginName() string {
 
 func (this gitRepository) OnActivate() {
 	exec.Command("code", this.path).Output()
+	os.Exit(0)
 }
 
 func (this gitRepository) IsVisible(queryPart string) bool {

@@ -2,6 +2,7 @@ package components
 
 import (
 	"friedow/tucan-search/plugins"
+	"os"
 	"strings"
 
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
@@ -49,12 +50,16 @@ func (this *OptionList) OnKeyPress(keyVal uint) bool {
 		return true
 	}
 
+	if keyVal == gdk.KEY_Escape {
+		os.Exit(0)
+		return true
+	}
+
 	this.optionList.InvalidateFilter()
 	return false
 }
 
 func (this *OptionList) OnActivate() {
-
 	row := this.optionList.SelectedRow()
 	this.pluginOption(row).OnActivate()
 }

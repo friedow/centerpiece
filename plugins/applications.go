@@ -89,6 +89,7 @@ func (this application) PluginName() string {
 
 func (this application) OnActivate() {
 	exec.Command("xdg-open", this.path).Run()
+	os.Exit(0)
 }
 
 func (this application) IsVisible(queryPart string) bool {

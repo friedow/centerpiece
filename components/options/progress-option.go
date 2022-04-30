@@ -15,7 +15,7 @@ func NewProgressOption(title string, action string, progress float64) *ProgressO
 	this.textOption = NewTextOption(title, action)
 
 	this.progressBar = gtk.NewProgressBar()
-	this.progressBar.SetPulseStep(progress)
+	this.SetProgress(progress)
 
 	this.Box = gtk.NewBox(gtk.OrientationVertical, 0)
 	this.Append(this.textOption)

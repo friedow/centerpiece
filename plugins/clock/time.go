@@ -33,5 +33,5 @@ func (this Time) update() {
 
 func (this Time) title() string {
 	hour, minute, second := time.Now().Clock()
-	return fmt.Sprintf("%d:%d:%d", hour, minute, second)
+	return fmt.Sprintf("%02d:%02d:%02d", hour, minute, second)
 }

@@ -17,5 +17,6 @@ func PluginOptions() []PluginOption {
 	pluginOptions = append(pluginOptions, newOpenWindowsPluginOptions()...)
 	pluginOptions = append(pluginOptions, newApplicationsPluginOptions()...)
 	pluginOptions = append(pluginOptions, newGitRepositoriesPluginOptions()...)
+	// newNetworkManagerPluginOptions()
 	return pluginOptions
 }

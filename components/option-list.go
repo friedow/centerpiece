@@ -22,6 +22,13 @@ type OptionList struct {
 func NewOptionList() *OptionList {
 	this := OptionList{}
 
+	this.ScrolledWindow = gtk.NewScrolledWindow()
+	this.Render()
+
+	return &this
+}
+
+func (this *OptionList) Render() {
 	this.optionList.ListBox = gtk.NewListBox()
 	this.optionList.SetHeaderFunc(this.setHeader)
 	this.optionList.AddCSSClass("option-list")
@@ -33,10 +40,7 @@ func NewOptionList() *OptionList {
 
 	this.selectFirstRow()
 
-	this.ScrolledWindow = gtk.NewScrolledWindow()
 	this.SetChild(this.optionList)
-
-	return &this
 }
 
 func (this *OptionList) OnKeyPress(keyVal uint) bool {

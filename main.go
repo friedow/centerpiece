@@ -36,7 +36,7 @@ func activate(app *gtk.Application) {
 	window.SetModal(true)
 
 	searchView := views.NewSearchView()
-	window.SetChild(searchView.Box)
+	window.SetChild(searchView)
 
 	window.Show()
 }

@@ -16,8 +16,14 @@ import (
 func newApplicationsPluginOptions() []PluginOption {
 	applications := []*application{}
 
-	for _, dataDir := range basedir.DataDirs {
-		err := filepath.WalkDir(dataDir+"/applications", func(path string, info fs.DirEntry, _ error) error {
+	appDirs := basedir.DataDirs
+	for i := 0; i < len(appDirs); i++ {
+		appDirs[i], _ = filepath.EvalSymlinks(appDirs[i] + "/applications")
+	}
+
+	for _, dataDir := range appDirs {
+		err := filepath.WalkDir(dataDir, func(path string, info fs.DirEntry, _ error) error {
+			log.Print(path)
 			if !strings.HasSuffix(path, ".desktop") {
 				return nil
 			}

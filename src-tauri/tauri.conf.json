@@ -12,7 +12,10 @@
   },
   "tauri": {
     "allowlist": {
-      "all": true
+      "all": true,
+      "globalShortcut": {
+        "all": true
+      }
     },
     "bundle": {
       "active": true,
@@ -57,13 +60,12 @@
       {
         "fullscreen": false,
         "height": 600,
-        "resizable": true,
         "title": "search.friedow.com",
         "width": 800,
         "center": true,
         "alwaysOnTop": true,
         "transparent": true,
-        "maximized": true
+        "visible": false
       }
     ]
   }

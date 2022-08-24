@@ -1,4 +1,10 @@
 <script setup lang="ts">
+import { appWindow } from "@tauri-apps/api/window";
+import {
+  register,
+  isRegistered,
+  unregister,
+} from "@tauri-apps/api/globalShortcut";
 import { ref, onMounted } from "vue";
 
 const listItems = [
@@ -52,8 +58,18 @@ function increaseActiveListItemIndex() {
 }
 
 onMounted(() => {
+  registerGlobalShortcut();
   trapFocusInSearchbar();
 });
+
+async function registerGlobalShortcut() {
+  if (await isRegistered("Super+Space")) unregister("Super+Space");
+
+  register("Super+Space", async () => {
+    if (await appWindow.isVisible()) appWindow.hide();
+    else appWindow.show();
+  });
+}
 
 function trapFocusInSearchbar() {
   const searchBar = document.getElementById("search-bar");
@@ -66,14 +82,15 @@ function trapFocusInSearchbar() {
   });
 }
 
-const searchString = ref("")
+const searchString = ref("");
 
 function filteredListItems() {
-  return listItems.filter(listItem => {
-    return listItem.title.toLowerCase().includes(searchString.value.toLowerCase())
-  })
+  return listItems.filter((listItem) => {
+    return listItem.title
+      .toLowerCase()
+      .includes(searchString.value.toLowerCase());
+  });
 }
-
 </script>
 
 <!-- ⎇⌘⌃⇧⌥ -->
@@ -98,6 +115,7 @@ function filteredListItems() {
         class="flex-1 py-2 pl-11 pr-4 bg-transparent text-white w-full"
         @keydown.up="decreaseActiveListItemIndex"
         @keydown.down="increaseActiveListItemIndex"
+        @keydown.esc="appWindow.hide"
         v-model="searchString"
         autofocus
       />

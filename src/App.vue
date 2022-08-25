@@ -45,6 +45,19 @@ const listItems = [
   },
 ];
 
+const plugins = [
+  {
+    name: "Apps",
+    icon: "rocket",
+    items: listItems,
+  },
+  {
+    name: "Open Windows",
+    icon: "rocket",
+    items: listItems,
+  },
+];
+
 const activeListItemIndex = ref(0);
 
 function decreaseActiveListItemIndex() {

@@ -59,13 +59,15 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 500,
         "title": "search.friedow.com",
-        "width": 800,
+        "width": 700,
         "center": true,
         "alwaysOnTop": true,
         "transparent": true,
-        "visible": false
+        "visible": false,
+        "resizable": true,
+        "maximized": true
       }
     ]
   }

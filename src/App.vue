@@ -5,7 +5,23 @@ import {
   isRegistered,
   unregister,
 } from "@tauri-apps/api/globalShortcut";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, Ref, nextTick, computed } from "vue";
+import SearchBar from "./components/SearchBar.vue";
+import ItemGroup from "./components/ItemGroup.vue";
+import ListItem from "./components/ListItem.vue";
+
+interface IPlugin {
+  name: string;
+  items: IListItem[];
+}
+
+interface IListItem {
+  title: string;
+  action: {
+    keys: string[];
+    text: string;
+  };
+}
 
 const listItems = [
   {
@@ -18,7 +34,7 @@ const listItems = [
   {
     title: "Brave",
     action: {
-      keys: ["↵"],
+      keys: ["⌘"],
       text: "open",
     },
   },
@@ -45,7 +61,7 @@ const listItems = [
   },
 ];
 
-const plugins = [
+const itemGroups = [
   {
     name: "Apps",
     icon: "rocket",
@@ -53,26 +69,24 @@ const plugins = [
   },
   {
     name: "Open Windows",
-    icon: "rocket",
+    icon: "window-maximize",
+    items: listItems,
+  },
+  {
+    name: "Open Windows",
+    icon: "window-maximize",
+    items: listItems,
+  },
+  {
+    name: "Open Windows",
+    icon: "window-maximize",
     items: listItems,
   },
 ];
 
-const activeListItemIndex = ref(0);
-
-function decreaseActiveListItemIndex() {
-  if (activeListItemIndex.value <= 0) return;
-  activeListItemIndex.value--;
-}
-
-function increaseActiveListItemIndex() {
-  if (activeListItemIndex.value >= listItems.length - 1) return;
-  activeListItemIndex.value++;
-}
-
 onMounted(() => {
   registerGlobalShortcut();
-  trapFocusInSearchbar();
+  activateFirstListItem();
 });
 
 async function registerGlobalShortcut() {
@@ -84,88 +98,61 @@ async function registerGlobalShortcut() {
   });
 }
 
-function trapFocusInSearchbar() {
-  const searchBar = document.getElementById("search-bar");
-
-  if (!searchBar) return;
-  searchBar.addEventListener("focusout", () => {
-    setTimeout(() => {
-      searchBar.focus();
-    }, 0);
-  });
-}
 
 const searchString = ref("");
 
-function filteredListItems() {
-  return listItems.filter((listItem) => {
-    return listItem.title
-      .toLowerCase()
-      .includes(searchString.value.toLowerCase());
-  });
+// start: handling of active list items //
+
+const itemGroupRefs: Ref<InstanceType<typeof ItemGroup>[]> = ref([]);
+const activeListItemIndex = ref(0);
+
+function allListItems(): InstanceType<typeof ListItem>[] {
+  return itemGroupRefs.value.flatMap(itemGroupRef => itemGroupRef.getListItemRefs().value);
 }
+
+function resetActiveListItem() {
+  allListItems().forEach(listItem => listItem.deactivate());
+}
+
+async function activateFirstListItem() {
+  resetActiveListItem();
+  await nextTick();
+
+  if (allListItems().length === 0) return;
+
+  activeListItemIndex.value = 0
+  allListItems()[activeListItemIndex.value].activate();
+}
+
+function activatePreviousListItem() {
+  if ((activeListItemIndex.value - 1) < 0) return;
+
+  resetActiveListItem();
+  activeListItemIndex.value--;
+  allListItems()[activeListItemIndex.value].activate();
+}
+
+function activateNextListItem() {
+  if ((activeListItemIndex.value + 1) >= allListItems().length) return;
+
+  resetActiveListItem();
+  activeListItemIndex.value++;
+  allListItems()[activeListItemIndex.value].activate();
+}
+
+// end: handling of active list items //
+
 </script>
 
 <!-- ⎇⌘⌃⇧⌥ -->
 
 <template>
-  <main class="bg-zinc-900 text-white">
-    <div class="border-b-1 border-zinc-700 relative">
-      <font-awesome-icon
-        icon="fa-solid fa-magnifying-glass"
-        class="
-          absolute
-          mt-3
-          ml-4
-          text-base
-          mb-0.5
-          pointer-events-none
-          text-zinc-500
-        "
-      />
-      <input
-        id="search-bar"
-        class="flex-1 py-2 pl-11 pr-4 bg-transparent text-white w-full"
-        @keydown.up="decreaseActiveListItemIndex"
-        @keydown.down="increaseActiveListItemIndex"
-        @keydown.esc="appWindow.hide"
-        v-model="searchString"
-        autofocus
-      />
-    </div>
-    <ul class="pointer-events-none">
-      <li
-        v-for="(listItem, listItemIndex) in filteredListItems()"
-        :key="listItemIndex"
-        class="flex justify-between items-center py-1.5 px-4"
-        :class="{ 'bg-zinc-800': activeListItemIndex === listItemIndex }"
-      >
-        <span>{{ listItem.title }}</span>
-        <div
-          class="text-xs flex gap-1 items-center"
-          :class="{
-            visible: activeListItemIndex === listItemIndex,
-            invisible: activeListItemIndex !== listItemIndex,
-          }"
-        >
-          <div
-            v-for="key in listItem.action.keys"
-            :key="key"
-            class="
-              border-1
-              rounded-sm
-              w-3.5
-              h-3.5
-              flex
-              justify-center
-              items-center
-            "
-          >
-            {{ key }}
-          </div>
-          <span>{{ listItem.action.text }}</span>
-        </div>
-      </li>
+  <main class="bg-zinc-900 text-white font-mono flex flex-col max-h-full px-5 pt-3">
+    <SearchBar v-model="searchString" @keydown.up="activatePreviousListItem" @keydown.down="activateNextListItem"
+      @update:model-value="activateFirstListItem" />
+    <ul class="pointer-events-none overflow-y-auto pb-3">
+      <ItemGroup v-for="(itemGroup, itemGroupIndex) in itemGroups" :key="itemGroupIndex" :item-group="itemGroup"
+        :search-string="searchString" ref="itemGroupRefs" />
     </ul>
   </main>
 </template>

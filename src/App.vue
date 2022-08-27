@@ -9,6 +9,7 @@ import { ref, onMounted, Ref, nextTick, computed } from "vue";
 import SearchBar from "./components/SearchBar.vue";
 import ItemGroup from "./components/ItemGroup.vue";
 import ListItem from "./components/ListItem.vue";
+import { faL } from "@fortawesome/free-solid-svg-icons";
 
 interface IPlugin {
   name: string;
@@ -105,6 +106,7 @@ const searchString = ref("");
 
 const itemGroupRefs: Ref<InstanceType<typeof ItemGroup>[]> = ref([]);
 const activeListItemIndex = ref(0);
+const isNoResultsTextVisible = ref(false);
 
 function allListItems(): InstanceType<typeof ListItem>[] {
   return itemGroupRefs.value.flatMap(itemGroupRef => itemGroupRef.getListItemRefs().value);
@@ -118,8 +120,12 @@ async function activateFirstListItem() {
   resetActiveListItem();
   await nextTick();
 
-  if (allListItems().length === 0) return;
+  if (allListItems().length === 0) {
+    isNoResultsTextVisible.value = true;
+    return;
+  };
 
+  isNoResultsTextVisible.value = false;
   activeListItemIndex.value = 0
   allListItems()[activeListItemIndex.value].activate();
 }
@@ -153,6 +159,14 @@ function activateNextListItem() {
     <ul class="pointer-events-none overflow-y-auto pb-3">
       <ItemGroup v-for="(itemGroup, itemGroupIndex) in itemGroups" :key="itemGroupIndex" :item-group="itemGroup"
         :search-string="searchString" ref="itemGroupRefs" />
+      
+      <ListItem v-if="isNoResultsTextVisible" :list-item="{
+        title: `No results for: ${searchString}`,
+        action: {
+          keys: [],
+          text: '',
+        }
+      }" class="pt-5 text-zinc-400" />
     </ul>
   </main>
 </template>

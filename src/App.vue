@@ -5,11 +5,11 @@ import {
   isRegistered,
   unregister,
 } from "@tauri-apps/api/globalShortcut";
-import { ref, onMounted, Ref, nextTick, computed } from "vue";
+import { ref, onMounted, Ref, nextTick } from "vue";
 import SearchBar from "./components/SearchBar.vue";
 import ItemGroup from "./components/ItemGroup.vue";
 import ListItem from "./components/ListItem.vue";
-import { faL } from "@fortawesome/free-solid-svg-icons";
+import ApplicationsPlugin from "./plugins/applications";
 
 interface IPlugin {
   name: string;
@@ -88,6 +88,7 @@ const itemGroups = [
 onMounted(() => {
   registerGlobalShortcut();
   activateFirstListItem();
+  ApplicationsPlugin.getItemGroup();
 });
 
 async function registerGlobalShortcut() {

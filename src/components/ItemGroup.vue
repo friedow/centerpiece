@@ -2,7 +2,7 @@
 import { ref, Ref } from 'vue';
 import ListItem, { IListItem } from './ListItem.vue';
 
-interface IItemGroup {
+export interface IItemGroup {
   name: string;
   icon: string;
   items: IListItem[];

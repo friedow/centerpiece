@@ -21,6 +21,8 @@ tauri = { version = "1.0.5", features = ["api-all"] }
 
 # business logic dependencies
 walkdir = "2"
+lazy_static = "1.4.0"
+regex = "1.6.0"
 
 [features]
 # by default Tauri runs in production mode

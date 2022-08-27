@@ -1,25 +1,20 @@
 import { invoke } from '@tauri-apps/api/tauri'
 import { IItemGroup } from '../components/ItemGroup.vue';
-import { IListItem } from '../components/ListItem.vue';
 
 export default class ApplicationsPlugin {
-    public static async getItemGroup(): Promise<IItemGroup> {
+    public isLoading = true;
+    public itemGroup: IItemGroup | null = null;
 
-        
-        const output = await invoke('get_desktop_files');
-        console.log(output);
-    
-    
-    
-        const applications: IListItem[] = [
-    
-        ];
-    
-        return {
-            name: "Apps",
-            icon: "rocket",
-            items: applications,
-        }
+    public getItemGroup(): IItemGroup | null {
+        return this.itemGroup;
+    }
+
+    public initialize() {
+        this.loadData();
+    }
+
+    public async loadData() {
+        this.itemGroup = await invoke('get_applications_group');
+        this.isLoading = false;
     }
 }
-

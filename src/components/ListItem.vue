@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { open } from '@tauri-apps/api/shell';
 
 export interface IListItem {
     title: string;
     action: {
         keys: string[];
         text: string;
+        command: string[];
+        open: string;
     };
 }
 
@@ -23,9 +26,17 @@ function deactivate() {
     isActive.value = false;
 }
 
+async function executeAction() {
+    console.log(props.listItem)
+    if (props.listItem.action.open !== "") {
+        await open(props.listItem.action.open);
+    }
+}
+
 defineExpose({
   activate,
   deactivate,
+  executeAction,
 })
 </script>
 

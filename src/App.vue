@@ -5,90 +5,25 @@ import {
   isRegistered,
   unregister,
 } from "@tauri-apps/api/globalShortcut";
-import { ref, onMounted, Ref, nextTick } from "vue";
+import { ref, onMounted, Ref, nextTick, reactive, computed } from "vue";
 import SearchBar from "./components/SearchBar.vue";
-import ItemGroup from "./components/ItemGroup.vue";
+import ItemGroup, { IItemGroup } from "./components/ItemGroup.vue";
 import ListItem from "./components/ListItem.vue";
 import ApplicationsPlugin from "./plugins/applications";
 
-interface IPlugin {
-  name: string;
-  items: IListItem[];
-}
+const plugins = reactive([new ApplicationsPlugin()]);
 
-interface IListItem {
-  title: string;
-  action: {
-    keys: string[];
-    text: string;
-  };
-}
+const itemGroups = computed((): IItemGroup[] => {
+  activateFirstListItem();
+  return plugins
+    .map(plugin => plugin.getItemGroup())
+    .filter(itemGroup => !!itemGroup) as IItemGroup[]
+});
 
-const listItems = [
-  {
-    title: "Alacritty",
-    action: {
-      keys: ["↵"],
-      text: "open",
-    },
-  },
-  {
-    title: "Brave",
-    action: {
-      keys: ["⌘"],
-      text: "open",
-    },
-  },
-  {
-    title: "VS Code",
-    action: {
-      keys: ["↵"],
-      text: "open",
-    },
-  },
-  {
-    title: "XFCE Settings",
-    action: {
-      keys: ["↵"],
-      text: "open",
-    },
-  },
-  {
-    title: "Firefox",
-    action: {
-      keys: ["↵"],
-      text: "open",
-    },
-  },
-];
-
-const itemGroups = [
-  {
-    name: "Apps",
-    icon: "rocket",
-    items: listItems,
-  },
-  {
-    name: "Open Windows",
-    icon: "window-maximize",
-    items: listItems,
-  },
-  {
-    name: "Open Windows",
-    icon: "window-maximize",
-    items: listItems,
-  },
-  {
-    name: "Open Windows",
-    icon: "window-maximize",
-    items: listItems,
-  },
-];
 
 onMounted(() => {
   registerGlobalShortcut();
-  activateFirstListItem();
-  ApplicationsPlugin.getItemGroup();
+  initializePlugins();
 });
 
 async function registerGlobalShortcut() {
@@ -98,6 +33,10 @@ async function registerGlobalShortcut() {
     if (await appWindow.isVisible()) appWindow.hide();
     else appWindow.show();
   });
+}
+
+function initializePlugins() {
+  plugins.forEach(plugin => plugin.initialize());
 }
 
 
@@ -147,6 +86,11 @@ function activateNextListItem() {
   allListItems()[activeListItemIndex.value].activate();
 }
 
+function executeActiveListItemAction() {
+  console.log('hello');
+  allListItems()[activeListItemIndex.value].executeAction();
+}
+
 // end: handling of active list items //
 
 </script>
@@ -156,16 +100,18 @@ function activateNextListItem() {
 <template>
   <main class="bg-zinc-900 text-white font-mono flex flex-col max-h-full px-5 pt-3">
     <SearchBar v-model="searchString" @keydown.up="activatePreviousListItem" @keydown.down="activateNextListItem"
-      @update:model-value="activateFirstListItem" />
+      @keydown.enter="executeActiveListItemAction" @update:model-value="activateFirstListItem" />
     <ul class="pointer-events-none overflow-y-auto pb-3">
       <ItemGroup v-for="(itemGroup, itemGroupIndex) in itemGroups" :key="itemGroupIndex" :item-group="itemGroup"
         :search-string="searchString" ref="itemGroupRefs" />
-      
+
       <ListItem v-if="isNoResultsTextVisible" :list-item="{
         title: `No results for: ${searchString}`,
         action: {
           keys: [],
           text: '',
+          open: '',
+          command: [],
         }
       }" class="pt-5 text-zinc-400" />
     </ul>

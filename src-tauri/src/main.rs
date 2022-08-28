@@ -89,8 +89,6 @@ fn to_list_item(desktop_file_path: String) -> Option<ListItem> {
     });
     if desktop_entry_type_application_promise.is_none() { return None; }
 
-    println!("{desktop_file_contents}");
-
     return Some(ListItem {
         title: desktop_entry_name,
         action: ListItemAction {

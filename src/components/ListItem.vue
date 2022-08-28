@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { open } from '@tauri-apps/api/shell';
+import { appWindow } from "@tauri-apps/api/window";
 
 export interface IListItem {
     title: string;
@@ -27,8 +28,8 @@ function deactivate() {
 }
 
 async function executeAction() {
-    console.log(props.listItem.action.open)
     if (props.listItem.action.open !== "") {
+        appWindow.hide();
         await open(props.listItem.action.open);
     }
 }

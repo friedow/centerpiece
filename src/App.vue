@@ -87,7 +87,6 @@ function activateNextListItem() {
 }
 
 function executeActiveListItemAction() {
-  console.log('hello');
   allListItems()[activeListItemIndex.value].executeAction();
 }
 

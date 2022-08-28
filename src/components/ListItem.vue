@@ -27,7 +27,7 @@ function deactivate() {
 }
 
 async function executeAction() {
-    console.log(props.listItem)
+    console.log(props.listItem.action.open)
     if (props.listItem.action.open !== "") {
         await open(props.listItem.action.open);
     }

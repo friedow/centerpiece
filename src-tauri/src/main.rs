@@ -57,44 +57,64 @@ fn get_desktop_file_paths() -> Vec<String> {
     return desktop_file_paths;
 }
 
-fn to_list_item(desktop_file_path: String) -> ListItem {
+fn to_list_item(desktop_file_path: String) -> Option<ListItem> {
     let desktop_file_contents = fs::read_to_string(&desktop_file_path).unwrap();
-    println!("{desktop_file_contents}");
 
     lazy_static! {
-      static ref NAME_REGEX: Regex = Regex::new(r"Name=(.*)").unwrap();
-      static ref EXEC_REGEX: Regex = Regex::new(r"Exec=(.*)").unwrap();
+      static ref NAME_REGEX: Regex = Regex::new(r"\nName=(.*)").unwrap();
+      static ref EXEC_REGEX: Regex = Regex::new(r"\nExec=(.*)").unwrap();
+      static ref NO_DISPLAY_REGEX: Regex = Regex::new(r"\n(NoDisplay=true|Hidden=true)").unwrap();
+
+      static ref TYPE_APPLICATION_REGEX: Regex = Regex::new(r"\n(Type=Application)").unwrap();
     }
 
-    let desktop_entry_name = NAME_REGEX.captures(&desktop_file_contents).and_then(|cap| {
+    let desktop_entry_name_promise = NAME_REGEX.captures(&desktop_file_contents).and_then(|cap| {
         return cap.get(1).map(|name| name.as_str().to_string());
-    }).unwrap_or("===No Title Found===".to_string());
+    });
+    if desktop_entry_name_promise.is_none() { return None; }
+    let desktop_entry_name = desktop_entry_name_promise.unwrap();
 
-    let desktop_entry_exec = EXEC_REGEX.captures(&desktop_file_contents).and_then(|cap| {
+    let desktop_entry_exec_promise = EXEC_REGEX.captures(&desktop_file_contents).and_then(|cap| {
         return cap.get(1).map(|exec| exec.as_str().to_string());
-    }).unwrap_or("".to_string());
+    });
+    if desktop_entry_exec_promise.is_none() { return None; }
 
-    println!("{desktop_entry_exec}");
+    let desktop_entry_no_display_promise = NO_DISPLAY_REGEX.captures(&desktop_file_contents).and_then(|captures| {
+        return captures.get(1).map(|capture| capture.as_str().to_string());
+    });
+    if desktop_entry_no_display_promise.is_some() { return None; }
 
-    return ListItem {
+    let desktop_entry_type_application_promise = TYPE_APPLICATION_REGEX.captures(&desktop_file_contents).and_then(|captures| {
+        return captures.get(1).map(|capture| capture.as_str().to_string());
+    });
+    if desktop_entry_type_application_promise.is_none() { return None; }
+
+    println!("{desktop_file_contents}");
+
+    return Some(ListItem {
         title: desktop_entry_name,
         action: ListItemAction {
             keys: vec!["↵".into()],
-            text: "Open".into(),
-            open: desktop_entry_exec,
+            text: "open".into(),
+            open: desktop_file_path,
             command: Vec::new(),
         },
-    };
+    });
 }
 
 #[tauri::command]
 fn get_applications_group() -> ItemGroup {
     let desktop_file_paths = get_desktop_file_paths();
-    let list_items: Vec<ListItem> = desktop_file_paths
+    let mut list_items: Vec<ListItem> = desktop_file_paths
         .into_iter()
         .map(to_list_item)
+        .filter(|list_item_option| list_item_option.is_some())
+        .map(|list_item_option| list_item_option.unwrap())
         .rev()
         .collect();
+    
+    list_items.sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase()));
+    list_items.dedup_by(|a, b| a.title.to_lowercase().eq(&b.title.to_lowercase()));
 
     return ItemGroup {
         name: "Apps".into(),

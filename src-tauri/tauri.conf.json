@@ -20,7 +20,7 @@
         "all": true,
         "execute": true,
         "sidecar": true,
-        "open": true
+        "open": ".*"
       }
     },
     "bundle": {

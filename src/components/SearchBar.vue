@@ -24,6 +24,11 @@ function trapFocusInSearchbar() {
     }, 0);
   });
 }
+
+function bubbleInputEvent(event: Event) {
+  const target = event.target as HTMLInputElement;
+  emit('update:modelValue', target.value);
+}
 </script>
 
 <template>
@@ -45,7 +50,7 @@ function trapFocusInSearchbar() {
       class="flex-1 py-2 pl-11 pr-4 bg-transparent text-white w-full"
       :value="modelValue"
       @keydown.esc="appWindow.hide"
-      @input="$emit('update:modelValue', $event.target.value)"
+      @input="bubbleInputEvent"
       autofocus
     />
   </div>

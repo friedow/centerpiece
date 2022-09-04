@@ -47,6 +47,7 @@ const searchString = ref("");
 const itemGroupRefs: Ref<InstanceType<typeof ItemGroup>[]> = ref([]);
 const activeListItemIndex = ref(0);
 const isNoResultsTextVisible = ref(false);
+const activeItem = computed(() => allListItems()[activeListItemIndex.value]);
 
 function allListItems(): InstanceType<typeof ListItem>[] {
   return itemGroupRefs.value.flatMap(itemGroupRef => itemGroupRef.getListItemRefs().value);
@@ -67,7 +68,7 @@ async function activateFirstListItem() {
 
   isNoResultsTextVisible.value = false;
   activeListItemIndex.value = 0
-  allListItems()[activeListItemIndex.value].activate();
+  activeItem.value.activate();
 }
 
 function activatePreviousListItem() {
@@ -75,7 +76,7 @@ function activatePreviousListItem() {
 
   resetActiveListItem();
   activeListItemIndex.value--;
-  allListItems()[activeListItemIndex.value].activate();
+  activeItem.value.activate();
 }
 
 function activateNextListItem() {
@@ -83,11 +84,15 @@ function activateNextListItem() {
 
   resetActiveListItem();
   activeListItemIndex.value++;
-  allListItems()[activeListItemIndex.value].activate();
+  activeItem.value.activate();
 }
 
+
+
 function executeActiveListItemAction() {
-  allListItems()[activeListItemIndex.value].executeAction();
+  if(!activeItem.value.hasAction) return;
+  activeItem.value.executeAction();
+  searchString.value = "";
 }
 
 // end: handling of active list items //

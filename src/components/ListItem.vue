@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { open } from '@tauri-apps/api/shell';
 import { appWindow } from "@tauri-apps/api/window";
+import { computed } from '@vue/reactivity';
 
 export interface IListItem {
     title: string;
@@ -27,16 +28,18 @@ function deactivate() {
     isActive.value = false;
 }
 
+const hasAction = computed(() => props.listItem.action.open !== "");
+
 async function executeAction() {
-    if (props.listItem.action.open !== "") {
-        appWindow.hide();
-        await open(props.listItem.action.open);
-    }
+    if (!hasAction.value) return;
+    appWindow.hide();
+    await open(props.listItem.action.open);
 }
 
 defineExpose({
   activate,
   deactivate,
+  hasAction,
   executeAction,
 })
 </script>

@@ -121,9 +121,66 @@ fn get_applications_group() -> ItemGroup {
     };
 }
 
+use std::process::Command;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+struct Window {
+    id: i64,
+    name: String,
+    window_type: Option<String>,
+    nodes: Vec<Window>,
+}
+
+impl Window {
+    fn to_list_item(&self) -> ListItem {
+        return ListItem {
+            title: self.name.to_owned(),
+            action: ListItemAction {
+                keys: vec!["↵".into()],
+                text: "switch to".into(),
+                open: "".into(),
+                command: vec![String::from("i3-msg"), format!("[con_id={}]", self.id).into(), String::from("focus")],
+            },
+        }
+    }
+}
+
+
+fn get_windows() -> Vec<Window> {
+    let i3msg_command_output = Command::new("i3-msg")
+        .arg("-t")
+        .arg("get_tree")
+        .output()
+        .expect("failed to execute process");
+    let windows_string = String::from_utf8_lossy(&i3msg_command_output.stdout).into_owned();
+    let windows: Window = serde_json::from_str(windows_string.as_str()).unwrap();
+    return vec![windows];
+}
+
+#[tauri::command]
+fn get_windows_group() -> ItemGroup {
+    let windows = get_windows();
+
+    let mut list_items: Vec<ListItem> = windows
+        .into_iter()
+        .map(|window| window.to_list_item())
+        .rev()
+        .collect();
+    
+    list_items.sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase()));
+    list_items.dedup_by(|a, b| a.title.to_lowercase().eq(&b.title.to_lowercase()));
+
+    return ItemGroup {
+        name: "Windows".into(),
+        icon: "window-maximize".into(),
+        items: list_items,
+    };
+}
+
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_applications_group])
+        .invoke_handler(tauri::generate_handler![get_applications_group, get_windows_group])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

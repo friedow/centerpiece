@@ -10,8 +10,9 @@ import SearchBar from "./components/SearchBar.vue";
 import ItemGroup, { IItemGroup } from "./components/ItemGroup.vue";
 import ListItem from "./components/ListItem.vue";
 import ApplicationsPlugin from "./plugins/applications";
+import WindowsPlugin from "./plugins/windows";
 
-const plugins = reactive([new ApplicationsPlugin()]);
+const plugins = reactive([new ApplicationsPlugin(), new WindowsPlugin()]);
 
 const itemGroups = computed((): IItemGroup[] => {
   activateFirstListItem();

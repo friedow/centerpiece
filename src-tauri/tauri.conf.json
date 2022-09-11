@@ -20,7 +20,14 @@
         "all": true,
         "execute": true,
         "sidecar": true,
-        "open": ".*"
+        "open": ".*",
+        "scope": [
+          {
+            "name": "i3-msg",
+            "cmd": "i3-msg",
+            "args": true
+          }
+        ]
       }
     },
     "bundle": {

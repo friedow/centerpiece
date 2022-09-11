@@ -20,8 +20,14 @@ struct ListItem {
 struct ListItemAction {
     keys: Vec<String>,
     text: String,
-    open: String,
-    command: Vec<String>,
+    open: Option<String>,
+    command: Option<ListItemActionCommand>,
+}
+
+#[derive(serde::Serialize)]
+struct ListItemActionCommand {
+    program: String,
+    args: Vec<String>,
 }
 
 use std::fs;
@@ -94,8 +100,8 @@ fn to_list_item(desktop_file_path: String) -> Option<ListItem> {
         action: ListItemAction {
             keys: vec!["↵".into()],
             text: "open".into(),
-            open: desktop_file_path,
-            command: Vec::new(),
+            open: Some(desktop_file_path),
+            command: None,
         },
     });
 }
@@ -125,48 +131,53 @@ use std::process::Command;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
-struct Window {
+struct WindowTree {
     id: i64,
-    name: String,
+    name: Option<String>,
     window_type: Option<String>,
-    nodes: Vec<Window>,
+    nodes: Vec<WindowTree>,
 }
 
-impl Window {
+impl WindowTree {
     fn to_list_item(&self) -> ListItem {
         return ListItem {
-            title: self.name.to_owned(),
+            title: self.name.to_owned().unwrap_or(String::from("null")),
             action: ListItemAction {
                 keys: vec!["↵".into()],
                 text: "switch to".into(),
-                open: "".into(),
-                command: vec![String::from("i3-msg"), format!("[con_id={}]", self.id).into(), String::from("focus")],
+                open: None,
+                command: Some(ListItemActionCommand {
+                    program: String::from("i3-msg"),
+                    args: vec![format!("[con_id={}]", self.id).into(), String::from("focus")]
+                }),
             },
         }
     }
+
+
+    fn get_list_items(&self) -> Vec<ListItem> {
+        if self.window_type.is_some() && self.name.is_some() {
+            return vec![self.to_list_item()];
+        }
+        return self.nodes.iter().flat_map(|child_window_tree| child_window_tree.get_list_items()).collect();
+    }
 }
 
-
-fn get_windows() -> Vec<Window> {
-    let i3msg_command_output = Command::new("i3-msg")
-        .arg("-t")
-        .arg("get_tree")
-        .output()
-        .expect("failed to execute process");
-    let windows_string = String::from_utf8_lossy(&i3msg_command_output.stdout).into_owned();
-    let windows: Window = serde_json::from_str(windows_string.as_str()).unwrap();
-    return vec![windows];
+fn get_window_tree() -> WindowTree {
+        let i3msg_command_output = Command::new("i3-msg")
+            .arg("-t")
+            .arg("get_tree")
+            .output()
+            .expect("failed to execute process");
+        let window_tree_string = String::from_utf8_lossy(&i3msg_command_output.stdout).into_owned();
+        let window_tree: WindowTree = serde_json::from_str(window_tree_string.as_str()).unwrap();
+        return window_tree;
 }
 
 #[tauri::command]
 fn get_windows_group() -> ItemGroup {
-    let windows = get_windows();
-
-    let mut list_items: Vec<ListItem> = windows
-        .into_iter()
-        .map(|window| window.to_list_item())
-        .rev()
-        .collect();
+    let window_tree = get_window_tree();
+    let mut list_items = window_tree.get_list_items();
     
     list_items.sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase()));
     list_items.dedup_by(|a, b| a.title.to_lowercase().eq(&b.title.to_lowercase()));

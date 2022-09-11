@@ -12,10 +12,9 @@ import ListItem from "./components/ListItem.vue";
 import ApplicationsPlugin from "./plugins/applications";
 import WindowsPlugin from "./plugins/windows";
 
-const plugins = reactive([new ApplicationsPlugin(), new WindowsPlugin()]);
+const plugins = reactive([new WindowsPlugin(), new ApplicationsPlugin()]);
 
 const itemGroups = computed((): IItemGroup[] => {
-  activateFirstListItem();
   return plugins
     .map(plugin => plugin.getItemGroup())
     .filter(itemGroup => !!itemGroup) as IItemGroup[]
@@ -23,6 +22,7 @@ const itemGroups = computed((): IItemGroup[] => {
 
 
 onMounted(() => {
+  activateFirstListItem();
   registerGlobalShortcut();
   initializePlugins();
 });
@@ -32,8 +32,14 @@ async function registerGlobalShortcut() {
 
   register("Super+Space", async () => {
     if (await appWindow.isVisible()) appWindow.hide();
-    else appWindow.show();
+    else showWindow();
   });
+}
+
+async function showWindow(): Promise<void> {
+  console.log('hello')
+  await activateFirstListItem();
+  await appWindow.show();
 }
 
 function initializePlugins() {
@@ -48,10 +54,13 @@ const searchString = ref("");
 const itemGroupRefs: Ref<InstanceType<typeof ItemGroup>[]> = ref([]);
 const activeListItemIndex = ref(0);
 const isNoResultsTextVisible = ref(false);
-const activeItem = computed(() => allListItems()[activeListItemIndex.value]);
 
 function allListItems(): InstanceType<typeof ListItem>[] {
   return itemGroupRefs.value.flatMap(itemGroupRef => itemGroupRef.getListItemRefs().value);
+}
+
+function activeItem() {
+  return allListItems()[activeListItemIndex.value];
 }
 
 function resetActiveListItem() {
@@ -69,7 +78,8 @@ async function activateFirstListItem() {
 
   isNoResultsTextVisible.value = false;
   activeListItemIndex.value = 0
-  activeItem.value.activate();
+  await nextTick();
+  activeItem().activate();
 }
 
 function activatePreviousListItem() {
@@ -77,7 +87,7 @@ function activatePreviousListItem() {
 
   resetActiveListItem();
   activeListItemIndex.value--;
-  activeItem.value.activate();
+  activeItem().activate();
 }
 
 function activateNextListItem() {
@@ -85,14 +95,14 @@ function activateNextListItem() {
 
   resetActiveListItem();
   activeListItemIndex.value++;
-  activeItem.value.activate();
+  activeItem().activate();
 }
 
 
 
 function executeActiveListItemAction() {
-  if(!activeItem.value.hasAction) return;
-  activeItem.value.executeAction();
+  if(!activeItem().hasAction) return;
+  activeItem().executeAction();
   searchString.value = "";
 }
 
@@ -115,8 +125,8 @@ function executeActiveListItemAction() {
         action: {
           keys: [],
           text: '',
-          open: '',
-          command: [],
+          open: null,
+          command: null,
         }
       }" class="pt-5 text-zinc-400" />
     </ul>

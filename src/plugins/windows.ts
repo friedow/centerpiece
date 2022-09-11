@@ -11,6 +11,7 @@ export default class WindowsPlugin {
 
     public initialize() {
         this.loadData();
+        setInterval(() => this.loadData(), 3000);
     }
 
     public async loadData() {

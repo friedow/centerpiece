@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { open } from '@tauri-apps/api/shell';
+import { Command, open } from '@tauri-apps/api/shell';
 import { appWindow } from "@tauri-apps/api/window";
 import { computed } from '@vue/reactivity';
 
@@ -9,8 +9,11 @@ export interface IListItem {
     action: {
         keys: string[];
         text: string;
-        command: string[];
-        open: string;
+        command: {
+            program: string;
+            args: string[];
+        } | null;
+        open: string | null;
     };
 }
 
@@ -28,12 +31,18 @@ function deactivate() {
     isActive.value = false;
 }
 
-const hasAction = computed(() => props.listItem.action.open !== "");
+const hasAction = computed(() => props.listItem.action.open || props.listItem.action.command);
 
 async function executeAction() {
     if (!hasAction.value) return;
     appWindow.hide();
-    await open(props.listItem.action.open);
+
+    if(props.listItem.action.open) await open(props.listItem.action.open);
+    else if (props.listItem.action.command) {
+        const command = new Command(props.listItem.action.command.program, props.listItem.action.command.args);
+        command.execute();
+        console.log(props.listItem.action.command.program, props.listItem.action.command.args)
+    };
 }
 
 defineExpose({

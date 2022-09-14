@@ -147,8 +147,8 @@ impl WindowTree {
                 text: "switch to".into(),
                 open: None,
                 command: Some(ListItemActionCommand {
-                    program: String::from("i3-msg"),
-                    args: vec![format!("[con_id={}]", self.id).into(), String::from("focus")]
+                    program: String::from("sh"),
+                    args: vec![String::from("-c"), format!("i3-msg [con_id={}] focus", self.id).into()]
                 }),
             },
         }

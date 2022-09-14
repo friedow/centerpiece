@@ -23,8 +23,8 @@
         "open": ".*",
         "scope": [
           {
-            "name": "i3-msg",
-            "cmd": "i3-msg",
+            "name": "sh",
+            "cmd": "sh",
             "args": true
           }
         ]

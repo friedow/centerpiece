@@ -23,8 +23,12 @@
         rustc
         cargo
         rustfmt
+        rustup
         rustPackages.clippy 
       ];
+
+      RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
+      
       shellHook = ''
         export PATH="$PWD/node_modules/.bin/:$PATH"
       '';

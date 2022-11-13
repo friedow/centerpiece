@@ -20,8 +20,7 @@ struct ListItem {
 struct ListItemAction {
     keys: Vec<String>,
     text: String,
-    open: Option<String>,
-    command: Option<ListItemActionCommand>,
+    command: ListItemActionCommand,
 }
 
 #[derive(serde::Serialize)]
@@ -106,8 +105,10 @@ fn to_list_item(desktop_file_path: String) -> Option<ListItem> {
         action: ListItemAction {
             keys: vec!["↵".into()],
             text: "open".into(),
-            open: Some(desktop_file_path),
-            command: None,
+            command: ListItemActionCommand {
+                program: String::from("sh"),
+                args: vec![String::from("-c"), format!("xdg-open {}", desktop_file_path).into()]
+            },
         },
     });
 }
@@ -140,7 +141,7 @@ use serde::{Deserialize, Serialize};
 struct WindowTree {
     id: i64,
     name: Option<String>,
-    window_type: Option<String>,
+    pid: Option<u64>,
     nodes: Vec<WindowTree>,
 }
 
@@ -151,18 +152,17 @@ impl WindowTree {
             action: ListItemAction {
                 keys: vec!["↵".into()],
                 text: "switch to".into(),
-                open: None,
-                command: Some(ListItemActionCommand {
+                command: ListItemActionCommand {
                     program: String::from("sh"),
-                    args: vec![String::from("-c"), format!("i3-msg [con_id={}] focus", self.id).into()]
-                }),
+                    args: vec![String::from("-c"), format!("swaymsg [con_id={}] focus", self.id).into()]
+                },
             },
         }
     }
 
 
     fn get_list_items(&self) -> Vec<ListItem> {
-        if self.window_type.is_some() && self.name.is_some() {
+        if self.pid.is_some() && self.name.is_some() {
             return vec![self.to_list_item()];
         }
         return self.nodes.iter().flat_map(|child_window_tree| child_window_tree.get_list_items()).collect();
@@ -170,7 +170,7 @@ impl WindowTree {
 }
 
 fn get_window_tree() -> WindowTree {
-        let i3msg_command_output = Command::new("i3-msg")
+        let i3msg_command_output = Command::new("swaymsg")
             .arg("-t")
             .arg("get_tree")
             .output()

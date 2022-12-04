@@ -122,12 +122,7 @@ function executeActiveListItemAction() {
 
       <ListItem v-if="isNoResultsTextVisible" :list-item="{
         title: `No results for: ${searchString}`,
-        action: {
-          keys: [],
-          text: '',
-          open: null,
-          command: null,
-        }
+        actions: []
       }" class="pt-5 text-zinc-400" />
     </ul>
   </main>

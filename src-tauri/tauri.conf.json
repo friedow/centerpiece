@@ -63,6 +63,19 @@
         "timestampUrl": ""
       }
     },
+    "cli": {
+      "description": "CLI to control the search.friedow.com deamon.",
+      "longDescription": "",
+      "beforeHelp": "",
+      "afterHelp": "",
+      "args": [
+        {
+          "name": "toggle",
+          "short": "t",
+          "multipleOccurrences": false
+        }
+      ]
+    },
     "security": {
       "csp": null
     },

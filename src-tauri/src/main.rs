@@ -13,7 +13,7 @@ struct ItemGroup {
 #[derive(serde::Serialize)]
 struct ListItem {
     title: String,
-    action: ListItemAction,
+    actions: Vec<ListItemAction>,
 }
 
 #[derive(serde::Serialize)]
@@ -102,14 +102,14 @@ fn to_list_item(desktop_file_path: String) -> Option<ListItem> {
 
     return Some(ListItem {
         title: desktop_entry_name,
-        action: ListItemAction {
+        actions: vec![ListItemAction {
             keys: vec!["↵".into()],
             text: "open".into(),
             command: ListItemActionCommand {
                 program: String::from("sh"),
                 args: vec![String::from("-c"), format!("xdg-open {}", desktop_file_path).into()]
             },
-        },
+        }],
     });
 }
 
@@ -149,14 +149,14 @@ impl WindowTree {
     fn to_list_item(&self) -> ListItem {
         return ListItem {
             title: self.name.to_owned().unwrap_or(String::from("null")),
-            action: ListItemAction {
+            actions: vec![ListItemAction {
                 keys: vec!["↵".into()],
                 text: "switch to".into(),
                 command: ListItemActionCommand {
                     program: String::from("sh"),
                     args: vec![String::from("-c"), format!("swaymsg [con_id={}] focus", self.id).into()]
                 },
-            },
+            }],
         }
     }
 

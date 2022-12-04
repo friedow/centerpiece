@@ -15,6 +15,7 @@ export default class ApplicationsPlugin {
 
     public async loadData() {
         this.itemGroup = await invoke('get_applications_group');
+        console.log(this.itemGroup);
         this.isLoading = false;
     }
 }

@@ -15,6 +15,7 @@ import WindowsPlugin from "./plugins/windows";
 const plugins = reactive([new WindowsPlugin(), new ApplicationsPlugin()]);
 
 const itemGroups = computed((): IItemGroup[] => {
+  console.log(plugins);
   return plugins
     .map(plugin => plugin.getItemGroup())
     .filter(itemGroup => !!itemGroup) as IItemGroup[]

@@ -67,13 +67,13 @@ defineExpose({
       }"
     >
       <div
-        v-for="key in listItem.action.keys"
+        v-for="key in listItem.actions[0].keys"
         :key="key"
         class="border-1 rounded-sm w-3.5 h-3.5 flex justify-center items-center pt-0.5"
       >
         {{ key }}
       </div>
-      <span>{{ listItem.action.text }}</span>
+      <span>{{ listItem.actions[0].text }}</span>
     </div>
   </li>
 </template>

@@ -195,9 +195,31 @@ fn get_windows_group() -> ItemGroup {
     };
 }
 
+use tauri::Manager;
+
+// the payload type must implement `Serialize` and `Clone`.
+#[derive(Clone, serde::Serialize)]
+struct Payload {
+  message: String,
+}
+
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_applications_group, get_windows_group])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    .setup(|app| {
+      let matches = app.get_cli_matches().unwrap();
+      let should_toggle_visibility = matches.args.get("toggle").unwrap().value.as_bool().unwrap();
+      println!("visibility toggle: {}", should_toggle_visibility);
+    
+      app.emit_all("event-name", Payload { message: "Tauri is awesome!".into() }).unwrap();
+
+      Ok(())
+    })
+    .invoke_handler(tauri::generate_handler![get_applications_group, get_windows_group])
+    .run(tauri::generate_context!())
+    .expect("error while running tauri application");
+
+    // tauri::Builder::default()
+    //     .invoke_handler(tauri::generate_handler![get_applications_group, get_windows_group])
+    //     .run(tauri::generate_context!())
+    //     .expect("error while running tauri application");
 }

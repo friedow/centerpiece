@@ -36,7 +36,6 @@ const hasAction = computed(() => props.listItem.actions.length > 0);
 
 async function executeAction() {
   if (!hasAction.value) return;
-  appWindow.hide();
 
   const command = new Command(
     props.listItem.actions[0].command.program,

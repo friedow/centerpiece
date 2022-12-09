@@ -15,38 +15,20 @@ import WindowsPlugin from "./plugins/windows";
 const plugins = reactive([new WindowsPlugin(), new ApplicationsPlugin()]);
 
 const itemGroups = computed((): IItemGroup[] => {
-  console.log(plugins);
   return plugins
-    .map(plugin => plugin.getItemGroup())
-    .filter(itemGroup => !!itemGroup) as IItemGroup[]
+    .map((plugin) => plugin.getItemGroup())
+    .filter((itemGroup) => !!itemGroup) as IItemGroup[];
 });
 
-
-onMounted(() => {
-  activateFirstListItem();
-  registerGlobalShortcut();
-  initializePlugins();
-});
-
-async function registerGlobalShortcut() {
-  if (await isRegistered("Super+Space")) unregister("Super+Space");
-
-  register("Super+Space", async () => {
-    if (await appWindow.isVisible()) appWindow.hide();
-    else showWindow();
-  });
-}
-
-async function showWindow(): Promise<void> {
-  console.log('hello')
+onMounted(async () => {
+  await initializePlugins();
   await activateFirstListItem();
-  await appWindow.show();
-}
+});
 
-function initializePlugins() {
-  plugins.forEach(plugin => plugin.initialize());
+async function initializePlugins() {
+  const initializePluginPromises = plugins.map((plugin) => plugin.initialize());
+  await Promise.all(initializePluginPromises);
 }
-
 
 const searchString = ref("");
 
@@ -57,7 +39,9 @@ const activeListItemIndex = ref(0);
 const isNoResultsTextVisible = ref(false);
 
 function allListItems(): InstanceType<typeof ListItem>[] {
-  return itemGroupRefs.value.flatMap(itemGroupRef => itemGroupRef.getListItemRefs().value);
+  return itemGroupRefs.value.flatMap(
+    (itemGroupRef) => itemGroupRef.getListItemRefs().value
+  );
 }
 
 function activeItem() {
@@ -65,7 +49,7 @@ function activeItem() {
 }
 
 function resetActiveListItem() {
-  allListItems().forEach(listItem => listItem.deactivate());
+  allListItems().forEach((listItem) => listItem.deactivate());
 }
 
 async function activateFirstListItem() {
@@ -75,16 +59,16 @@ async function activateFirstListItem() {
   if (allListItems().length === 0) {
     isNoResultsTextVisible.value = true;
     return;
-  };
+  }
 
   isNoResultsTextVisible.value = false;
-  activeListItemIndex.value = 0
+  activeListItemIndex.value = 0;
   await nextTick();
   activeItem().activate();
 }
 
 function activatePreviousListItem() {
-  if ((activeListItemIndex.value - 1) < 0) return;
+  if (activeListItemIndex.value - 1 < 0) return;
 
   resetActiveListItem();
   activeListItemIndex.value--;
@@ -92,39 +76,52 @@ function activatePreviousListItem() {
 }
 
 function activateNextListItem() {
-  if ((activeListItemIndex.value + 1) >= allListItems().length) return;
+  if (activeListItemIndex.value + 1 >= allListItems().length) return;
 
   resetActiveListItem();
   activeListItemIndex.value++;
   activeItem().activate();
 }
 
-
-
 function executeActiveListItemAction() {
-  if(!activeItem().hasAction) return;
+  if (!activeItem().hasAction) return;
   activeItem().executeAction();
   searchString.value = "";
 }
 
 // end: handling of active list items //
-
 </script>
 
 <!-- ⎇⌘⌃⇧⌥ -->
 
 <template>
-  <main class="bg-zinc-900 text-white font-mono flex flex-col max-h-full px-5 pt-3">
-    <SearchBar v-model="searchString" @keydown.up="activatePreviousListItem" @keydown.down="activateNextListItem"
-      @keydown.enter="executeActiveListItemAction" @update:model-value="activateFirstListItem" />
+  <main
+    class="bg-zinc-900 text-white font-mono flex flex-col max-h-full px-5 pt-3"
+  >
+    <SearchBar
+      v-model="searchString"
+      @keydown.up="activatePreviousListItem"
+      @keydown.down="activateNextListItem"
+      @keydown.enter="executeActiveListItemAction"
+      @update:model-value="activateFirstListItem"
+    />
     <ul class="pointer-events-none overflow-y-auto pb-3">
-      <ItemGroup v-for="(itemGroup, itemGroupIndex) in itemGroups" :key="itemGroupIndex" :item-group="itemGroup"
-        :search-string="searchString" ref="itemGroupRefs" />
+      <ItemGroup
+        v-for="(itemGroup, itemGroupIndex) in itemGroups"
+        :key="itemGroupIndex"
+        :item-group="itemGroup"
+        :search-string="searchString"
+        ref="itemGroupRefs"
+      />
 
-      <ListItem v-if="isNoResultsTextVisible" :list-item="{
-        title: `No results for: ${searchString}`,
-        actions: []
-      }" class="pt-5 text-zinc-400" />
+      <ListItem
+        v-if="isNoResultsTextVisible"
+        :list-item="{
+          title: `No results for: ${searchString}`,
+          actions: [],
+        }"
+        class="pt-5 text-zinc-400"
+      />
     </ul>
   </main>
 </template>

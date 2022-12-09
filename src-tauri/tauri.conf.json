@@ -13,9 +13,6 @@
   "tauri": {
     "allowlist": {
       "all": true,
-      "globalShortcut": {
-        "all": true
-      },
       "shell": {
         "all": true,
         "execute": true,
@@ -63,19 +60,6 @@
         "timestampUrl": ""
       }
     },
-    "cli": {
-      "description": "CLI to control the search.friedow.com deamon.",
-      "longDescription": "",
-      "beforeHelp": "",
-      "afterHelp": "",
-      "args": [
-        {
-          "name": "toggle",
-          "short": "t",
-          "multipleOccurrences": false
-        }
-      ]
-    },
     "security": {
       "csp": null
     },
@@ -91,7 +75,7 @@
         "center": true,
         "alwaysOnTop": true,
         "transparent": true,
-        "visible": false,
+        "visible": true,
         "resizable": true,
         "maximized": true
       }

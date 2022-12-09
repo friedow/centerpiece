@@ -58,21 +58,23 @@ defineExpose({
     :class="{ 'bg-zinc-800': isActive }"
   >
     <span class="text-sm">{{ listItem.title }}</span>
-    <div
-      class="text-xs flex gap-1 items-center"
-      :class="{
-        visible: isActive,
-        invisible: !isActive,
-      }"
-    >
+    <template v-if="listItem.actions.length">
       <div
-        v-for="key in listItem.actions[0].keys"
-        :key="key"
-        class="border-1 rounded-sm w-3.5 h-3.5 flex justify-center items-center pt-0.5"
+        class="text-xs flex gap-1 items-center"
+        :class="{
+          visible: isActive,
+          invisible: !isActive,
+        }"
       >
-        {{ key }}
+        <div
+          v-for="key in listItem.actions[0].keys"
+          :key="key"
+          class="border-1 rounded-sm w-3.5 h-3.5 flex justify-center items-center pt-0.5"
+        >
+          {{ key }}
+        </div>
+        <span>{{ listItem.actions[0].text }}</span>
       </div>
-      <span>{{ listItem.actions[0].text }}</span>
-    </div>
+    </template>
   </li>
 </template>

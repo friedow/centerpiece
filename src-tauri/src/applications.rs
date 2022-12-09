@@ -12,9 +12,8 @@ lazy_static! {
 
 fn get_desktop_file_paths() -> Vec<String> {
     let mut desktop_file_paths = Vec::new();
-
     let xdg_data_dirs = XDG_DATA_DIRS.split(":");
-    println!("{:?}", *XDG_DATA_DIRS);
+
     for xdg_data_dir in xdg_data_dirs {
         for dir_entry_promise in WalkDir::new(xdg_data_dir).follow_links(true) {
             // ignore files that return not found while accessing them

@@ -11,8 +11,13 @@ import ItemGroup, { IItemGroup } from "./components/ItemGroup.vue";
 import ListItem from "./components/ListItem.vue";
 import ApplicationsPlugin from "./plugins/applications";
 import WindowsPlugin from "./plugins/windows";
+import GitProjectsPlugin from "./plugins/git-projects";
 
-const plugins = reactive([new WindowsPlugin(), new ApplicationsPlugin()]);
+const plugins = reactive([
+  new WindowsPlugin(),
+  new ApplicationsPlugin(),
+  new GitProjectsPlugin(),
+]);
 
 const itemGroups = computed((): IItemGroup[] => {
   return plugins

@@ -46,6 +46,7 @@ fn to_list_item(desktop_file_path: String) -> Option<types::ListItem> {
         static ref EXEC_REGEX: Regex = Regex::new(r"\nExec=(.*)").unwrap();
         static ref NO_DISPLAY_REGEX: Regex = Regex::new(r"\n(NoDisplay=true|Hidden=true)").unwrap();
         static ref TYPE_APPLICATION_REGEX: Regex = Regex::new(r"\n(Type=Application)").unwrap();
+        static ref FILE_NAME_REGEX: Regex = Regex::new(r"/([^/]+).desktop").unwrap();
     }
 
     let desktop_entry_name_promise = NAME_REGEX.captures(&desktop_file_contents).and_then(|cap| {
@@ -81,6 +82,18 @@ fn to_list_item(desktop_file_path: String) -> Option<types::ListItem> {
         return None;
     }
 
+    let desktop_file_name_promise = FILE_NAME_REGEX
+        .captures(&desktop_file_path)
+        .and_then(|cap| {
+            return cap.get(1).map(|name| name.as_str().to_string());
+        });
+
+    if desktop_file_name_promise.is_none() {
+        return None;
+    }
+
+    let desktop_file_name = desktop_file_name_promise.unwrap();
+
     return Some(types::ListItem {
         title: desktop_entry_name,
         actions: vec![types::ListItemAction {
@@ -90,7 +103,7 @@ fn to_list_item(desktop_file_path: String) -> Option<types::ListItem> {
                 program: String::from("sh"),
                 args: vec![
                     String::from("-c"),
-                    format!("xdg-open {}", desktop_file_path).into(),
+                    format!("gtk-launch {}", desktop_file_name).into(),
                 ],
             },
         }],

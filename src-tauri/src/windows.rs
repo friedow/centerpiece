@@ -61,7 +61,7 @@ pub(crate) fn get_windows_group() -> types::ItemGroup {
 
     return types::ItemGroup {
         name: "Windows".into(),
-        icon: "window-maximize".into(),
+        icon: "LayoutGrid".into(),
         items: list_items,
     };
 }

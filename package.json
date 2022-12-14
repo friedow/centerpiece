@@ -10,10 +10,8 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^6.2.1",
-    "@fortawesome/free-solid-svg-icons": "^6.2.1",
-    "@fortawesome/vue-fontawesome": "^3.0.2",
     "@tauri-apps/api": "^1.2.0",
+    "lucide-vue-next": "^0.104.0",
     "vue": "^3.2.37"
   },
   "devDependencies": {

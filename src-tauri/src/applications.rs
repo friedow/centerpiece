@@ -125,7 +125,7 @@ pub(crate) fn get_applications_group() -> types::ItemGroup {
 
     return types::ItemGroup {
         name: "Apps".into(),
-        icon: "rocket".into(),
+        icon: "Rocket".into(),
         items: list_items,
     };
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { appWindow } from "@tauri-apps/api/window";
 import { onMounted } from "vue";
+import Icon from "../Icon.vue";
 
 const props = defineProps<{
   modelValue: string;
@@ -32,14 +32,11 @@ function bubbleInputEvent(event: Event) {
 </script>
 
 <template>
-  <div class="border-b-1 border-zinc-700 relative">
-    <font-awesome-icon
-      icon="fa-solid fa-magnifying-glass"
-      class="absolute mt-3 ml-4 text-base mb-0.5 pointer-events-none text-zinc-500"
-    />
+  <div class="border-b-1 border-zinc-700 flex gap-4 p-2">
+    <Icon name="Search" class="w-7 h-7" />
     <input
       id="search-bar"
-      class="flex-1 py-2 pl-11 pr-4 bg-transparent text-white w-full"
+      class="flex-1 bg-transparent text-white w-full h-7"
       :value="modelValue"
       @input="bubbleInputEvent"
       autofocus

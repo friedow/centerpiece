@@ -96,7 +96,7 @@ pub(crate) fn get_git_projects_group() -> types::ItemGroup {
 
     return types::ItemGroup {
         name: "Git Repositories".into(),
-        icon: "folder".into(),
+        icon: "GitFork".into(),
         items: list_items,
     };
 }

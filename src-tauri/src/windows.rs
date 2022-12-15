@@ -52,6 +52,7 @@ fn get_window_tree() -> WindowTree {
     return window_tree;
 }
 
+#[tauri::command]
 pub(crate) fn get_windows_group() -> types::ItemGroup {
     let window_tree = get_window_tree();
     let mut list_items = window_tree.get_list_items();

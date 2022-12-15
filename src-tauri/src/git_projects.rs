@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::env::var;
-use walkdir::{DirEntry, WalkDir};
+use walkdir::WalkDir;
 
 use crate::types;
 
@@ -82,6 +82,7 @@ fn to_list_item(git_dir: String) -> Option<types::ListItem> {
     });
 }
 
+#[tauri::command]
 pub(crate) fn get_git_projects_group() -> types::ItemGroup {
     let mut list_items: Vec<types::ListItem> = get_git_dirs()
         .into_iter()

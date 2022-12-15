@@ -110,6 +110,7 @@ fn to_list_item(desktop_file_path: String) -> Option<types::ListItem> {
     });
 }
 
+#[tauri::command]
 pub(crate) fn get_applications_group() -> types::ItemGroup {
     let desktop_file_paths = get_desktop_file_paths();
     let mut list_items: Vec<types::ListItem> = desktop_file_paths

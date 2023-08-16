@@ -1,29 +1,22 @@
-use iced::widget::{button, column, text, text_input};
-use iced::window::PlatformSpecific;
-use iced::{window, Alignment, Element, Sandbox, Settings};
+use iced::Sandbox;
 
 pub fn main() -> iced::Result {
-    let mut default_settings = Settings::default();
-    default_settings.window = window::Settings {
+    let mut default_settings = iced::Settings::default();
+    default_settings.window = iced::window::Settings {
         transparent: true,
-        size: (500, 500),
+        size: (500, 400),
         decorations: false,
         always_on_top: true,
         resizable: false,
-        position: window::Position::Centered,
+        position: iced::window::Position::Centered,
         min_size: None,
         max_size: None,
         icon: None,
         visible: true,
-        platform_specific: PlatformSpecific::default(),
+        platform_specific: iced::window::PlatformSpecific::default(),
     };
 
     Centerpiece::run(default_settings)
-}
-
-struct Centerpiece {
-    value: i32,
-    query: String,
 }
 
 #[derive(Debug, Clone)]
@@ -33,6 +26,12 @@ enum Message {
     DecrementPressed,
 }
 
+struct Centerpiece {
+    value: i32,
+    query: String,
+    plugins: Vec<Plugin>,
+}
+
 impl Sandbox for Centerpiece {
     type Message = Message;
 
@@ -40,6 +39,34 @@ impl Sandbox for Centerpiece {
         Self {
             value: 0,
             query: String::from(""),
+            plugins: vec![
+                Plugin {
+                    title: String::from("Plugin 1"),
+                    entries: vec![
+                        PluginEntry {
+                            title: String::from("Item 1"),
+                            action: String::from("open"),
+                        },
+                        PluginEntry {
+                            title: String::from("Item 2"),
+                            action: String::from("open"),
+                        },
+                    ],
+                },
+                Plugin {
+                    title: String::from("Plugin 2"),
+                    entries: vec![
+                        PluginEntry {
+                            title: String::from("Item 1"),
+                            action: String::from("switch"),
+                        },
+                        PluginEntry {
+                            title: String::from("Item 2"),
+                            action: String::from("switch"),
+                        },
+                    ],
+                },
+            ],
         }
     }
 
@@ -61,17 +88,44 @@ impl Sandbox for Centerpiece {
         }
     }
 
-    fn view(&self) -> Element<Message> {
-        column![
-            text_input("Search", &self.query)
+    fn view(&self) -> iced::Element<Message> {
+        iced::widget::column![
+            iced::widget::text_input("Search", &self.query)
                 .on_input(Message::InputChanged)
-                .padding(32),
-            button("Increment").on_press(Message::IncrementPressed),
-            text(self.value).size(50),
-            button("Decrement").on_press(Message::DecrementPressed)
+                .padding(5),
+            iced::widget::column(self.plugins.iter().map(plugin).collect()),
         ]
         .padding(20)
-        .align_items(Alignment::Center)
         .into()
     }
+}
+
+struct Plugin {
+    title: String,
+    entries: Vec<PluginEntry>,
+}
+
+struct PluginEntry {
+    title: String,
+    action: String,
+}
+
+fn plugin(plugin: &Plugin) -> iced::Element<'static, Message> {
+    return iced::widget::column![
+        plugin_title(&plugin.title),
+        iced::widget::column(plugin.entries.iter().map(entry).collect()),
+    ]
+    .into();
+}
+
+fn plugin_title(title: &String) -> iced::Element<'static, Message> {
+    return iced::widget::row![iced::widget::text(title),].into();
+}
+
+fn entry(entry: &PluginEntry) -> iced::Element<'static, Message> {
+    return iced::widget::row![
+        iced::widget::text(&entry.title),
+        iced::widget::text(&entry.action),
+    ]
+    .into();
 }

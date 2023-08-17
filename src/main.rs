@@ -1,7 +1,10 @@
 use iced::Sandbox;
 
+mod types;
+
 pub fn main() -> iced::Result {
     let mut default_settings = iced::Settings::default();
+
     default_settings.window = iced::window::Settings {
         transparent: true,
         size: (500, 400),
@@ -21,7 +24,7 @@ pub fn main() -> iced::Result {
 
 #[derive(Debug, Clone)]
 enum Message {
-    InputChanged(String),
+    Search(String),
     IncrementPressed,
     DecrementPressed,
 }
@@ -29,7 +32,7 @@ enum Message {
 struct Centerpiece {
     value: i32,
     query: String,
-    plugins: Vec<Plugin>,
+    plugins: Vec<types::Plugin>,
 }
 
 impl Sandbox for Centerpiece {
@@ -40,27 +43,27 @@ impl Sandbox for Centerpiece {
             value: 0,
             query: String::from(""),
             plugins: vec![
-                Plugin {
+                types::Plugin {
                     title: String::from("Plugin 1"),
                     entries: vec![
-                        PluginEntry {
+                        types::PluginEntry {
                             title: String::from("Item 1"),
                             action: String::from("open"),
                         },
-                        PluginEntry {
+                        types::PluginEntry {
                             title: String::from("Item 2"),
                             action: String::from("open"),
                         },
                     ],
                 },
-                Plugin {
+                types::Plugin {
                     title: String::from("Plugin 2"),
                     entries: vec![
-                        PluginEntry {
+                        types::PluginEntry {
                             title: String::from("Item 1"),
                             action: String::from("switch"),
                         },
-                        PluginEntry {
+                        types::PluginEntry {
                             title: String::from("Item 2"),
                             action: String::from("switch"),
                         },
@@ -82,7 +85,7 @@ impl Sandbox for Centerpiece {
             Message::DecrementPressed => {
                 self.value -= 1;
             }
-            Message::InputChanged(input) => {
+            Message::Search(input) => {
                 self.query = input;
             }
         }
@@ -91,41 +94,42 @@ impl Sandbox for Centerpiece {
     fn view(&self) -> iced::Element<Message> {
         iced::widget::column![
             iced::widget::text_input("Search", &self.query)
-                .on_input(Message::InputChanged)
-                .padding(5),
-            iced::widget::column(self.plugins.iter().map(plugin).collect()),
+                .on_input(Message::Search)
+                // TODO: define font size in rem
+                .padding(16),
+            iced::widget::column(self.plugins.iter().map(view_plugin).collect()),
         ]
-        .padding(20)
         .into()
+    }
+
+    fn theme(&self) -> iced::Theme {
+        return iced::Theme::Dark;
     }
 }
 
-struct Plugin {
-    title: String,
-    entries: Vec<PluginEntry>,
-}
-
-struct PluginEntry {
-    title: String,
-    action: String,
-}
-
-fn plugin(plugin: &Plugin) -> iced::Element<'static, Message> {
+fn view_plugin(plugin: &types::Plugin) -> iced::Element<'static, Message> {
     return iced::widget::column![
-        plugin_title(&plugin.title),
-        iced::widget::column(plugin.entries.iter().map(entry).collect()),
+        iced::widget::horizontal_rule(1),
+        iced::widget::column![
+            view_plugin_title(&plugin.title),
+            iced::widget::column(plugin.entries.iter().map(view_entry).collect()),
+        ]
+        .padding(8),
     ]
     .into();
 }
 
-fn plugin_title(title: &String) -> iced::Element<'static, Message> {
-    return iced::widget::row![iced::widget::text(title),].into();
+fn view_plugin_title(title: &String) -> iced::Element<'static, Message> {
+    return iced::widget::row![iced::widget::text(title).size(10)]
+        .padding(8)
+        .into();
 }
 
-fn entry(entry: &PluginEntry) -> iced::Element<'static, Message> {
+fn view_entry(entry: &types::PluginEntry) -> iced::Element<'static, Message> {
     return iced::widget::row![
-        iced::widget::text(&entry.title),
-        iced::widget::text(&entry.action),
+        iced::widget::text(&entry.title).width(iced::Length::Fill),
+        iced::widget::text(&entry.action).horizontal_alignment(iced::alignment::Horizontal::Right),
     ]
+    .padding(5)
     .into();
 }

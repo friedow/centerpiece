@@ -25,13 +25,12 @@ pub fn main() -> iced::Result {
 #[derive(Debug, Clone)]
 enum Message {
     Search(String),
-    IncrementPressed,
-    DecrementPressed,
 }
 
 struct Centerpiece {
     value: i32,
     query: String,
+    active_entry_id: String,
     plugins: Vec<types::Plugin>,
 }
 
@@ -44,28 +43,35 @@ impl Sandbox for Centerpiece {
         Self {
             value: 0,
             query: String::from(""),
+            active_entry_id: String::from("clock-item-1"),
             plugins: vec![
                 types::Plugin {
+                    id: String::from("clock"),
                     title: String::from("Plugin 1"),
                     entries: vec![
-                        types::PluginEntry {
+                        types::Entry {
+                            id: String::from("clock-item-1"),
                             title: String::from("Item 1"),
                             action: String::from("open"),
                         },
-                        types::PluginEntry {
+                        types::Entry {
+                            id: String::from("clock-item-2"),
                             title: String::from("Item 2"),
                             action: String::from("open"),
                         },
                     ],
                 },
                 types::Plugin {
+                    id: String::from("git-repositories"),
                     title: String::from("Plugin 2"),
                     entries: vec![
-                        types::PluginEntry {
+                        types::Entry {
+                            id: String::from("git-repo-item-1"),
                             title: String::from("Item 1"),
                             action: String::from("switch"),
                         },
-                        types::PluginEntry {
+                        types::Entry {
+                            id: String::from("git-repo-item-2"),
                             title: String::from("Item 2"),
                             action: String::from("switch"),
                         },
@@ -81,12 +87,6 @@ impl Sandbox for Centerpiece {
 
     fn update(&mut self, message: Message) {
         match message {
-            Message::IncrementPressed => {
-                self.value += 1;
-            }
-            Message::DecrementPressed => {
-                self.value -= 1;
-            }
             Message::Search(input) => {
                 self.query = input;
             }
@@ -99,7 +99,12 @@ impl Sandbox for Centerpiece {
                 .on_input(Message::Search)
                 .size(1.0 * REM)
                 .padding(iced::Padding::from([0.8 * REM, 1.0 * REM])),
-            iced::widget::column(self.plugins.iter().map(view_plugin).collect()),
+            iced::widget::column(
+                self.plugins
+                    .iter()
+                    .map(|plugin| view_plugin(plugin, &self.active_entry_id))
+                    .collect()
+            ),
         ]
         .into()
     }
@@ -109,12 +114,21 @@ impl Sandbox for Centerpiece {
     }
 }
 
-fn view_plugin(plugin: &types::Plugin) -> iced::Element<'static, Message> {
+fn view_plugin(
+    plugin: &types::Plugin,
+    active_entry_id: &String,
+) -> iced::Element<'static, Message> {
     return iced::widget::column![
         iced::widget::horizontal_rule(1),
         iced::widget::column![
             view_plugin_title(&plugin.title),
-            iced::widget::column(plugin.entries.iter().map(view_entry).collect()),
+            iced::widget::column(
+                plugin
+                    .entries
+                    .iter()
+                    .map(|entry| view_entry(entry, active_entry_id))
+                    .collect()
+            ),
         ]
         .padding(0.5 * REM),
     ]
@@ -127,14 +141,18 @@ fn view_plugin_title(title: &String) -> iced::Element<'static, Message> {
         .into();
 }
 
-fn view_entry(entry: &types::PluginEntry) -> iced::Element<'static, Message> {
+fn view_entry(entry: &types::Entry, active_entry_id: &String) -> iced::Element<'static, Message> {
     return iced::widget::row![
+        iced::widget::text(if &entry.id == active_entry_id {
+            "Active: "
+        } else {
+            ""
+        })
+        .size(1.0 * REM),
         iced::widget::text(&entry.title)
             .size(1.0 * REM)
             .width(iced::Length::Fill),
-        iced::widget::text(&entry.action)
-            .size(1.0 * REM)
-            .horizontal_alignment(iced::alignment::Horizontal::Right),
+        iced::widget::text(&entry.action).size(1.0 * REM),
     ]
     .padding(0.5 * REM)
     .into();

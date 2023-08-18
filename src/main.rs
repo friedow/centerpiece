@@ -28,7 +28,6 @@ enum Message {
 }
 
 struct Centerpiece {
-    value: i32,
     query: String,
     active_entry_id: String,
     plugins: Vec<types::Plugin>,
@@ -41,7 +40,6 @@ impl Sandbox for Centerpiece {
 
     fn new() -> Self {
         Self {
-            value: 0,
             query: String::from(""),
             active_entry_id: String::from("clock-item-1"),
             plugins: vec![
@@ -142,18 +140,35 @@ fn view_plugin_title(title: &String) -> iced::Element<'static, Message> {
 }
 
 fn view_entry(entry: &types::Entry, active_entry_id: &String) -> iced::Element<'static, Message> {
-    return iced::widget::row![
-        iced::widget::text(if &entry.id == active_entry_id {
-            "Active: "
-        } else {
-            ""
-        })
-        .size(1.0 * REM),
-        iced::widget::text(&entry.title)
-            .size(1.0 * REM)
-            .width(iced::Length::Fill),
-        iced::widget::text(&entry.action).size(1.0 * REM),
-    ]
-    .padding(0.5 * REM)
+    return iced::widget::container(
+        iced::widget::row![
+            iced::widget::text(&entry.title)
+                .size(1.0 * REM)
+                .width(iced::Length::Fill),
+            iced::widget::text(&entry.action).size(1.0 * REM),
+        ]
+        .padding(0.5 * REM),
+    )
+    .style(if &entry.id == active_entry_id {
+        iced::theme::Container::Box
+    } else {
+        iced::theme::Container::Transparent
+    })
     .into();
+
+    // iced::theme::Container::from(|| iced::widget::container::Appearance {
+    //     text_color: None,
+    //     background: None,
+    //     border_radius: 5.0,
+    //     border_width: 1.0,
+    //     border_color: iced::Color::from_rgb(150, 150, 150),
+    // })
 }
+
+// iced::widget::container::Appearance {
+//     text_color: None,
+//     background: None,
+//     border_radius: 5.0,
+//     border_width: 1.0,
+//     border_color: iced::Color::from_rgb(150, 150, 150),
+// }

@@ -25,9 +25,12 @@ pub fn main() -> iced::Result {
 
 #[derive(Debug, Clone)]
 enum Message {
+    Loaded,
     Search(String),
     Event(iced::Event),
 }
+
+const SEARCH_INPUT_ID: &str = "search_input";
 
 struct Centerpiece {
     query: String,
@@ -81,7 +84,7 @@ impl Application for Centerpiece {
                     },
                 ],
             },
-            iced::Command::none(),
+            iced::Command::perform(async {}, move |()| Message::Loaded),
         );
     }
 
@@ -91,10 +94,13 @@ impl Application for Centerpiece {
 
     fn update(&mut self, message: Message) -> iced::Command<Message> {
         match message {
+            Message::Loaded => self.focus_search_input(),
+
             Message::Search(input) => {
                 self.query = input;
                 return iced::Command::none();
             }
+
             Message::Event(event) => match event {
                 iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
                     key_code: iced::keyboard::KeyCode::Up,
@@ -129,8 +135,11 @@ impl Application for Centerpiece {
                     return iced::Command::none();
                 }
 
-                // TODO: this does not work while the text input is focussed
-                iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
+                iced::Event::Mouse(iced::mouse::Event::ButtonPressed(
+                    iced::mouse::Button::Left,
+                )) => self.focus_search_input(),
+
+                iced::Event::Keyboard(iced::keyboard::Event::KeyReleased {
                     key_code: iced::keyboard::KeyCode::Escape,
                     ..
                 }) => iced::window::close(),
@@ -141,12 +150,13 @@ impl Application for Centerpiece {
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-        iced::subscription::events().map(Message::Event)
+        return iced::subscription::events().map(Message::Event);
     }
 
     fn view(&self) -> iced::Element<Message> {
         iced::widget::container(iced::widget::column![
             iced::widget::text_input("Search", &self.query)
+                .id(iced::widget::text_input::Id::new(SEARCH_INPUT_ID))
                 .on_input(Message::Search)
                 .size(1.0 * style::REM)
                 .padding(iced::Padding::from([0.8 * style::REM, 1. * style::REM]))
@@ -229,5 +239,9 @@ impl Centerpiece {
             .iter()
             .flat_map(|plugin| &plugin.entries)
             .collect();
+    }
+
+    fn focus_search_input(&self) -> iced::Command<Message> {
+        return iced::widget::text_input::focus(iced::widget::text_input::Id::new(SEARCH_INPUT_ID));
     }
 }

@@ -92,23 +92,31 @@ impl Sandbox for Centerpiece {
     }
 
     fn view(&self) -> iced::Element<Message> {
-        iced::widget::column![
+        iced::widget::container(iced::widget::column![
             iced::widget::text_input("Search", &self.query)
                 .on_input(Message::Search)
                 .size(1.0 * REM)
-                .padding(iced::Padding::from([0.8 * REM, 1.0 * REM])),
+                .padding(iced::Padding::from([0.8 * REM, 1. * REM]))
+                .style(iced::theme::TextInput::Custom(Box::new(TextInputStyle {}))),
             iced::widget::column(
                 self.plugins
                     .iter()
                     .map(|plugin| self.view_plugin(plugin))
                     .collect()
             ),
-        ]
+        ])
+        .style(iced::theme::Container::Custom(Box::new(
+            ApplicationWrapperStyle {},
+        )))
         .into()
     }
 
     fn theme(&self) -> iced::Theme {
         return iced::Theme::Dark;
+    }
+
+    fn style(&self) -> iced::theme::Application {
+        return iced::theme::Application::Custom(Box::new(SandboxStyle {}));
     }
 }
 
@@ -141,9 +149,9 @@ impl Centerpiece {
         return iced::widget::container(
             iced::widget::row![
                 iced::widget::text(&entry.title)
-                    .size(1.0 * REM)
+                    .size(1. * REM)
                     .width(iced::Length::Fill),
-                iced::widget::text(&entry.action).size(1.0 * REM),
+                iced::widget::text(&entry.action).size(1. * REM),
             ]
             .padding(0.5 * REM),
         )
@@ -156,15 +164,83 @@ impl Centerpiece {
     }
 }
 
+struct SandboxStyle {}
+impl iced::application::StyleSheet for SandboxStyle {
+    type Style = iced::Theme;
+
+    fn appearance(&self, _style: &Self::Style) -> iced::application::Appearance {
+        iced::application::Appearance {
+            background_color: iced::color!(0x000000, 0.),
+            text_color: iced::color!(0xffffff, 1.),
+        }
+    }
+}
+
+struct ApplicationWrapperStyle {}
+impl iced::widget::container::StyleSheet for ApplicationWrapperStyle {
+    type Style = iced::Theme;
+
+    fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
+        return iced::widget::container::Appearance {
+            background: Some(iced::Background::Color(iced::color!(0x000000, 1.))),
+            border_color: iced::color!(0x000000, 0.),
+            border_radius: 0.25 * REM,
+            border_width: 0.,
+            text_color: None,
+        };
+    }
+}
+
+struct TextInputStyle {}
+impl iced::widget::text_input::StyleSheet for TextInputStyle {
+    type Style = iced::Theme;
+
+    fn active(&self, _style: &Self::Style) -> iced::widget::text_input::Appearance {
+        return iced::widget::text_input::Appearance {
+            background: iced::Background::Color(iced::color!(0x000000, 0.)),
+            border_radius: 0.,
+            border_width: 0.,
+            border_color: iced::color!(0x000000, 0.),
+            icon_color: iced::color!(0xf3f3f3, 1.),
+        };
+    }
+
+    fn focused(&self, style: &Self::Style) -> iced::widget::text_input::Appearance {
+        return self.active(style);
+    }
+
+    fn disabled(&self, style: &Self::Style) -> iced::widget::text_input::Appearance {
+        return self.active(style);
+    }
+
+    fn placeholder_color(&self, _style: &Self::Style) -> iced::Color {
+        return iced::color!(0xf3f3f3, 1.);
+    }
+
+    fn value_color(&self, _style: &Self::Style) -> iced::Color {
+        return iced::color!(0xffffff, 1.);
+    }
+
+    fn disabled_color(&self, _style: &Self::Style) -> iced::Color {
+        return iced::color!(0xfafafa, 1.);
+    }
+
+    fn selection_color(&self, _style: &Self::Style) -> iced::Color {
+        return iced::color!(0x1b1b1b, 1.);
+    }
+}
+
 struct ActiveEntryStyle {}
 impl iced::widget::container::StyleSheet for ActiveEntryStyle {
     type Style = iced::Theme;
 
     fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
-        let mut appearance = iced::widget::container::Appearance::default();
-        appearance.border_radius = 5.0;
-        appearance.border_width = 1.0;
-        appearance.border_color = iced::Color::from_rgb(255.0, 255.0, 255.0);
-        return appearance;
+        return iced::widget::container::Appearance {
+            background: None,
+            border_radius: 0.1 * REM,
+            border_width: 1.,
+            border_color: iced::color!(0xffffff, 1.),
+            text_color: None,
+        };
     }
 }

@@ -100,7 +100,7 @@ impl Sandbox for Centerpiece {
             iced::widget::column(
                 self.plugins
                     .iter()
-                    .map(|plugin| view_plugin(plugin, &self.active_entry_id))
+                    .map(|plugin| self.view_plugin(plugin))
                     .collect()
             ),
         ]
@@ -112,63 +112,59 @@ impl Sandbox for Centerpiece {
     }
 }
 
-fn view_plugin(
-    plugin: &types::Plugin,
-    active_entry_id: &String,
-) -> iced::Element<'static, Message> {
-    return iced::widget::column![
-        iced::widget::horizontal_rule(1),
-        iced::widget::column![
-            view_plugin_title(&plugin.title),
-            iced::widget::column(
-                plugin
-                    .entries
-                    .iter()
-                    .map(|entry| view_entry(entry, active_entry_id))
-                    .collect()
-            ),
+impl Centerpiece {
+    fn view_plugin(&self, plugin: &types::Plugin) -> iced::Element<'static, Message> {
+        return iced::widget::column![
+            iced::widget::horizontal_rule(1),
+            iced::widget::column![
+                self.view_plugin_title(&plugin.title),
+                iced::widget::column(
+                    plugin
+                        .entries
+                        .iter()
+                        .map(|entry| self.view_entry(entry))
+                        .collect()
+                ),
+            ]
+            .padding(0.5 * REM),
         ]
-        .padding(0.5 * REM),
-    ]
-    .into();
-}
-
-fn view_plugin_title(title: &String) -> iced::Element<'static, Message> {
-    return iced::widget::row![iced::widget::text(title).size(0.75 * REM)]
-        .padding(0.5 * REM)
         .into();
+    }
+
+    fn view_plugin_title(&self, title: &String) -> iced::Element<'static, Message> {
+        return iced::widget::row![iced::widget::text(title).size(0.75 * REM)]
+            .padding(0.5 * REM)
+            .into();
+    }
+
+    fn view_entry(&self, entry: &types::Entry) -> iced::Element<'static, Message> {
+        return iced::widget::container(
+            iced::widget::row![
+                iced::widget::text(&entry.title)
+                    .size(1.0 * REM)
+                    .width(iced::Length::Fill),
+                iced::widget::text(&entry.action).size(1.0 * REM),
+            ]
+            .padding(0.5 * REM),
+        )
+        .style(if entry.id == self.active_entry_id {
+            iced::theme::Container::Custom(Box::new(ActiveEntryStyle {}))
+        } else {
+            iced::theme::Container::Transparent
+        })
+        .into();
+    }
 }
 
-fn view_entry(entry: &types::Entry, active_entry_id: &String) -> iced::Element<'static, Message> {
-    return iced::widget::container(
-        iced::widget::row![
-            iced::widget::text(&entry.title)
-                .size(1.0 * REM)
-                .width(iced::Length::Fill),
-            iced::widget::text(&entry.action).size(1.0 * REM),
-        ]
-        .padding(0.5 * REM),
-    )
-    .style(if &entry.id == active_entry_id {
-        iced::theme::Container::Box
-    } else {
-        iced::theme::Container::Transparent
-    })
-    .into();
+struct ActiveEntryStyle {}
+impl iced::widget::container::StyleSheet for ActiveEntryStyle {
+    type Style = iced::Theme;
 
-    // iced::theme::Container::from(|| iced::widget::container::Appearance {
-    //     text_color: None,
-    //     background: None,
-    //     border_radius: 5.0,
-    //     border_width: 1.0,
-    //     border_color: iced::Color::from_rgb(150, 150, 150),
-    // })
+    fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
+        let mut appearance = iced::widget::container::Appearance::default();
+        appearance.border_radius = 5.0;
+        appearance.border_width = 1.0;
+        appearance.border_color = iced::Color::from_rgb(255.0, 255.0, 255.0);
+        return appearance;
+    }
 }
-
-// iced::widget::container::Appearance {
-//     text_color: None,
-//     background: None,
-//     border_radius: 5.0,
-//     border_width: 1.0,
-//     border_color: iced::Color::from_rgb(150, 150, 150),
-// }

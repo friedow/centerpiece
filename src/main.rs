@@ -1,4 +1,4 @@
-use iced::Sandbox;
+use iced::Application;
 
 mod model;
 mod style;
@@ -8,7 +8,7 @@ pub fn main() -> iced::Result {
 
     default_settings.window = iced::window::Settings {
         transparent: true,
-        size: (500, 350),
+        size: (450, 350),
         decorations: false,
         always_on_top: true,
         resizable: false,
@@ -26,68 +26,122 @@ pub fn main() -> iced::Result {
 #[derive(Debug, Clone)]
 enum Message {
     Search(String),
+    Event(iced::Event),
 }
 
 struct Centerpiece {
     query: String,
-    active_entry_id: String,
+    active_entry_index: usize,
     plugins: Vec<model::Plugin>,
 }
 
-impl Sandbox for Centerpiece {
+impl Application for Centerpiece {
     type Message = Message;
+    type Executor = iced::executor::Default;
+    type Theme = iced::Theme;
+    type Flags = ();
 
-    fn new() -> Self {
-        Self {
-            query: String::from(""),
-            active_entry_id: String::from("clock-item-1"),
-            plugins: vec![
-                model::Plugin {
-                    id: String::from("clock"),
-                    title: String::from("Plugin 1"),
-                    entries: vec![
-                        model::Entry {
-                            id: String::from("clock-item-1"),
-                            title: String::from("Item 1"),
-                            action: String::from("open"),
-                        },
-                        model::Entry {
-                            id: String::from("clock-item-2"),
-                            title: String::from("Item 2"),
-                            action: String::from("open"),
-                        },
-                    ],
-                },
-                model::Plugin {
-                    id: String::from("git-repositories"),
-                    title: String::from("Plugin 2"),
-                    entries: vec![
-                        model::Entry {
-                            id: String::from("git-repo-item-1"),
-                            title: String::from("Item 1"),
-                            action: String::from("switch"),
-                        },
-                        model::Entry {
-                            id: String::from("git-repo-item-2"),
-                            title: String::from("Item 2"),
-                            action: String::from("switch"),
-                        },
-                    ],
-                },
-            ],
-        }
+    fn new(_flags: ()) -> (Self, iced::Command<Message>) {
+        return (
+            Self {
+                query: String::from(""),
+                active_entry_index: 0,
+                plugins: vec![
+                    model::Plugin {
+                        id: String::from("clock"),
+                        title: String::from("Plugin 1"),
+                        entries: vec![
+                            model::Entry {
+                                id: String::from("clock-item-1"),
+                                title: String::from("Item 1"),
+                                action: String::from("open"),
+                            },
+                            model::Entry {
+                                id: String::from("clock-item-2"),
+                                title: String::from("Item 2"),
+                                action: String::from("open"),
+                            },
+                        ],
+                    },
+                    model::Plugin {
+                        id: String::from("git-repositories"),
+                        title: String::from("Plugin 2"),
+                        entries: vec![
+                            model::Entry {
+                                id: String::from("git-repo-item-1"),
+                                title: String::from("Item 1"),
+                                action: String::from("switch"),
+                            },
+                            model::Entry {
+                                id: String::from("git-repo-item-2"),
+                                title: String::from("Item 2"),
+                                action: String::from("switch"),
+                            },
+                        ],
+                    },
+                ],
+            },
+            iced::Command::none(),
+        );
     }
 
     fn title(&self) -> String {
         String::from("Centerpiece")
     }
 
-    fn update(&mut self, message: Message) {
+    fn update(&mut self, message: Message) -> iced::Command<Message> {
         match message {
             Message::Search(input) => {
                 self.query = input;
+                return iced::Command::none();
             }
+            Message::Event(event) => match event {
+                iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
+                    key_code: iced::keyboard::KeyCode::Up,
+                    ..
+                }) => {
+                    let entries = self.entries();
+                    if entries.len() == 0 {
+                        self.active_entry_index = 0;
+                        return iced::Command::none();
+                    }
+
+                    if self.active_entry_index == 0 {
+                        self.active_entry_index = entries.len() - 1;
+                        return iced::Command::none();
+                    }
+
+                    self.active_entry_index -= 1;
+                    return iced::Command::none();
+                }
+
+                iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
+                    key_code: iced::keyboard::KeyCode::Down,
+                    ..
+                }) => {
+                    let entries = self.entries();
+                    if entries.len() == 0 || self.active_entry_index == entries.len() - 1 {
+                        self.active_entry_index = 0;
+                        return iced::Command::none();
+                    }
+
+                    self.active_entry_index += 1;
+                    return iced::Command::none();
+                }
+
+                // TODO: this does not work while the text input is focussed
+                iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
+                    key_code: iced::keyboard::KeyCode::Escape,
+                    ..
+                }) => iced::window::close(),
+
+                _ => iced::Command::none(),
+            },
         }
+    }
+
+    fn subscription(&self) -> iced::Subscription<Self::Message> {
+        iced::subscription::events().map(Message::Event)
     }
 
     fn view(&self) -> iced::Element<Message> {
@@ -122,7 +176,7 @@ impl Sandbox for Centerpiece {
 }
 
 impl Centerpiece {
-    fn view_plugin(&self, plugin: &model::Plugin) -> iced::Element<'static, Message> {
+    fn view_plugin(&self, plugin: &model::Plugin) -> iced::Element<Message> {
         return iced::widget::column![
             iced::widget::horizontal_rule(1),
             iced::widget::column![
@@ -140,13 +194,16 @@ impl Centerpiece {
         .into();
     }
 
-    fn view_plugin_title(&self, title: &String) -> iced::Element<'static, Message> {
+    fn view_plugin_title(&self, title: &String) -> iced::Element<Message> {
         return iced::widget::row![iced::widget::text(title).size(0.75 * style::REM)]
             .padding(0.5 * style::REM)
             .into();
     }
 
-    fn view_entry(&self, entry: &model::Entry) -> iced::Element<'static, Message> {
+    fn view_entry(&self, entry: &model::Entry) -> iced::Element<Message> {
+        let entries = self.entries();
+        let active_entry = entries.get(self.active_entry_index);
+
         return iced::widget::container(
             iced::widget::row![
                 iced::widget::text(&entry.title)
@@ -156,11 +213,21 @@ impl Centerpiece {
             ]
             .padding(0.5 * style::REM),
         )
-        .style(if entry.id == self.active_entry_id {
-            iced::theme::Container::Custom(Box::new(style::ActiveEntry {}))
-        } else {
-            iced::theme::Container::Transparent
-        })
+        .style(
+            if active_entry.is_some() && active_entry.unwrap().id == entry.id {
+                iced::theme::Container::Custom(Box::new(style::ActiveEntry {}))
+            } else {
+                iced::theme::Container::Transparent
+            },
+        )
         .into();
+    }
+
+    fn entries(&self) -> Vec<&model::Entry> {
+        return self
+            .plugins
+            .iter()
+            .flat_map(|plugin| &plugin.entries)
+            .collect();
     }
 }

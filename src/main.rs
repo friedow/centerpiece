@@ -1,6 +1,7 @@
 use iced::Sandbox;
 
-mod types;
+mod model;
+mod style;
 
 pub fn main() -> iced::Result {
     let mut default_settings = iced::Settings::default();
@@ -30,10 +31,8 @@ enum Message {
 struct Centerpiece {
     query: String,
     active_entry_id: String,
-    plugins: Vec<types::Plugin>,
+    plugins: Vec<model::Plugin>,
 }
-
-const REM: f32 = 14.0;
 
 impl Sandbox for Centerpiece {
     type Message = Message;
@@ -43,32 +42,32 @@ impl Sandbox for Centerpiece {
             query: String::from(""),
             active_entry_id: String::from("clock-item-1"),
             plugins: vec![
-                types::Plugin {
+                model::Plugin {
                     id: String::from("clock"),
                     title: String::from("Plugin 1"),
                     entries: vec![
-                        types::Entry {
+                        model::Entry {
                             id: String::from("clock-item-1"),
                             title: String::from("Item 1"),
                             action: String::from("open"),
                         },
-                        types::Entry {
+                        model::Entry {
                             id: String::from("clock-item-2"),
                             title: String::from("Item 2"),
                             action: String::from("open"),
                         },
                     ],
                 },
-                types::Plugin {
+                model::Plugin {
                     id: String::from("git-repositories"),
                     title: String::from("Plugin 2"),
                     entries: vec![
-                        types::Entry {
+                        model::Entry {
                             id: String::from("git-repo-item-1"),
                             title: String::from("Item 1"),
                             action: String::from("switch"),
                         },
-                        types::Entry {
+                        model::Entry {
                             id: String::from("git-repo-item-2"),
                             title: String::from("Item 2"),
                             action: String::from("switch"),
@@ -95,9 +94,11 @@ impl Sandbox for Centerpiece {
         iced::widget::container(iced::widget::column![
             iced::widget::text_input("Search", &self.query)
                 .on_input(Message::Search)
-                .size(1.0 * REM)
-                .padding(iced::Padding::from([0.8 * REM, 1. * REM]))
-                .style(iced::theme::TextInput::Custom(Box::new(TextInputStyle {}))),
+                .size(1.0 * style::REM)
+                .padding(iced::Padding::from([0.8 * style::REM, 1. * style::REM]))
+                .style(iced::theme::TextInput::Custom(Box::new(
+                    style::TextInput {}
+                ))),
             iced::widget::column(
                 self.plugins
                     .iter()
@@ -106,7 +107,7 @@ impl Sandbox for Centerpiece {
             ),
         ])
         .style(iced::theme::Container::Custom(Box::new(
-            ApplicationWrapperStyle {},
+            style::ApplicationWrapper {},
         )))
         .into()
     }
@@ -116,12 +117,12 @@ impl Sandbox for Centerpiece {
     }
 
     fn style(&self) -> iced::theme::Application {
-        return iced::theme::Application::Custom(Box::new(SandboxStyle {}));
+        return iced::theme::Application::Custom(Box::new(style::Sandbox {}));
     }
 }
 
 impl Centerpiece {
-    fn view_plugin(&self, plugin: &types::Plugin) -> iced::Element<'static, Message> {
+    fn view_plugin(&self, plugin: &model::Plugin) -> iced::Element<'static, Message> {
         return iced::widget::column![
             iced::widget::horizontal_rule(1),
             iced::widget::column![
@@ -134,113 +135,32 @@ impl Centerpiece {
                         .collect()
                 ),
             ]
-            .padding(0.5 * REM),
+            .padding(0.5 * style::REM),
         ]
         .into();
     }
 
     fn view_plugin_title(&self, title: &String) -> iced::Element<'static, Message> {
-        return iced::widget::row![iced::widget::text(title).size(0.75 * REM)]
-            .padding(0.5 * REM)
+        return iced::widget::row![iced::widget::text(title).size(0.75 * style::REM)]
+            .padding(0.5 * style::REM)
             .into();
     }
 
-    fn view_entry(&self, entry: &types::Entry) -> iced::Element<'static, Message> {
+    fn view_entry(&self, entry: &model::Entry) -> iced::Element<'static, Message> {
         return iced::widget::container(
             iced::widget::row![
                 iced::widget::text(&entry.title)
-                    .size(1. * REM)
+                    .size(1. * style::REM)
                     .width(iced::Length::Fill),
-                iced::widget::text(&entry.action).size(1. * REM),
+                iced::widget::text(&entry.action).size(1. * style::REM),
             ]
-            .padding(0.5 * REM),
+            .padding(0.5 * style::REM),
         )
         .style(if entry.id == self.active_entry_id {
-            iced::theme::Container::Custom(Box::new(ActiveEntryStyle {}))
+            iced::theme::Container::Custom(Box::new(style::ActiveEntry {}))
         } else {
             iced::theme::Container::Transparent
         })
         .into();
-    }
-}
-
-struct SandboxStyle {}
-impl iced::application::StyleSheet for SandboxStyle {
-    type Style = iced::Theme;
-
-    fn appearance(&self, _style: &Self::Style) -> iced::application::Appearance {
-        iced::application::Appearance {
-            background_color: iced::color!(0x000000, 0.),
-            text_color: iced::color!(0xffffff, 1.),
-        }
-    }
-}
-
-struct ApplicationWrapperStyle {}
-impl iced::widget::container::StyleSheet for ApplicationWrapperStyle {
-    type Style = iced::Theme;
-
-    fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
-        return iced::widget::container::Appearance {
-            background: Some(iced::Background::Color(iced::color!(0x000000, 1.))),
-            border_color: iced::color!(0x000000, 0.),
-            border_radius: 0.25 * REM,
-            border_width: 0.,
-            text_color: None,
-        };
-    }
-}
-
-struct TextInputStyle {}
-impl iced::widget::text_input::StyleSheet for TextInputStyle {
-    type Style = iced::Theme;
-
-    fn active(&self, _style: &Self::Style) -> iced::widget::text_input::Appearance {
-        return iced::widget::text_input::Appearance {
-            background: iced::Background::Color(iced::color!(0x000000, 0.)),
-            border_radius: 0.,
-            border_width: 0.,
-            border_color: iced::color!(0x000000, 0.),
-            icon_color: iced::color!(0xf3f3f3, 1.),
-        };
-    }
-
-    fn focused(&self, style: &Self::Style) -> iced::widget::text_input::Appearance {
-        return self.active(style);
-    }
-
-    fn disabled(&self, style: &Self::Style) -> iced::widget::text_input::Appearance {
-        return self.active(style);
-    }
-
-    fn placeholder_color(&self, _style: &Self::Style) -> iced::Color {
-        return iced::color!(0xf3f3f3, 1.);
-    }
-
-    fn value_color(&self, _style: &Self::Style) -> iced::Color {
-        return iced::color!(0xffffff, 1.);
-    }
-
-    fn disabled_color(&self, _style: &Self::Style) -> iced::Color {
-        return iced::color!(0xfafafa, 1.);
-    }
-
-    fn selection_color(&self, _style: &Self::Style) -> iced::Color {
-        return iced::color!(0x1b1b1b, 1.);
-    }
-}
-
-struct ActiveEntryStyle {}
-impl iced::widget::container::StyleSheet for ActiveEntryStyle {
-    type Style = iced::Theme;
-
-    fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
-        return iced::widget::container::Appearance {
-            background: None,
-            border_radius: 0.1 * REM,
-            border_width: 1.,
-            border_color: iced::color!(0xffffff, 1.),
-            text_color: None,
-        };
     }
 }

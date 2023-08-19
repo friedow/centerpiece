@@ -1,5 +1,6 @@
 use iced::Application;
 
+mod component;
 mod model;
 mod style;
 
@@ -24,13 +25,11 @@ pub fn main() -> iced::Result {
 }
 
 #[derive(Debug, Clone)]
-enum Message {
+pub enum Message {
     Loaded,
     Search(String),
     Event(iced::Event),
 }
-
-const SEARCH_INPUT_ID: &str = "search_input";
 
 struct Centerpiece {
     query: String,
@@ -155,18 +154,11 @@ impl Application for Centerpiece {
 
     fn view(&self) -> iced::Element<Message> {
         iced::widget::container(iced::widget::column![
-            iced::widget::text_input("Search", &self.query)
-                .id(iced::widget::text_input::Id::new(SEARCH_INPUT_ID))
-                .on_input(Message::Search)
-                .size(1.0 * style::REM)
-                .padding(iced::Padding::from([0.8 * style::REM, 1. * style::REM]))
-                .style(iced::theme::TextInput::Custom(Box::new(
-                    style::TextInput {}
-                ))),
+            component::query_input::view(&self.query),
             iced::widget::column(
                 self.plugins
                     .iter()
-                    .map(|plugin| self.view_plugin(plugin))
+                    .map(|plugin| component::plugin::view(plugin, self.active_entry_id()))
                     .collect()
             ),
         ])
@@ -186,53 +178,6 @@ impl Application for Centerpiece {
 }
 
 impl Centerpiece {
-    fn view_plugin(&self, plugin: &model::Plugin) -> iced::Element<Message> {
-        return iced::widget::column![
-            iced::widget::horizontal_rule(1),
-            iced::widget::column![
-                self.view_plugin_title(&plugin.title),
-                iced::widget::column(
-                    plugin
-                        .entries
-                        .iter()
-                        .map(|entry| self.view_entry(entry))
-                        .collect()
-                ),
-            ]
-            .padding(0.5 * style::REM),
-        ]
-        .into();
-    }
-
-    fn view_plugin_title(&self, title: &String) -> iced::Element<Message> {
-        return iced::widget::row![iced::widget::text(title).size(0.75 * style::REM)]
-            .padding(0.5 * style::REM)
-            .into();
-    }
-
-    fn view_entry(&self, entry: &model::Entry) -> iced::Element<Message> {
-        let entries = self.entries();
-        let active_entry = entries.get(self.active_entry_index);
-
-        return iced::widget::container(
-            iced::widget::row![
-                iced::widget::text(&entry.title)
-                    .size(1. * style::REM)
-                    .width(iced::Length::Fill),
-                iced::widget::text(&entry.action).size(1. * style::REM),
-            ]
-            .padding(0.5 * style::REM),
-        )
-        .style(
-            if active_entry.is_some() && active_entry.unwrap().id == entry.id {
-                iced::theme::Container::Custom(Box::new(style::ActiveEntry {}))
-            } else {
-                iced::theme::Container::Transparent
-            },
-        )
-        .into();
-    }
-
     fn entries(&self) -> Vec<&model::Entry> {
         return self
             .plugins
@@ -241,7 +186,18 @@ impl Centerpiece {
             .collect();
     }
 
+    fn active_entry_id(&self) -> Option<&String> {
+        let entries = self.entries();
+        let active_entry = entries.get(self.active_entry_index);
+        return match active_entry {
+            Some(entry) => Some(&entry.id),
+            None => None,
+        };
+    }
+
     fn focus_search_input(&self) -> iced::Command<Message> {
-        return iced::widget::text_input::focus(iced::widget::text_input::Id::new(SEARCH_INPUT_ID));
+        return iced::widget::text_input::focus(iced::widget::text_input::Id::new(
+            component::query_input::SEARCH_INPUT_ID,
+        ));
     }
 }

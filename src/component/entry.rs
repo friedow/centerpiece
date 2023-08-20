@@ -8,7 +8,7 @@ pub fn view(entry: &model::Entry, active: bool) -> iced::Element<'static, Messag
             iced::widget::text(&entry.title)
                 .size(1. * style::REM)
                 .width(iced::Length::Fill),
-            iced::widget::text(&entry.action).size(1. * style::REM),
+            iced::widget::text(if active { &entry.action } else { "" }).size(1. * style::REM)
         ]
         .padding(0.5 * style::REM),
     )

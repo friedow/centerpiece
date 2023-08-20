@@ -5,9 +5,13 @@ mod model;
 mod style;
 
 pub fn main() -> iced::Result {
-    let mut default_settings = iced::Settings::default();
+    let mut settings = iced::Settings::default();
+    settings.default_text_size = style::REM;
+    settings.default_font = Some(include_bytes!(
+        "../assets/FiraCode/FiraCodeNerdFont-Regular.ttf"
+    ));
 
-    default_settings.window = iced::window::Settings {
+    settings.window = iced::window::Settings {
         transparent: true,
         size: (450, 350),
         decorations: false,
@@ -21,7 +25,7 @@ pub fn main() -> iced::Result {
         platform_specific: iced::window::PlatformSpecific::default(),
     };
 
-    Centerpiece::run(default_settings)
+    Centerpiece::run(settings)
 }
 
 #[derive(Debug, Clone)]
@@ -51,7 +55,7 @@ impl Application for Centerpiece {
                 plugins: vec![
                     model::Plugin {
                         id: String::from("clock"),
-                        title: String::from("Plugin 1"),
+                        title: String::from("󰅐 Clock"),
                         entries: vec![
                             model::Entry {
                                 id: String::from("clock-item-1"),

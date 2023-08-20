@@ -5,14 +5,16 @@ pub const SEARCH_INPUT_ID: &str = "search_input";
 
 pub fn view(query: &String) -> iced::Element<'static, Message> {
     return iced::widget::row![
-        // iced::widget::svg(),
+        iced::widget::container(iced::widget::text("󰍉 ").size(1.3 * style::REM)).padding(
+            iced::Padding::from([0.2 * style::REM, -0.5 * style::REM, 0., 0.])
+        ),
         iced::widget::text_input("Search", query)
             .id(iced::widget::text_input::Id::new(SEARCH_INPUT_ID))
             .on_input(Message::Search)
-            .size(1.0 * style::REM)
-            .padding(iced::Padding::from([0.8 * style::REM, 1. * style::REM]))
+            .size(1. * style::REM)
             .style(style())
     ]
+    .padding(iced::Padding::from([0.8 * style::REM, 1. * style::REM]))
     .into();
 }
 

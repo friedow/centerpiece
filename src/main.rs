@@ -7,15 +7,21 @@ mod style;
 pub fn main() -> iced::Result {
     let mut settings = iced::Settings::default();
     settings.default_text_size = style::REM;
-    settings.default_font = Some(include_bytes!(
-        "../assets/FiraCode/FiraCodeNerdFont-Regular.ttf"
-    ));
+    settings.default_font = iced::Font {
+        family: iced::font::Family::Monospace,
+        weight: iced::font::Weight::Normal,
+        stretch: iced::font::Stretch::Normal,
+        monospaced: true,
+    };
+    // Some(include_bytes!(
+    //     "../assets/FiraCode/FiraCodeNerdFont-Regular.ttf"
+    // ));
 
     settings.window = iced::window::Settings {
         transparent: true,
-        size: (450, 350),
+        size: (550, 350),
         decorations: false,
-        always_on_top: true,
+        level: iced::window::Level::AlwaysOnTop,
         resizable: false,
         position: iced::window::Position::Centered,
         min_size: None,

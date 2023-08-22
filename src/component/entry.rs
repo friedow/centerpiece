@@ -32,7 +32,7 @@ impl iced::widget::container::StyleSheet for Style {
     fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
         return iced::widget::container::Appearance {
             background: None,
-            border_radius: 0.1 * style::REM,
+            border_radius: iced::BorderRadius::from(0.1 * style::REM),
             border_width: 1.,
             border_color: iced::color!(0xffffff, 1.),
             text_color: None,

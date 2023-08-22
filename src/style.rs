@@ -7,8 +7,8 @@ impl iced::application::StyleSheet for Sandbox {
 
     fn appearance(&self, _style: &Self::Style) -> iced::application::Appearance {
         iced::application::Appearance {
-            background_color: iced::color!(0x000000, 0.),
-            text_color: iced::color!(0xffffff, 1.),
+            background_color: iced::Color::TRANSPARENT,
+            text_color: iced::Color::WHITE,
         }
     }
 }
@@ -20,9 +20,9 @@ impl iced::widget::container::StyleSheet for ApplicationWrapper {
 
     fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
         return iced::widget::container::Appearance {
-            background: Some(iced::Background::Color(iced::color!(0x000000, 1.))),
-            border_color: iced::color!(0x000000, 0.),
-            border_radius: 0.25 * REM,
+            background: Some(iced::Background::Color(iced::Color::BLACK)),
+            border_color: iced::Color::TRANSPARENT,
+            border_radius: iced::BorderRadius::from(0.25 * REM),
             border_width: 0.,
             text_color: None,
         };

@@ -30,7 +30,7 @@ impl iced::widget::text_input::StyleSheet for Style {
     fn active(&self, _style: &Self::Style) -> iced::widget::text_input::Appearance {
         return iced::widget::text_input::Appearance {
             background: iced::Background::Color(iced::color!(0x000000, 0.)),
-            border_radius: 0.,
+            border_radius: iced::BorderRadius::from(0.),
             border_width: 0.,
             border_color: iced::color!(0x000000, 0.),
             icon_color: iced::color!(0xf3f3f3, 1.),

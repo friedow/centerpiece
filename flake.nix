@@ -10,30 +10,19 @@
 
       devInputs = with pkgs; [ rustc rustfmt cargo ];
 
-      nativeBuildInputs = with pkgs; [ cmake pkgconf makeWrapper ];
+      nativeBuildInputs = with pkgs;
+        [
+          # cmake pkgconf
+          makeWrapper
+        ];
 
-      buildInputs = with pkgs; [
-        wayland
-
-        freetype
-        expat
-        libGL
-        libglvnd
-        fontconfig
-        libxkbcommon
-
-        xorg.libX11
-        xorg.libXcursor
-        xorg.libXi
-        xorg.libXrandr
-        xorg.libxcb
-      ];
+      buildInputs = with pkgs; [ ];
     in {
       devShells.${system}.default = pkgs.mkShell {
         inherit nativeBuildInputs buildInputs;
         packages = devInputs;
         LD_LIBRARY_PATH =
-          pkgs.lib.makeLibraryPath [ pkgs.vulkan-loader pkgs.libGL ];
+          pkgs.lib.makeLibraryPath [ pkgs.wayland pkgs.libxkbcommon ];
       };
 
       packages.${system}.default = pkgs.rustPlatform.buildRustPackage rec {
@@ -45,9 +34,8 @@
         postInstall = ''
           wrapProgram "$out/bin/${pname}" \
             --prefix LD_LIBRARY_PATH : ${
-              pkgs.lib.makeLibraryPath [ pkgs.vulkan-loader pkgs.libGL ]
-            } \
-            --suffix XDG_DATA_DIRS : "${pkgs.papirus-icon-theme}/share"
+              pkgs.lib.makeLibraryPath [ pkgs.wayland pkgs.libxkbcommon ]
+            }
         '';
 
         src = ./.;

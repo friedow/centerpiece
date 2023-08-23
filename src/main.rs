@@ -8,14 +8,11 @@ pub fn main() -> iced::Result {
     let mut settings = iced::Settings::default();
     settings.default_text_size = style::REM;
     settings.default_font = iced::Font {
-        family: iced::font::Family::Monospace,
+        family: iced::font::Family::Name("FiraCode Nerd Font"),
         weight: iced::font::Weight::Normal,
         stretch: iced::font::Stretch::Normal,
         monospaced: true,
     };
-    // Some(include_bytes!(
-    //     "../assets/FiraCode/FiraCodeNerdFont-Regular.ttf"
-    // ));
 
     settings.window = iced::window::Settings {
         transparent: true,
@@ -39,6 +36,7 @@ pub enum Message {
     Loaded,
     Search(String),
     Event(iced::Event),
+    FontLoaded(Result<(), iced::font::Error>),
 }
 
 struct Centerpiece {
@@ -93,7 +91,13 @@ impl Application for Centerpiece {
                     },
                 ],
             },
-            iced::Command::perform(async {}, move |()| Message::Loaded),
+            iced::Command::batch(vec![
+                iced::font::load(
+                    include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
+                )
+                .map(Message::FontLoaded),
+                iced::Command::perform(async {}, move |()| Message::Loaded),
+            ]),
         );
     }
 
@@ -155,6 +159,8 @@ impl Application for Centerpiece {
 
                 _ => iced::Command::none(),
             },
+
+            Message::FontLoaded(_) => iced::Command::none(),
         }
     }
 

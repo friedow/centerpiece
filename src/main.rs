@@ -1,8 +1,9 @@
-use iced::Application;
+use iced::{Application, futures::SinkExt};
 
 mod component;
 mod model;
 mod style;
+mod plugin;
 
 pub fn main() -> iced::Result {
     let mut settings = iced::Settings::default();
@@ -37,12 +38,15 @@ pub enum Message {
     Search(String),
     Event(iced::Event),
     FontLoaded(Result<(), iced::font::Error>),
+    RegisterPlugin(model::Plugin, iced::futures::channel::mpsc::Sender<crate::plugin::clock::PluginRequest>),
+    AppendEntry(String, model::Entry),
 }
 
 struct Centerpiece {
     query: String,
     active_entry_index: usize,
     plugins: Vec<model::Plugin>,
+    sender: Option<iced::futures::channel::mpsc::Sender<crate::plugin::clock::PluginRequest>>,
 }
 
 impl Application for Centerpiece {
@@ -56,40 +60,8 @@ impl Application for Centerpiece {
             Self {
                 query: String::from(""),
                 active_entry_index: 0,
-                plugins: vec![
-                    model::Plugin {
-                        id: String::from("clock"),
-                        title: String::from("󰅐 Clock"),
-                        entries: vec![
-                            model::Entry {
-                                id: String::from("clock-item-1"),
-                                title: String::from("Item 1"),
-                                action: String::from("open"),
-                            },
-                            model::Entry {
-                                id: String::from("clock-item-2"),
-                                title: String::from("Item 2"),
-                                action: String::from("open"),
-                            },
-                        ],
-                    },
-                    model::Plugin {
-                        id: String::from("git-repositories"),
-                        title: String::from("Plugin 2"),
-                        entries: vec![
-                            model::Entry {
-                                id: String::from("git-repo-item-1"),
-                                title: String::from("Item 1"),
-                                action: String::from("switch"),
-                            },
-                            model::Entry {
-                                id: String::from("git-repo-item-2"),
-                                title: String::from("Item 2"),
-                                action: String::from("switch"),
-                            },
-                        ],
-                    },
-                ],
+                plugins: vec![],
+                sender: None,
             },
             iced::Command::batch(vec![
                 iced::font::load(
@@ -110,7 +82,21 @@ impl Application for Centerpiece {
             Message::Loaded => self.focus_search_input(),
 
             Message::Search(input) => {
-                self.query = input;
+                self.query = input.clone();
+                println!("notifting plugins");
+                // self.plugins.iter().for_each(|plugin| {plugin.channel.send(plugin::clock::PluginRequest::Search(input.clone()));});
+                // for channel in self.channels.iter_mut() {
+                //     let _ = channel.send(plugin::clock::PluginRequest::Search(input.clone()));
+                // }
+                if self.sender.is_none() {
+                    println!("no sender found");
+                    return iced::Command::none();
+                }
+
+                let _ = self.sender.as_mut().unwrap().try_send(plugin::clock::PluginRequest::Search(input.clone()));
+                // if test.is_err() {
+                //     println!("{:?}", test.unwrap_err());
+                // }
                 return iced::Command::none();
             }
 
@@ -161,11 +147,34 @@ impl Application for Centerpiece {
             },
 
             Message::FontLoaded(_) => iced::Command::none(),
+
+            Message::RegisterPlugin(plugin, sender) => {
+                self.plugins.push(plugin);
+                self.sender = Some(sender);
+                return iced::Command::none();
+            },
+
+            Message::AppendEntry(plugin_id, entry) => {
+                // self.plugins.iter()
+                let plugin = self.plugins.iter_mut().find(|plugin| plugin.id == plugin_id);
+                if plugin.is_none() {
+                    println!("Appending entry failed. Could not find plugin for id {:?}", plugin_id);
+                    return iced::Command::none();
+                }
+
+                let plugin = plugin.unwrap();
+                plugin.entries.push(entry);
+                return iced::Command::none();
+            },
         }
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-        return iced::subscription::events().map(Message::Event);
+
+        return iced::subscription::Subscription::batch(vec![
+            iced::subscription::events().map(Message::Event),
+            plugin::clock::spawn(),
+        ]);
     }
 
     fn view(&self) -> iced::Element<Message> {

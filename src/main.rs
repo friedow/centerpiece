@@ -40,6 +40,7 @@ pub enum Message {
     FontLoaded(Result<(), iced::font::Error>),
     RegisterPlugin(model::Plugin),
     AppendEntry(String, model::Entry),
+    Clear(String),
 }
 
 struct Centerpiece {
@@ -152,6 +153,18 @@ impl Application for Centerpiece {
                 plugin.entries.push(entry);
                 return iced::Command::none();
             },
+
+            Message::Clear(plugin_id) => {
+                let plugin = self.plugins.iter_mut().find(|plugin| plugin.id == plugin_id);
+                if plugin.is_none() {
+                    println!("Clearing entries failed. Could not find plugin with id {:?}", plugin_id);
+                    return iced::Command::none();
+                }
+
+                let plugin = plugin.unwrap();
+                plugin.entries.clear();
+                return iced::Command::none();
+            }
         }
     }
 

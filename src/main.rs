@@ -1,4 +1,4 @@
-use iced::{Application, futures::SinkExt};
+use iced::Application;
 
 mod component;
 mod model;
@@ -38,7 +38,7 @@ pub enum Message {
     Search(String),
     Event(iced::Event),
     FontLoaded(Result<(), iced::font::Error>),
-    RegisterPlugin(model::Plugin, iced::futures::channel::mpsc::Sender<crate::plugin::clock::PluginRequest>),
+    RegisterPlugin(model::Plugin),
     AppendEntry(String, model::Entry),
 }
 
@@ -46,7 +46,6 @@ struct Centerpiece {
     query: String,
     active_entry_index: usize,
     plugins: Vec<model::Plugin>,
-    sender: Option<iced::futures::channel::mpsc::Sender<crate::plugin::clock::PluginRequest>>,
 }
 
 impl Application for Centerpiece {
@@ -61,7 +60,6 @@ impl Application for Centerpiece {
                 query: String::from(""),
                 active_entry_index: 0,
                 plugins: vec![],
-                sender: None,
             },
             iced::Command::batch(vec![
                 iced::font::load(
@@ -82,21 +80,11 @@ impl Application for Centerpiece {
             Message::Loaded => self.focus_search_input(),
 
             Message::Search(input) => {
-                self.query = input.clone();
-                println!("notifting plugins");
-                // self.plugins.iter().for_each(|plugin| {plugin.channel.send(plugin::clock::PluginRequest::Search(input.clone()));});
-                // for channel in self.channels.iter_mut() {
-                //     let _ = channel.send(plugin::clock::PluginRequest::Search(input.clone()));
-                // }
-                if self.sender.is_none() {
-                    println!("no sender found");
-                    return iced::Command::none();
+                for plugin in self.plugins.iter_mut() {
+                    let _ = plugin.channel.try_send(plugin::clock::PluginRequest::Search(input.clone()));
                 }
 
-                let _ = self.sender.as_mut().unwrap().try_send(plugin::clock::PluginRequest::Search(input.clone()));
-                // if test.is_err() {
-                //     println!("{:?}", test.unwrap_err());
-                // }
+                self.query = input;
                 return iced::Command::none();
             }
 
@@ -148,17 +136,15 @@ impl Application for Centerpiece {
 
             Message::FontLoaded(_) => iced::Command::none(),
 
-            Message::RegisterPlugin(plugin, sender) => {
+            Message::RegisterPlugin(plugin) => {
                 self.plugins.push(plugin);
-                self.sender = Some(sender);
                 return iced::Command::none();
             },
 
             Message::AppendEntry(plugin_id, entry) => {
-                // self.plugins.iter()
                 let plugin = self.plugins.iter_mut().find(|plugin| plugin.id == plugin_id);
                 if plugin.is_none() {
-                    println!("Appending entry failed. Could not find plugin for id {:?}", plugin_id);
+                    println!("Appending entry failed. Could not find plugin with id {:?}", plugin_id);
                     return iced::Command::none();
                 }
 

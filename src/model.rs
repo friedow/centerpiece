@@ -4,7 +4,7 @@ pub struct Plugin {
     pub priority: u32,
     pub title: String,
     pub entries: Vec<Entry>,
-    // pub channel: iced::futures::channel::mpsc::Sender<crate::plugin::clock::PluginRequest>,
+    pub channel: iced::futures::channel::mpsc::Sender<crate::plugin::clock::PluginRequest>,
 }
 
 #[derive(Debug, Clone)]

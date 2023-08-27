@@ -28,65 +28,44 @@ pub fn spawn() -> iced::Subscription<crate::Message> {
                             id: String::from("clock"),
                             priority: 0,
                             title: String::from("󰅐 Clock"),
-                            // channel: sender,
+                            channel: sender,
                             entries: vec![],
                         };
 
                         // Send the sender back to the application
-                        let _ = output.send(crate::Message::RegisterPlugin(plugin, sender)).await;
+                        let _ = output.send(crate::Message::RegisterPlugin(plugin)).await;
 
                         // We are ready to receive messages
                         state = State::Ready(receiver);
                     }
                     State::Ready(receiver) => {
-                        // Read next input sent from `Application`
-                        // todo: doesnt work
-                        // let mut fused_receiver = receiver.by_ref().fuse();
-                        // iced::futures::select! {
+                        let input = receiver.select_next_some().await;
 
-                        let _ = receiver.select_next_some().await;
-                        let _ = output
-                            .send(crate::Message::AppendEntry(
-                                String::from("clock"),
-                                crate::model::Entry {
-                                    id: String::from("clock-item-1"),
-                                    title: String::from("Item 1"),
-                                    action: String::from("open"),
-                                },
-                            ))
-                            .await;
+                        match input {
+                            PluginRequest::Search(query) => {
+                                let _ = output
+                                    .send(crate::Message::AppendEntry(
+                                        String::from("clock"),
+                                        crate::model::Entry {
+                                            id: String::from("clock-item-1"),
+                                            title: String::from(query),
+                                            action: String::from("open"),
+                                        },
+                                    ))
+                                    .await;
 
-                        let _ = output
-                            .send(crate::Message::AppendEntry(
-                                String::from("clock"),
-                                crate::model::Entry {
-                                    id: String::from("clock-item-2"),
-                                    title: String::from("Item 2"),
-                                    action: String::from("open"),
-                                },
-                            ))
-                            .await;
-
-                        // match input {
-                        //     PluginRequest::Search(query) => {
-
-                        // Do some async work...
-
-                        // Finally, we can optionally produce a message to tell the
-                        // `Application` the work is done
-                        // let _ = output.send(crate::Message::AppendEntry(String::from("clock"), crate::model::Entry {
-                        //     id: String::from("clock-item-1"),
-                        //     title: String::from("Item 1"),
-                        //     action: String::from("open"),
-                        // })).await;
-
-                        // let _ = output.send(crate::Message::AppendEntry(String::from("clock"), crate::model::Entry {
-                        //     id: String::from("clock-item-2"),
-                        //     title: String::from("Item 2"),
-                        //     action: String::from("open"),
-                        // })).await;
-                        //     }
-                        // }
+                                let _ = output
+                                    .send(crate::Message::AppendEntry(
+                                        String::from("clock"),
+                                        crate::model::Entry {
+                                            id: String::from("clock-item-2"),
+                                            title: String::from("Item 2"),
+                                            action: String::from("open"),
+                                        },
+                                    ))
+                                    .await;
+                            }
+                        }
                     }
                 }
             }

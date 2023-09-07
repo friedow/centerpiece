@@ -82,7 +82,7 @@ impl Application for Centerpiece {
 
             Message::Search(input) => {
                 for plugin in self.plugins.iter_mut() {
-                    let _ = plugin.channel.try_send(plugin::clock::PluginRequest::Search(input.clone()));
+                    let _ = plugin.channel.try_send(crate::model::PluginRequest::Search(input.clone()));
                 }
 
                 self.query = input;
@@ -169,10 +169,9 @@ impl Application for Centerpiece {
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-
         return iced::subscription::Subscription::batch(vec![
             iced::subscription::events().map(Message::Event),
-            plugin::clock::spawn(),
+            crate::plugin::Plugin::Clock.spawn(),
         ]);
     }
 

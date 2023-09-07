@@ -1,15 +1,6 @@
 use iced::futures::sink::SinkExt;
 use iced::futures::{FutureExt, StreamExt};
 
-pub enum PluginRequest {
-    Search(String),
-    None,
-}
-
-enum State {
-    Starting,
-    Ready(iced::futures::channel::mpsc::Receiver<PluginRequest>),
-}
 
 pub fn spawn() -> iced::Subscription<crate::Message> {
     struct SomeWorker;
@@ -22,14 +13,14 @@ pub fn spawn() -> iced::Subscription<crate::Message> {
 }
 
 async fn main(mut app_channel_sender: iced::futures::channel::mpsc::Sender<crate::Message>) -> ! {
-    let mut state = State::Starting;
+    let mut state = crate::model::PluginState::Starting;
 
     loop {
         match &mut state {
-            State::Starting => {
+            crate::model::PluginState::Starting => {
                 initialize(&mut app_channel_sender, &mut state).await;
             }
-            State::Ready(plugin_channel_receiver) => {
+            crate::model::PluginState::Ready(plugin_channel_receiver) => {
                 update(&mut app_channel_sender, plugin_channel_receiver).await;
             }
         }
@@ -38,7 +29,7 @@ async fn main(mut app_channel_sender: iced::futures::channel::mpsc::Sender<crate
 
 async fn initialize(
     app_channel_sender: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
-    state: &mut State,
+    state: &mut crate::model::PluginState,
 ) {
     let (plugin_channel_sender, plugin_channel_receiver) =
         iced::futures::channel::mpsc::channel(100);
@@ -57,12 +48,12 @@ async fn initialize(
         .await;
 
     // We are ready to receive messages
-    *state = State::Ready(plugin_channel_receiver);
+    *state = crate::model::PluginState::Ready(plugin_channel_receiver);
 }
 
 async fn update(
     app_channel_sender: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
-    plugin_channel_receiver: &mut iced::futures::channel::mpsc::Receiver<PluginRequest>,
+    plugin_channel_receiver: &mut iced::futures::channel::mpsc::Receiver<crate::model::PluginRequest>,
 ) {
     let timer = async_std::task::sleep(std::time::Duration::from_secs(1)).fuse();
     let plugin_request = plugin_channel_receiver.select_next_some().fuse();
@@ -71,7 +62,7 @@ async fn update(
     iced::futures::pin_mut!(timer, plugin_request);
 
     let input = iced::futures::select! {
-        _ = timer => PluginRequest::None,
+        _ = timer => crate::model::PluginRequest::None,
         plugin_request_message = plugin_request => plugin_request_message,
     };
 

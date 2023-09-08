@@ -20,13 +20,17 @@ impl Plugin {
     async fn main(&self, mut app_channel_sender: iced::futures::channel::mpsc::Sender<crate::Message>) -> ! {
         let mut state = crate::model::PluginState::Starting;
 
+        let mut plugin = match self {
+            Plugin::Clock => crate::plugin::clock::ClockPlugin::new(),
+        };
+
         loop {
             match &mut state {
                 crate::model::PluginState::Starting => {
-                    self.initialize(&mut app_channel_sender, &mut state).await;
+                    self.initialize(&mut plugin, &mut app_channel_sender, &mut state).await;
                 }
                 crate::model::PluginState::Ready(plugin_channel_receiver) => {
-                    self.update(&mut app_channel_sender, plugin_channel_receiver).await;
+                    self.update(&mut plugin, &mut app_channel_sender, plugin_channel_receiver).await;
                 }
             }
         }
@@ -34,15 +38,14 @@ impl Plugin {
 
     async fn initialize(
         &self,
+        current_plugin: &mut impl crate::plugin::clock::CreatePlugin,
         app_channel_sender: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
         state: &mut crate::model::PluginState,
     ) {
         let (plugin_channel_sender, plugin_channel_receiver) =
             iced::futures::channel::mpsc::channel(100);
 
-        let plugin = match self {
-            Plugin::Clock => crate::plugin::clock::from(plugin_channel_sender)
-        };
+        let plugin = current_plugin.pluginFrom(plugin_channel_sender);
 
         // Send the sender back to the application
         let _ = app_channel_sender
@@ -55,11 +58,10 @@ impl Plugin {
 
     async fn update(
         &self,
+        current_plugin: &mut impl crate::plugin::clock::Update,
         app_channel_sender: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
         plugin_channel_receiver: &mut iced::futures::channel::mpsc::Receiver<crate::model::PluginRequest>,
     ) {
-        match self {
-            Plugin::Clock => crate::plugin::clock::update(app_channel_sender, plugin_channel_receiver).await,
-        }
+        current_plugin.update(app_channel_sender, plugin_channel_receiver).await;
     }
 }

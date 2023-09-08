@@ -1,13 +1,13 @@
 use async_trait::async_trait;
 use iced::futures::sink::SinkExt;
-use iced::futures::{StreamExt};
+use iced::futures::StreamExt;
 
 pub struct ClockPlugin {
     is_initial_run: bool,
 }
 
 pub trait CreatePlugin {
-    fn pluginFrom(
+    fn plugin_information_from(
         &mut self,
         channel_in: iced::futures::channel::mpsc::Sender<crate::model::PluginRequest>,
     ) -> crate::model::Plugin;
@@ -17,8 +17,8 @@ pub trait CreatePlugin {
 pub trait Update {
     async fn update(
         &mut self,
-        app_channel_sender: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
-        plugin_channel_receiver: &mut iced::futures::channel::mpsc::Receiver<
+        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
+        plugin_channel_in: &mut iced::futures::channel::mpsc::Receiver<
             crate::model::PluginRequest,
         >,
     );
@@ -33,15 +33,15 @@ impl ClockPlugin {
 }
 
 impl CreatePlugin for ClockPlugin {
-    fn pluginFrom(
+    fn plugin_information_from(
         &mut self,
-        channel_in: iced::futures::channel::mpsc::Sender<crate::model::PluginRequest>,
+        app_channel_out: iced::futures::channel::mpsc::Sender<crate::model::PluginRequest>,
     ) -> crate::model::Plugin {
         return crate::model::Plugin {
             id: String::from("clock"),
             priority: 0,
             title: String::from("󰅐 Clock"),
-            channel: channel_in,
+            app_channel_out,
             entries: vec![],
         };
     }
@@ -51,8 +51,8 @@ impl CreatePlugin for ClockPlugin {
 impl Update for ClockPlugin {
     async fn update(
         &mut self,
-        app_channel_sender: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
-        plugin_channel_receiver: &mut iced::futures::channel::mpsc::Receiver<
+        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
+        plugin_channel_in: &mut iced::futures::channel::mpsc::Receiver<
             crate::model::PluginRequest,
         >,
     ) {
@@ -60,7 +60,7 @@ impl Update for ClockPlugin {
             self.is_initial_run = false;
             crate::model::PluginRequest::None
         } else {
-            let plugin_request_future = plugin_channel_receiver.select_next_some();
+            let plugin_request_future = plugin_channel_in.select_next_some();
             let plugin_request = async_std::future::timeout(
                 std::time::Duration::from_secs(1),
                 plugin_request_future,
@@ -72,14 +72,14 @@ impl Update for ClockPlugin {
 
         match plugin_request {
             _ => {
-                let _ = app_channel_sender
+                let _ = plugin_channel_out
                     .send(crate::Message::Clear(String::from("clock")))
                     .await;
 
                 let date = chrono::Local::now();
 
                 let formatted_time = date.format("%H:%M:%S").to_string();
-                let _ = app_channel_sender
+                let _ = plugin_channel_out
                     .send(crate::Message::AppendEntry(
                         String::from("clock"),
                         crate::model::Entry {
@@ -91,7 +91,7 @@ impl Update for ClockPlugin {
                     .await;
 
                 let formatted_date = date.format("%A, %_d. %B %Y").to_string();
-                let _ = app_channel_sender
+                let _ = plugin_channel_out
                     .send(crate::Message::AppendEntry(
                         String::from("clock"),
                         crate::model::Entry {

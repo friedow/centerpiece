@@ -82,7 +82,7 @@ impl Application for Centerpiece {
 
             Message::Search(input) => {
                 for plugin in self.plugins.iter_mut() {
-                    let _ = plugin.channel.try_send(crate::model::PluginRequest::Search(input.clone()));
+                    let _ = plugin.app_channel_out.try_send(crate::model::PluginRequest::Search(input.clone()));
                 }
 
                 self.query = input;

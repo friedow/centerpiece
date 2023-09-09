@@ -3,10 +3,15 @@ use iced::futures::sink::SinkExt;
 
 pub mod clock;
 
+pub enum PluginRequest {
+    Search(String),
+    None,
+}
+
 pub trait CreatePluginModel {
     fn plugin_model_from(
         &mut self,
-        channel_in: iced::futures::channel::mpsc::Sender<crate::model::PluginRequest>,
+        channel_in: iced::futures::channel::mpsc::Sender<PluginRequest>,
     ) -> crate::model::PluginModel;
 }
 
@@ -15,7 +20,7 @@ pub trait Update {
     async fn update(
         &mut self,
         plugin_channel_in: &mut iced::futures::channel::mpsc::Receiver<
-            crate::model::PluginRequest,
+            PluginRequest,
         >,
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     );
@@ -51,7 +56,7 @@ impl Plugin {
         &self,
         plugin: &mut impl CreatePluginModel,
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
-    ) -> iced::futures::channel::mpsc::Receiver<crate::model::PluginRequest> {
+    ) -> iced::futures::channel::mpsc::Receiver<PluginRequest> {
         let (app_channel_out, plugin_channel_in) =
             iced::futures::channel::mpsc::channel(100);
 
@@ -68,7 +73,7 @@ impl Plugin {
     async fn update(
         &self,
         plugin: &mut impl Update,
-        plugin_channel_in: &mut iced::futures::channel::mpsc::Receiver<crate::model::PluginRequest>,
+        plugin_channel_in: &mut iced::futures::channel::mpsc::Receiver<PluginRequest>,
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     ) {
         plugin.update(plugin_channel_in, plugin_channel_out).await;

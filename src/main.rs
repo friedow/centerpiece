@@ -2,12 +2,11 @@ use iced::Application;
 
 mod component;
 mod model;
-mod style;
 mod plugin;
 
 pub fn main() -> iced::Result {
     let mut settings = iced::Settings::default();
-    settings.default_text_size = style::REM;
+    settings.default_text_size = REM;
     settings.default_font = iced::Font {
         family: iced::font::Family::Name("FiraCode Nerd Font"),
         weight: iced::font::Weight::Normal,
@@ -56,19 +55,17 @@ impl Application for Centerpiece {
     type Flags = ();
 
     fn new(_flags: ()) -> (Self, iced::Command<Message>) {
+        let _ = iced::font::load(
+                    include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
+                );
+
         return (
             Self {
                 query: String::from(""),
                 active_entry_index: 0,
                 plugins: vec![],
             },
-            iced::Command::batch(vec![
-                iced::font::load(
-                    include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
-                )
-                .map(Message::FontLoaded),
-                iced::Command::perform(async {}, move |()| Message::Loaded),
-            ]),
+            iced::Command::perform(async {}, move |()| Message::Loaded),
         );
     }
 
@@ -80,48 +77,18 @@ impl Application for Centerpiece {
         match message {
             Message::Loaded => self.focus_search_input(),
 
-            Message::Search(input) => {
-                for plugin in self.plugins.iter_mut() {
-                    let _ = plugin.app_channel_out.try_send(crate::model::PluginRequest::Search(input.clone()));
-                }
-
-                self.query = input;
-                return iced::Command::none();
-            }
+            Message::Search(input) => self.search(input),
 
             Message::Event(event) => match event {
                 iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
                     key_code: iced::keyboard::KeyCode::Up,
                     ..
-                }) => {
-                    let entries = self.entries();
-                    if entries.len() == 0 {
-                        self.active_entry_index = 0;
-                        return iced::Command::none();
-                    }
-
-                    if self.active_entry_index == 0 {
-                        self.active_entry_index = entries.len() - 1;
-                        return iced::Command::none();
-                    }
-
-                    self.active_entry_index -= 1;
-                    return iced::Command::none();
-                }
+                }) => self.select_previous_entry(),
 
                 iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
                     key_code: iced::keyboard::KeyCode::Down,
                     ..
-                }) => {
-                    let entries = self.entries();
-                    if entries.len() == 0 || self.active_entry_index == entries.len() - 1 {
-                        self.active_entry_index = 0;
-                        return iced::Command::none();
-                    }
-
-                    self.active_entry_index += 1;
-                    return iced::Command::none();
-                }
+                }) => self.select_next_entry(),
 
                 iced::Event::Mouse(iced::mouse::Event::ButtonPressed(
                     iced::mouse::Button::Left,
@@ -137,34 +104,11 @@ impl Application for Centerpiece {
 
             Message::FontLoaded(_) => iced::Command::none(),
 
-            Message::RegisterPlugin(plugin) => {
-                self.plugins.push(plugin);
-                return iced::Command::none();
-            },
+            Message::RegisterPlugin(plugin) => self.register_plugin(plugin),
 
-            Message::AppendEntry(plugin_id, entry) => {
-                let plugin = self.plugins.iter_mut().find(|plugin| plugin.id == plugin_id);
-                if plugin.is_none() {
-                    println!("Appending entry failed. Could not find plugin with id {:?}", plugin_id);
-                    return iced::Command::none();
-                }
+            Message::AppendEntry(plugin_id, entry) => self.append_entry(plugin_id, entry),
 
-                let plugin = plugin.unwrap();
-                plugin.entries.push(entry);
-                return iced::Command::none();
-            },
-
-            Message::Clear(plugin_id) => {
-                let plugin = self.plugins.iter_mut().find(|plugin| plugin.id == plugin_id);
-                if plugin.is_none() {
-                    println!("Clearing entries failed. Could not find plugin with id {:?}", plugin_id);
-                    return iced::Command::none();
-                }
-
-                let plugin = plugin.unwrap();
-                plugin.entries.clear();
-                return iced::Command::none();
-            }
+            Message::Clear(plugin_id) => self.clear_entries(plugin_id),
         }
     }
 
@@ -186,7 +130,7 @@ impl Application for Centerpiece {
             ),
         ])
         .style(iced::theme::Container::Custom(Box::new(
-            style::ApplicationWrapper {},
+            ApplicationWrapperStyle {},
         )))
         .into()
     }
@@ -196,7 +140,7 @@ impl Application for Centerpiece {
     }
 
     fn style(&self) -> iced::theme::Application {
-        return iced::theme::Application::Custom(Box::new(style::Sandbox {}));
+        return iced::theme::Application::Custom(Box::new(SandboxStyle {}));
     }
 }
 
@@ -218,9 +162,121 @@ impl Centerpiece {
         };
     }
 
+    fn search(&mut self, input: String) -> iced::Command<Message> {
+        for plugin in self.plugins.iter_mut() {
+            let _ = plugin
+                .app_channel_out
+                .try_send(crate::plugin::PluginRequest::Search(input.clone()));
+        }
+
+        self.query = input;
+        return iced::Command::none();
+    }
+
     fn focus_search_input(&self) -> iced::Command<Message> {
         return iced::widget::text_input::focus(iced::widget::text_input::Id::new(
             component::query_input::SEARCH_INPUT_ID,
         ));
+    }
+
+    fn select_previous_entry(&mut self) -> iced::Command<Message> {
+        let entries = self.entries();
+        if entries.len() == 0 {
+            self.active_entry_index = 0;
+            return iced::Command::none();
+        }
+
+        if self.active_entry_index == 0 {
+            self.active_entry_index = entries.len() - 1;
+            return iced::Command::none();
+        }
+
+        self.active_entry_index -= 1;
+        return iced::Command::none();
+    }
+
+    fn select_next_entry(&mut self) -> iced::Command<Message> {
+        let entries = self.entries();
+        if entries.len() == 0 || self.active_entry_index == entries.len() - 1 {
+            self.active_entry_index = 0;
+            return iced::Command::none();
+        }
+
+        self.active_entry_index += 1;
+        return iced::Command::none();
+    }
+
+    fn register_plugin(&mut self, plugin: crate::model::PluginModel) -> iced::Command<Message> {
+        self.plugins.push(plugin);
+        return iced::Command::none();
+    }
+
+    fn append_entry(
+        &mut self,
+        plugin_id: String,
+        entry: crate::model::EntryModel,
+    ) -> iced::Command<Message> {
+        let plugin = self
+            .plugins
+            .iter_mut()
+            .find(|plugin| plugin.id == plugin_id);
+        if plugin.is_none() {
+            println!(
+                "Appending entry failed. Could not find plugin with id {:?}",
+                plugin_id
+            );
+            return iced::Command::none();
+        }
+
+        let plugin = plugin.unwrap();
+        plugin.entries.push(entry);
+        return iced::Command::none();
+    }
+
+    fn clear_entries(&mut self, plugin_id: String) -> iced::Command<Message> {
+        let plugin = self
+            .plugins
+            .iter_mut()
+            .find(|plugin| plugin.id == plugin_id);
+        if plugin.is_none() {
+            println!(
+                "Clearing entries failed. Could not find plugin with id {:?}",
+                plugin_id
+            );
+            return iced::Command::none();
+        }
+
+        let plugin = plugin.unwrap();
+        plugin.entries.clear();
+        return iced::Command::none();
+    }
+}
+
+pub const REM: f32 = 14.0;
+
+struct SandboxStyle {}
+impl iced::application::StyleSheet for SandboxStyle {
+    type Style = iced::Theme;
+
+    fn appearance(&self, _style: &Self::Style) -> iced::application::Appearance {
+        iced::application::Appearance {
+            background_color: iced::Color::TRANSPARENT,
+            text_color: iced::Color::WHITE,
+        }
+    }
+}
+
+struct ApplicationWrapperStyle {}
+impl iced::widget::container::StyleSheet for ApplicationWrapperStyle {
+    type Style = iced::Theme;
+
+    fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
+        return iced::widget::container::Appearance {
+            background: Some(iced::Background::Color(iced::Color::BLACK)),
+            border_color: iced::Color::TRANSPARENT,
+            border_radius: iced::BorderRadius::from(0.25 * REM),
+            border_width: 0.,
+            text_color: None,
+        };
     }
 }

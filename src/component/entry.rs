@@ -1,16 +1,15 @@
-use crate::model;
-use crate::style;
-use crate::Message;
-
-pub fn view(entry: &model::EntryModel, active: bool) -> iced::Element<'static, Message> {
+pub fn view(
+    entry: &crate::model::EntryModel,
+    active: bool,
+) -> iced::Element<'static, crate::Message> {
     return iced::widget::container(
         iced::widget::row![
             iced::widget::text(&entry.title)
-                .size(1. * style::REM)
+                .size(1. * crate::REM)
                 .width(iced::Length::Fill),
-            iced::widget::text(if active { &entry.action } else { "" }).size(1. * style::REM)
+            iced::widget::text(if active { &entry.action } else { "" }).size(1. * crate::REM)
         ]
-        .padding(0.5 * style::REM),
+        .padding(0.5 * crate::REM),
     )
     .style(style(active))
     .into();
@@ -32,7 +31,7 @@ impl iced::widget::container::StyleSheet for Style {
     fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
         return iced::widget::container::Appearance {
             background: None,
-            border_radius: iced::BorderRadius::from(0.1 * style::REM),
+            border_radius: iced::BorderRadius::from(0.1 * crate::REM),
             border_width: 1.,
             border_color: iced::color!(0xffffff, 1.),
             text_color: None,

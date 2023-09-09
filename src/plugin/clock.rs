@@ -17,7 +17,7 @@ impl ClockPlugin {
 impl crate::plugin::CreatePluginModel for ClockPlugin {
     fn plugin_model_from(
         &mut self,
-        app_channel_out: iced::futures::channel::mpsc::Sender<crate::model::PluginRequest>,
+        app_channel_out: iced::futures::channel::mpsc::Sender<crate::plugin::PluginRequest>,
     ) -> crate::model::PluginModel {
         return crate::model::PluginModel {
             id: String::from("clock"),
@@ -34,13 +34,13 @@ impl crate::plugin::Update for ClockPlugin {
     async fn update(
         &mut self,
         plugin_channel_in: &mut iced::futures::channel::mpsc::Receiver<
-            crate::model::PluginRequest,
+            crate::plugin::PluginRequest,
         >,
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     ) {
         let plugin_request = if self.is_initial_run {
             self.is_initial_run = false;
-            crate::model::PluginRequest::None
+            crate::plugin::PluginRequest::None
         } else {
             let plugin_request_future = plugin_channel_in.select_next_some();
             let plugin_request = async_std::future::timeout(
@@ -48,7 +48,7 @@ impl crate::plugin::Update for ClockPlugin {
                 plugin_request_future,
             )
             .await
-            .unwrap_or(crate::model::PluginRequest::None);
+            .unwrap_or(crate::plugin::PluginRequest::None);
             plugin_request
         };
 

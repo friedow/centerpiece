@@ -1,20 +1,17 @@
-use crate::style;
-use crate::Message;
-
 pub const SEARCH_INPUT_ID: &str = "search_input";
 
-pub fn view(query: &String) -> iced::Element<'static, Message> {
+pub fn view(query: &String) -> iced::Element<'static, crate::Message> {
     return iced::widget::row![
-        iced::widget::container(iced::widget::text("󰍉 ").size(1.3 * style::REM)).padding(
-            iced::Padding::from([0.2 * style::REM, -0.5 * style::REM, 0., 0.])
+        iced::widget::container(iced::widget::text("󰍉 ").size(1.3 * crate::REM)).padding(
+            iced::Padding::from([0.2 * crate::REM, -0.5 * crate::REM, 0., 0.])
         ),
         iced::widget::text_input("Search", query)
             .id(iced::widget::text_input::Id::new(SEARCH_INPUT_ID))
-            .on_input(Message::Search)
-            .size(1. * style::REM)
+            .on_input(crate::Message::Search)
+            .size(1. * crate::REM)
             .style(style())
     ]
-    .padding(iced::Padding::from([0.8 * style::REM, 1. * style::REM]))
+    .padding(iced::Padding::from([0.8 * crate::REM, 1. * crate::REM]))
     .into();
 }
 

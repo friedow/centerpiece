@@ -2,7 +2,7 @@ use crate::model;
 use crate::style;
 use crate::Message;
 
-pub fn view(entry: &model::Entry, active: bool) -> iced::Element<'static, Message> {
+pub fn view(entry: &model::EntryModel, active: bool) -> iced::Element<'static, Message> {
     return iced::widget::container(
         iced::widget::row![
             iced::widget::text(&entry.title)

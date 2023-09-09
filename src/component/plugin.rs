@@ -4,7 +4,7 @@ use crate::style;
 use crate::Message;
 
 pub fn view(
-    plugin: &model::Plugin,
+    plugin: &model::PluginModel,
     active_entry_id: Option<&String>,
 ) -> iced::Element<'static, Message> {
     return iced::widget::column![

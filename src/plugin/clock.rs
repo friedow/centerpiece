@@ -6,24 +6,6 @@ pub struct ClockPlugin {
     is_initial_run: bool,
 }
 
-pub trait CreatePlugin {
-    fn plugin_information_from(
-        &mut self,
-        channel_in: iced::futures::channel::mpsc::Sender<crate::model::PluginRequest>,
-    ) -> crate::model::Plugin;
-}
-
-#[async_trait]
-pub trait Update {
-    async fn update(
-        &mut self,
-        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
-        plugin_channel_in: &mut iced::futures::channel::mpsc::Receiver<
-            crate::model::PluginRequest,
-        >,
-    );
-}
-
 impl ClockPlugin {
     pub fn new() -> ClockPlugin {
         return ClockPlugin {
@@ -32,12 +14,12 @@ impl ClockPlugin {
     }
 }
 
-impl CreatePlugin for ClockPlugin {
-    fn plugin_information_from(
+impl crate::plugin::CreatePluginModel for ClockPlugin {
+    fn plugin_model_from(
         &mut self,
         app_channel_out: iced::futures::channel::mpsc::Sender<crate::model::PluginRequest>,
-    ) -> crate::model::Plugin {
-        return crate::model::Plugin {
+    ) -> crate::model::PluginModel {
+        return crate::model::PluginModel {
             id: String::from("clock"),
             priority: 0,
             title: String::from("󰅐 Clock"),
@@ -48,13 +30,13 @@ impl CreatePlugin for ClockPlugin {
 }
 
 #[async_trait]
-impl Update for ClockPlugin {
+impl crate::plugin::Update for ClockPlugin {
     async fn update(
         &mut self,
-        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
         plugin_channel_in: &mut iced::futures::channel::mpsc::Receiver<
             crate::model::PluginRequest,
         >,
+        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     ) {
         let plugin_request = if self.is_initial_run {
             self.is_initial_run = false;
@@ -82,7 +64,7 @@ impl Update for ClockPlugin {
                 let _ = plugin_channel_out
                     .send(crate::Message::AppendEntry(
                         String::from("clock"),
-                        crate::model::Entry {
+                        crate::model::EntryModel {
                             id: String::from("time-entry"),
                             title: formatted_time,
                             action: String::from("open"),
@@ -94,7 +76,7 @@ impl Update for ClockPlugin {
                 let _ = plugin_channel_out
                     .send(crate::Message::AppendEntry(
                         String::from("clock"),
-                        crate::model::Entry {
+                        crate::model::EntryModel {
                             id: String::from("date"),
                             title: formatted_date,
                             action: String::from("open"),

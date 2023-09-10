@@ -5,30 +5,7 @@ mod model;
 mod plugin;
 
 pub fn main() -> iced::Result {
-    let mut settings = iced::Settings::default();
-    settings.default_text_size = REM;
-    settings.default_font = iced::Font {
-        family: iced::font::Family::Name("FiraCode Nerd Font"),
-        weight: iced::font::Weight::Normal,
-        stretch: iced::font::Stretch::Normal,
-        monospaced: true,
-    };
-
-    settings.window = iced::window::Settings {
-        transparent: true,
-        size: (550, 350),
-        decorations: false,
-        level: iced::window::Level::AlwaysOnTop,
-        resizable: false,
-        position: iced::window::Position::Centered,
-        min_size: None,
-        max_size: None,
-        icon: None,
-        visible: true,
-        platform_specific: iced::window::PlatformSpecific::default(),
-    };
-
-    Centerpiece::run(settings)
+    return Centerpiece::run(Centerpiece::settings());
 }
 
 #[derive(Debug, Clone)]
@@ -56,8 +33,8 @@ impl Application for Centerpiece {
 
     fn new(_flags: ()) -> (Self, iced::Command<Message>) {
         let _ = iced::font::load(
-                    include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
-                );
+            include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
+        );
 
         return (
             Self {
@@ -145,6 +122,32 @@ impl Application for Centerpiece {
 }
 
 impl Centerpiece {
+    fn settings() -> iced::Settings<()> {
+        let mut settings = iced::Settings::default();
+        settings.default_text_size = REM;
+        settings.default_font = iced::Font {
+            family: iced::font::Family::Name("FiraCode Nerd Font"),
+            weight: iced::font::Weight::Normal,
+            stretch: iced::font::Stretch::Normal,
+            monospaced: true,
+        };
+
+        settings.window = iced::window::Settings {
+            transparent: true,
+            size: (550, 350),
+            decorations: false,
+            level: iced::window::Level::AlwaysOnTop,
+            resizable: false,
+            position: iced::window::Position::Centered,
+            min_size: None,
+            max_size: None,
+            icon: None,
+            visible: true,
+            platform_specific: iced::window::PlatformSpecific::default(),
+        };
+        return settings;
+    }
+
     fn entries(&self) -> Vec<&model::EntryModel> {
         return self
             .plugins

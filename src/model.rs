@@ -12,4 +12,5 @@ pub struct EntryModel {
     pub id: String,
     pub title: String,
     pub action: String,
+    pub meta: String,
 }

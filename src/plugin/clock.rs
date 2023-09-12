@@ -1,13 +1,16 @@
+use std::format;
+
 use async_trait::async_trait;
 use iced::futures::sink::SinkExt;
 use iced::futures::StreamExt;
+use fuzzy_matcher::FuzzyMatcher;
 
 pub struct ClockPlugin {
     is_initial_run: bool,
     last_query: String,
     all_entries: Vec<crate::model::EntryModel>,
 }
-
+// TODO: most Strings can probable be converted to &str
 impl ClockPlugin {
     pub fn new() -> ClockPlugin {
         return ClockPlugin {
@@ -17,7 +20,7 @@ impl ClockPlugin {
         };
     }
 
-    fn update_entries(
+    async fn update_entries(
         &mut self,
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     ) {
@@ -29,6 +32,7 @@ impl ClockPlugin {
             id: String::from("time-entry"),
             title: formatted_time,
             action: String::from("open"),
+            meta: String::from("Clock Time"),
         };
         self.all_entries.push(time_entry.clone());
 
@@ -37,10 +41,11 @@ impl ClockPlugin {
             id: String::from("date"),
             title: formatted_date,
             action: String::from("open"),
+            meta: String::from("Clock Date"),
         };
         self.all_entries.push(date_entry.clone());
 
-        self.search(plugin_channel_out, self.last_query.clone());
+        self.search(plugin_channel_out, self.last_query.clone()).await;
     }
 
     async fn search(
@@ -48,31 +53,33 @@ impl ClockPlugin {
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
         query: String,
     ) {
-        self.last_query = query;
+        self.last_query = query.clone();
 
         let matcher = fuzzy_matcher::skim::SkimMatcherV2::default();
 
-        let filtered_entries = self
+        let mut filtered_entries = self
             .all_entries
             .iter()
             .filter_map(|entry| {
-                let match_result = matcher.fuzzy_indices(entry.title, query);
+
+                let keywords = format!("{} {}", entry.title, entry.meta);
+                let match_result = matcher.fuzzy_indices(&keywords, &query);
                 if match_result.is_none() {
                     return None;
                 }
                 let (score, _) = match_result.unwrap();
                 return Some((score, entry));
             })
-            .collect::<Vec<(i32, &crate::model::EntryModel)>>();
+            .collect::<Vec<(i64, &crate::model::EntryModel)>>();
 
-        filtered_entries.sort_by_cached_key(|(score, entry)| score);
+        filtered_entries.sort_by_cached_key(|(score, _)| score.clone());
 
         // TODO: it may be more performant to convert this into a send_all
         let _ = plugin_channel_out
             .send(crate::Message::Clear(String::from("clock")))
             .await;
 
-        for (score, entry) in filtered_entries {
+        for (_, entry) in filtered_entries {
             let _ = plugin_channel_out
                 .send(crate::Message::AppendEntry(
                     String::from("clock"),
@@ -125,7 +132,7 @@ impl crate::plugin::Update for ClockPlugin {
             crate::plugin::PluginRequest::Search(query) => {
                 self.search(plugin_channel_out, query).await
             }
-            crate::plugin::PluginRequest::Timeout => self.update_entries(plugin_channel_out),
+            crate::plugin::PluginRequest::Timeout => self.update_entries(plugin_channel_out).await,
         }
     }
 }

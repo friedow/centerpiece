@@ -92,7 +92,7 @@ impl Application for Centerpiece {
     fn subscription(&self) -> iced::Subscription<Self::Message> {
         return iced::subscription::Subscription::batch(vec![
             iced::subscription::events().map(Message::Event),
-            crate::plugin::Plugin::Clock.spawn(),
+            crate::plugin::clock::ClockPlugin::spawn(),
         ]);
     }
 

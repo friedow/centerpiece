@@ -1,28 +1,90 @@
 use std::format;
 
-use async_trait::async_trait;
+use fuzzy_matcher::FuzzyMatcher;
 use iced::futures::sink::SinkExt;
 use iced::futures::StreamExt;
-use fuzzy_matcher::FuzzyMatcher;
 
 pub struct ClockPlugin {
+    plugin: crate::model::PluginModel,
     is_initial_run: bool,
     last_query: String,
     all_entries: Vec<crate::model::EntryModel>,
+    plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
+    plugin_channel_in: iced::futures::channel::mpsc::Receiver<crate::plugin::PluginRequest>,
 }
+
 // TODO: most Strings can probable be converted to &str
 impl ClockPlugin {
-    pub fn new() -> ClockPlugin {
+    pub fn spawn() -> iced::Subscription<crate::Message> {
+        return iced::subscription::channel(
+            std::any::TypeId::of::<ClockPlugin>(),
+            100,
+            |plugin_channel_out| async {
+                let mut plugin = ClockPlugin::new(plugin_channel_out);
+                plugin.main().await
+            },
+        );
+    }
+
+    pub fn new(
+        plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
+    ) -> ClockPlugin {
+        let (app_channel_out, plugin_channel_in) = iced::futures::channel::mpsc::channel(100);
+
         return ClockPlugin {
             is_initial_run: true,
             last_query: String::new(),
             all_entries: vec![],
+            plugin_channel_in,
+            plugin_channel_out,
+            plugin: crate::model::PluginModel {
+                id: String::from("clock"),
+                priority: 0,
+                title: String::from("󰅐 Clock"),
+                app_channel_out,
+                entries: vec![],
+            },
         };
+    }
+
+    async fn main(&mut self) -> ! {
+        self.register_plugin().await;
+
+        loop {
+            self.update().await;
+        }
+    }
+
+    async fn register_plugin(&mut self) {
+        let _ = self
+            .plugin_channel_out
+            .send(crate::Message::RegisterPlugin(self.plugin.clone()))
+            .await;
+    }
+
+    async fn update(&mut self) {
+        let plugin_request = if self.is_initial_run {
+            self.is_initial_run = false;
+            crate::plugin::PluginRequest::Timeout
+        } else {
+            let plugin_request_future = self.plugin_channel_in.select_next_some();
+            let plugin_request = async_std::future::timeout(
+                std::time::Duration::from_secs(1),
+                plugin_request_future,
+            )
+            .await
+            .unwrap_or(crate::plugin::PluginRequest::Timeout);
+            plugin_request
+        };
+
+        match plugin_request {
+            crate::plugin::PluginRequest::Search(query) => self.search(query).await,
+            crate::plugin::PluginRequest::Timeout => self.update_entries().await,
+        }
     }
 
     async fn update_entries(
         &mut self,
-        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     ) {
         self.all_entries.clear();
         let date = chrono::Local::now();
@@ -45,12 +107,12 @@ impl ClockPlugin {
         };
         self.all_entries.push(date_entry.clone());
 
-        self.search(plugin_channel_out, self.last_query.clone()).await;
+        self.search(self.last_query.clone())
+            .await;
     }
 
     async fn search(
         &mut self,
-        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
         query: String,
     ) {
         self.last_query = query.clone();
@@ -61,7 +123,6 @@ impl ClockPlugin {
             .all_entries
             .iter()
             .filter_map(|entry| {
-
                 let keywords = format!("{} {}", entry.title, entry.meta);
                 let match_result = matcher.fuzzy_indices(&keywords, &query);
                 if match_result.is_none() {
@@ -75,64 +136,17 @@ impl ClockPlugin {
         filtered_entries.sort_by_cached_key(|(score, _)| score.clone());
 
         // TODO: it may be more performant to convert this into a send_all
-        let _ = plugin_channel_out
+        let _ = self.plugin_channel_out
             .send(crate::Message::Clear(String::from("clock")))
             .await;
 
         for (_, entry) in filtered_entries {
-            let _ = plugin_channel_out
+            let _ = self.plugin_channel_out
                 .send(crate::Message::AppendEntry(
                     String::from("clock"),
                     entry.clone(),
                 ))
                 .await;
-        }
-    }
-}
-
-impl crate::plugin::CreatePluginModel for ClockPlugin {
-    fn plugin_model_from(
-        &mut self,
-        app_channel_out: iced::futures::channel::mpsc::Sender<crate::plugin::PluginRequest>,
-    ) -> crate::model::PluginModel {
-        return crate::model::PluginModel {
-            id: String::from("clock"),
-            priority: 0,
-            title: String::from("󰅐 Clock"),
-            app_channel_out,
-            entries: vec![],
-        };
-    }
-}
-
-#[async_trait]
-impl crate::plugin::Update for ClockPlugin {
-    async fn update(
-        &mut self,
-        plugin_channel_in: &mut iced::futures::channel::mpsc::Receiver<
-            crate::plugin::PluginRequest,
-        >,
-        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
-    ) {
-        let plugin_request = if self.is_initial_run {
-            self.is_initial_run = false;
-            crate::plugin::PluginRequest::Timeout
-        } else {
-            let plugin_request_future = plugin_channel_in.select_next_some();
-            let plugin_request = async_std::future::timeout(
-                std::time::Duration::from_secs(1),
-                plugin_request_future,
-            )
-            .await
-            .unwrap_or(crate::plugin::PluginRequest::Timeout);
-            plugin_request
-        };
-
-        match plugin_request {
-            crate::plugin::PluginRequest::Search(query) => {
-                self.search(plugin_channel_out, query).await
-            }
-            crate::plugin::PluginRequest::Timeout => self.update_entries(plugin_channel_out).await,
         }
     }
 }

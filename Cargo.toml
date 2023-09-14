@@ -10,4 +10,7 @@ async-std = "1.12.0"
 async-trait = "0.1.73"
 chrono = "0.4.26"
 iced = { version = "0.10.0", features = ["svg"] }
+# search
 fuzzy-matcher = "0.3.7"
+# applications plugin
+freedesktop-desktop-entry = "0.5.0"

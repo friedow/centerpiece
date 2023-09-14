@@ -169,7 +169,7 @@ impl Centerpiece {
         for plugin in self.plugins.iter_mut() {
             let _ = plugin
                 .app_channel_out
-                .try_send(crate::plugin::PluginRequest::Search(input.clone()));
+                .try_send(crate::model::PluginRequest::Search(input.clone()));
         }
 
         self.query = input;

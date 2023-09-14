@@ -10,7 +10,7 @@ pub struct ClockPlugin {
     last_query: String,
     all_entries: Vec<crate::model::Entry>,
     plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
-    plugin_channel_in: iced::futures::channel::mpsc::Receiver<crate::plugin::PluginRequest>,
+    plugin_channel_in: iced::futures::channel::mpsc::Receiver<crate::model::PluginRequest>,
 }
 
 // TODO: most Strings can probable be converted to &str
@@ -65,7 +65,7 @@ impl ClockPlugin {
     async fn update(&mut self) {
         let plugin_request = if self.is_initial_run {
             self.is_initial_run = false;
-            crate::plugin::PluginRequest::Timeout
+            crate::model::PluginRequest::Timeout
         } else {
             let plugin_request_future = self.plugin_channel_in.select_next_some();
             let plugin_request = async_std::future::timeout(
@@ -73,19 +73,17 @@ impl ClockPlugin {
                 plugin_request_future,
             )
             .await
-            .unwrap_or(crate::plugin::PluginRequest::Timeout);
+            .unwrap_or(crate::model::PluginRequest::Timeout);
             plugin_request
         };
 
         match plugin_request {
-            crate::plugin::PluginRequest::Search(query) => self.search(query).await,
-            crate::plugin::PluginRequest::Timeout => self.update_entries().await,
+            crate::model::PluginRequest::Search(query) => self.search(query).await,
+            crate::model::PluginRequest::Timeout => self.update_entries().await,
         }
     }
 
-    async fn update_entries(
-        &mut self,
-    ) {
+    async fn update_entries(&mut self) {
         self.all_entries.clear();
         let date = chrono::Local::now();
 
@@ -107,14 +105,10 @@ impl ClockPlugin {
         };
         self.all_entries.push(date_entry.clone());
 
-        self.search(self.last_query.clone())
-            .await;
+        self.search(self.last_query.clone()).await;
     }
 
-    async fn search(
-        &mut self,
-        query: String,
-    ) {
+    async fn search(&mut self, query: String) {
         self.last_query = query.clone();
 
         let matcher = fuzzy_matcher::skim::SkimMatcherV2::default();
@@ -136,12 +130,14 @@ impl ClockPlugin {
         filtered_entries.sort_by_cached_key(|(score, _)| score.clone());
 
         // TODO: it may be more performant to convert this into a send_all
-        let _ = self.plugin_channel_out
+        let _ = self
+            .plugin_channel_out
             .send(crate::Message::Clear(String::from("clock")))
             .await;
 
         for (_, entry) in filtered_entries {
-            let _ = self.plugin_channel_out
+            let _ = self
+                .plugin_channel_out
                 .send(crate::Message::AppendEntry(
                     String::from("clock"),
                     entry.clone(),

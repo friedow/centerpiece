@@ -5,10 +5,10 @@ use iced::futures::sink::SinkExt;
 use iced::futures::StreamExt;
 
 pub struct ClockPlugin {
-    plugin: crate::model::PluginModel,
+    plugin: crate::model::Plugin,
     is_initial_run: bool,
     last_query: String,
-    all_entries: Vec<crate::model::EntryModel>,
+    all_entries: Vec<crate::model::Entry>,
     plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
     plugin_channel_in: iced::futures::channel::mpsc::Receiver<crate::plugin::PluginRequest>,
 }
@@ -37,7 +37,7 @@ impl ClockPlugin {
             all_entries: vec![],
             plugin_channel_in,
             plugin_channel_out,
-            plugin: crate::model::PluginModel {
+            plugin: crate::model::Plugin {
                 id: String::from("clock"),
                 priority: 0,
                 title: String::from("󰅐 Clock"),
@@ -90,7 +90,7 @@ impl ClockPlugin {
         let date = chrono::Local::now();
 
         let formatted_time = date.format("%H:%M:%S").to_string();
-        let time_entry = crate::model::EntryModel {
+        let time_entry = crate::model::Entry {
             id: String::from("time-entry"),
             title: formatted_time,
             action: String::from("open"),
@@ -99,7 +99,7 @@ impl ClockPlugin {
         self.all_entries.push(time_entry.clone());
 
         let formatted_date = date.format("%A, %_d. %B %Y").to_string();
-        let date_entry = crate::model::EntryModel {
+        let date_entry = crate::model::Entry {
             id: String::from("date"),
             title: formatted_date,
             action: String::from("open"),
@@ -131,7 +131,7 @@ impl ClockPlugin {
                 let (score, _) = match_result.unwrap();
                 return Some((score, entry));
             })
-            .collect::<Vec<(i64, &crate::model::EntryModel)>>();
+            .collect::<Vec<(i64, &crate::model::Entry)>>();
 
         filtered_entries.sort_by_cached_key(|(score, _)| score.clone());
 

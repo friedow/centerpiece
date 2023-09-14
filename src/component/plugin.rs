@@ -1,5 +1,5 @@
 pub fn view(
-    plugin: &crate::model::PluginModel,
+    plugin: &crate::model::Plugin,
     active_entry_id: Option<&String>,
 ) -> iced::Element<'static, crate::Message> {
     return iced::widget::column![

@@ -14,15 +14,15 @@ pub enum Message {
     Search(String),
     Event(iced::Event),
     FontLoaded(Result<(), iced::font::Error>),
-    RegisterPlugin(model::PluginModel),
-    AppendEntry(String, model::EntryModel),
+    RegisterPlugin(model::Plugin),
+    AppendEntry(String, model::Entry),
     Clear(String),
 }
 
 struct Centerpiece {
     query: String,
     active_entry_index: usize,
-    plugins: Vec<model::PluginModel>,
+    plugins: Vec<model::Plugin>,
 }
 
 impl Application for Centerpiece {
@@ -148,7 +148,7 @@ impl Centerpiece {
         return settings;
     }
 
-    fn entries(&self) -> Vec<&model::EntryModel> {
+    fn entries(&self) -> Vec<&model::Entry> {
         return self
             .plugins
             .iter()
@@ -209,7 +209,7 @@ impl Centerpiece {
         return iced::Command::none();
     }
 
-    fn register_plugin(&mut self, plugin: crate::model::PluginModel) -> iced::Command<Message> {
+    fn register_plugin(&mut self, plugin: crate::model::Plugin) -> iced::Command<Message> {
         self.plugins.push(plugin);
         return iced::Command::none();
     }
@@ -217,7 +217,7 @@ impl Centerpiece {
     fn append_entry(
         &mut self,
         plugin_id: String,
-        entry: crate::model::EntryModel,
+        entry: crate::model::Entry,
     ) -> iced::Command<Message> {
         let plugin = self
             .plugins

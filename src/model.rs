@@ -1,14 +1,14 @@
 #[derive(Debug, Clone)]
-pub struct PluginModel {
+pub struct Plugin {
     pub id: String,
     pub priority: u32,
     pub title: String,
-    pub entries: Vec<EntryModel>,
+    pub entries: Vec<Entry>,
     pub app_channel_out: iced::futures::channel::mpsc::Sender<crate::plugin::PluginRequest>,
 }
 
 #[derive(Debug, Clone)]
-pub struct EntryModel {
+pub struct Entry {
     pub id: String,
     pub title: String,
     pub action: String,

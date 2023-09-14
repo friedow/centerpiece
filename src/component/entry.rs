@@ -1,7 +1,4 @@
-pub fn view(
-    entry: &crate::model::EntryModel,
-    active: bool,
-) -> iced::Element<'static, crate::Message> {
+pub fn view(entry: &crate::model::Entry, active: bool) -> iced::Element<'static, crate::Message> {
     return iced::widget::container(
         iced::widget::row![
             iced::widget::text(&entry.title)

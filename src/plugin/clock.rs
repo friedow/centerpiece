@@ -6,7 +6,6 @@ use iced::futures::StreamExt;
 
 pub struct ClockPlugin {
     plugin: crate::model::Plugin,
-    is_initial_run: bool,
     last_query: String,
     all_entries: Vec<crate::model::Entry>,
     plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
@@ -32,14 +31,13 @@ impl ClockPlugin {
         let (app_channel_out, plugin_channel_in) = iced::futures::channel::mpsc::channel(100);
 
         return ClockPlugin {
-            is_initial_run: true,
             last_query: String::new(),
             all_entries: vec![],
             plugin_channel_in,
             plugin_channel_out,
             plugin: crate::model::Plugin {
                 id: String::from("clock"),
-                priority: 0,
+                priority: 10,
                 title: String::from("󰅐 Clock"),
                 app_channel_out,
                 entries: vec![],
@@ -49,6 +47,7 @@ impl ClockPlugin {
 
     async fn main(&mut self) -> ! {
         self.register_plugin().await;
+        self.update_entries().await;
 
         loop {
             self.update().await;
@@ -63,23 +62,16 @@ impl ClockPlugin {
     }
 
     async fn update(&mut self) {
-        let plugin_request = if self.is_initial_run {
-            self.is_initial_run = false;
-            crate::model::PluginRequest::Timeout
-        } else {
-            let plugin_request_future = self.plugin_channel_in.select_next_some();
-            let plugin_request = async_std::future::timeout(
-                std::time::Duration::from_secs(1),
-                plugin_request_future,
-            )
-            .await
-            .unwrap_or(crate::model::PluginRequest::Timeout);
-            plugin_request
-        };
+        let plugin_request_future = self.plugin_channel_in.select_next_some();
+        let plugin_request =
+            async_std::future::timeout(std::time::Duration::from_secs(1), plugin_request_future)
+                .await
+                .unwrap_or(crate::model::PluginRequest::Timeout);
 
         match plugin_request {
             crate::model::PluginRequest::Search(query) => self.search(query).await,
             crate::model::PluginRequest::Timeout => self.update_entries().await,
+            crate::model::PluginRequest::Activate(_) => (),
         }
     }
 
@@ -93,6 +85,7 @@ impl ClockPlugin {
             title: formatted_time,
             action: String::from("open"),
             meta: String::from("Clock Time"),
+            cmd: vec![],
         };
         self.all_entries.push(time_entry.clone());
 
@@ -102,6 +95,7 @@ impl ClockPlugin {
             title: formatted_date,
             action: String::from("open"),
             meta: String::from("Clock Date"),
+            cmd: vec![],
         };
         self.all_entries.push(date_entry.clone());
 
@@ -128,18 +122,19 @@ impl ClockPlugin {
             .collect::<Vec<(i64, &crate::model::Entry)>>();
 
         filtered_entries.sort_by_cached_key(|(score, _)| score.clone());
+        filtered_entries.reverse();
 
         // TODO: it may be more performant to convert this into a send_all
         let _ = self
             .plugin_channel_out
-            .send(crate::Message::Clear(String::from("clock")))
+            .send(crate::Message::Clear(self.plugin.id.clone()))
             .await;
 
         for (_, entry) in filtered_entries {
             let _ = self
                 .plugin_channel_out
                 .send(crate::Message::AppendEntry(
-                    String::from("clock"),
+                    self.plugin.id.clone(),
                     entry.clone(),
                 ))
                 .await;

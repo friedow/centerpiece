@@ -1,4 +1,5 @@
-use iced::Application;
+use iced::{Application, futures::SinkExt};
+use plugin::clock::ClockPlugin;
 
 mod component;
 mod model;
@@ -76,6 +77,11 @@ impl Application for Centerpiece {
                     ..
                 }) => iced::window::close(),
 
+                iced::Event::Keyboard(iced::keyboard::Event::KeyReleased {
+                    key_code: iced::keyboard::KeyCode::Enter,
+                    ..
+                }) => self.activate_selected_entry(),
+
                 _ => iced::Command::none(),
             },
 
@@ -92,6 +98,7 @@ impl Application for Centerpiece {
     fn subscription(&self) -> iced::Subscription<Self::Message> {
         return iced::subscription::Subscription::batch(vec![
             iced::subscription::events().map(Message::Event),
+            crate::plugin::applications::ApplicationsPlugin::spawn(),
             crate::plugin::clock::ClockPlugin::spawn(),
         ]);
     }
@@ -251,6 +258,23 @@ impl Centerpiece {
 
         let plugin = plugin.unwrap();
         plugin.entries.clear();
+        return iced::Command::none();
+    }
+
+    fn activate_selected_entry(&mut self) -> iced::Command<Message> {
+        let active_entry_id_option = self.active_entry_id();
+        if active_entry_id_option.is_none() {
+            return iced::Command::none();
+        }
+        let active_entry_id = active_entry_id_option.unwrap();
+
+        let plugin_option = self.plugins.iter().find(|plugin| plugin.entries.iter().any(|entry| entry.id.eq(active_entry_id)));
+        if plugin_option.is_none() {
+            return iced::Command::none();
+        }
+        let plugin = plugin_option.unwrap();
+
+        plugin.app_channel_out.send(model::PluginRequest::Activate(active_entry_id.clone()));
         return iced::Command::none();
     }
 }

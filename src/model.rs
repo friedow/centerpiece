@@ -7,15 +7,29 @@ pub struct Plugin {
     pub app_channel_out: iced::futures::channel::mpsc::Sender<PluginRequest>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq)]
 pub struct Entry {
     pub id: String,
     pub title: String,
     pub action: String,
     pub meta: String,
+    pub cmd: Vec<String>,
+}
+
+impl std::hash::Hash for Entry {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
+}
+
+impl PartialEq for Entry {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
 }
 
 pub enum PluginRequest {
     Search(String),
     Timeout,
+    Activate(String),
 }

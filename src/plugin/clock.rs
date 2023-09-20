@@ -9,7 +9,6 @@ pub struct ClockPlugin {
     plugin_channel_in: iced::futures::channel::mpsc::Receiver<crate::model::PluginRequest>,
 }
 
-// TODO: most Strings can probable be converted to &str
 impl ClockPlugin {
     pub fn spawn() -> iced::Subscription<crate::Message> {
         return iced::subscription::channel(
@@ -102,7 +101,6 @@ impl ClockPlugin {
 
         let filtered_entries = crate::plugin::utils::search(self.all_entries.clone(), &query);
 
-        // TODO: it may be more performant to convert this into a send_all
         self.plugin_channel_out
             .try_send(crate::Message::Clear(self.plugin.id.clone()))
             .ok();

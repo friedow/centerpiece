@@ -1,4 +1,3 @@
-use iced::futures::sink::SinkExt;
 use iced::futures::StreamExt;
 
 pub struct ApplicationsPlugin {
@@ -180,7 +179,7 @@ impl ApplicationsPlugin {
     }
 
     async fn main(&mut self) -> ! {
-        self.register_plugin().await;
+        self.register_plugin();
         self.search(&String::from(""));
 
         loop {
@@ -188,11 +187,10 @@ impl ApplicationsPlugin {
         }
     }
 
-    async fn register_plugin(&mut self) {
-        let _ = self
-            .plugin_channel_out
-            .send(crate::Message::RegisterPlugin(self.plugin.clone()))
-            .await;
+    fn register_plugin(&mut self) {
+        self.plugin_channel_out
+            .try_send(crate::Message::RegisterPlugin(self.plugin.clone()))
+            .ok();
     }
 
     async fn update(&mut self) {
@@ -214,8 +212,6 @@ impl ApplicationsPlugin {
             .collect();
         let filtered_entries = crate::plugin::utils::search(all_entries, query);
 
-        // TODO: it may be more performant to convert this into a send_all
-        // iced::futures::stream::
         self.plugin_channel_out
             .try_send(crate::Message::Clear(self.plugin.id.clone()))
             .ok();

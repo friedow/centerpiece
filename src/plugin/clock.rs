@@ -85,7 +85,6 @@ impl ClockPlugin {
             title: formatted_time,
             action: String::from("open"),
             meta: String::from("Clock Time"),
-            cmd: vec![],
         };
         self.all_entries.push(time_entry.clone());
 
@@ -95,7 +94,6 @@ impl ClockPlugin {
             title: formatted_date,
             action: String::from("open"),
             meta: String::from("Clock Date"),
-            cmd: vec![],
         };
         self.all_entries.push(date_entry.clone());
 

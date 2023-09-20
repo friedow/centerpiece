@@ -1,6 +1,3 @@
-use std::format;
-
-use fuzzy_matcher::FuzzyMatcher;
 use iced::futures::sink::SinkExt;
 use iced::futures::StreamExt;
 
@@ -69,7 +66,7 @@ impl ClockPlugin {
                 .unwrap_or(crate::model::PluginRequest::Timeout);
 
         match plugin_request {
-            crate::model::PluginRequest::Search(query) => self.search(query).await,
+            crate::model::PluginRequest::Search(query) => self.search(query),
             crate::model::PluginRequest::Timeout => self.update_entries().await,
             crate::model::PluginRequest::Activate(_) => (),
         }
@@ -97,45 +94,23 @@ impl ClockPlugin {
         };
         self.all_entries.push(date_entry.clone());
 
-        self.search(self.last_query.clone()).await;
+        self.search(self.last_query.clone());
     }
 
-    async fn search(&mut self, query: String) {
+    fn search(&mut self, query: String) {
         self.last_query = query.clone();
 
-        let matcher = fuzzy_matcher::skim::SkimMatcherV2::default();
-
-        let mut filtered_entries = self
-            .all_entries
-            .iter()
-            .filter_map(|entry| {
-                let keywords = format!("{} {}", entry.title, entry.meta);
-                let match_result = matcher.fuzzy_indices(&keywords, &query);
-                if match_result.is_none() {
-                    return None;
-                }
-                let (score, _) = match_result.unwrap();
-                return Some((score, entry));
-            })
-            .collect::<Vec<(i64, &crate::model::Entry)>>();
-
-        filtered_entries.sort_by_cached_key(|(score, _)| score.clone());
-        filtered_entries.reverse();
+        let filtered_entries = crate::plugin::utils::search(self.all_entries.clone(), &query);
 
         // TODO: it may be more performant to convert this into a send_all
-        let _ = self
-            .plugin_channel_out
-            .send(crate::Message::Clear(self.plugin.id.clone()))
-            .await;
+        self.plugin_channel_out
+            .try_send(crate::Message::Clear(self.plugin.id.clone()))
+            .ok();
 
-        for (_, entry) in filtered_entries {
-            let _ = self
-                .plugin_channel_out
-                .send(crate::Message::AppendEntry(
-                    self.plugin.id.clone(),
-                    entry.clone(),
-                ))
-                .await;
+        for entry in filtered_entries {
+            self.plugin_channel_out
+                .try_send(crate::Message::AppendEntry(self.plugin.id.clone(), entry))
+                .ok();
         }
     }
 }

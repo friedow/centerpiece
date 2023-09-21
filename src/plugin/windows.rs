@@ -41,7 +41,7 @@ impl WindowsPlugin {
             plugin: crate::model::Plugin {
                 id: String::from("windows"),
                 priority: 30,
-                title: String::from("  Windows"),
+                title: String::from("󰖯 Windows"),
                 app_channel_out,
                 entries: vec![],
             },

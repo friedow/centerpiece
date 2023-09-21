@@ -235,6 +235,7 @@ impl Centerpiece {
 
     fn register_plugin(&mut self, plugin: crate::model::Plugin) -> iced::Command<Message> {
         self.plugins.push(plugin);
+        self.plugins.sort_by(|a, b| b.priority.cmp(&a.priority));
         return iced::Command::none();
     }
 

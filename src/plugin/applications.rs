@@ -153,7 +153,7 @@ impl ApplicationsPlugin {
             plugin_channel_out,
             plugin: crate::model::Plugin {
                 id: String::from("applications"),
-                priority: 0,
+                priority: 29,
                 title: String::from(" Apps"),
                 app_channel_out,
                 entries: vec![],

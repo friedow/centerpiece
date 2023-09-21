@@ -34,7 +34,7 @@ impl ClockPlugin {
             plugin: crate::model::Plugin {
                 id: String::from("clock"),
                 priority: 10,
-                title: String::from("󰅐 Clock"),
+                title: String::from(" Clock"),
                 app_channel_out,
                 entries: vec![],
             },

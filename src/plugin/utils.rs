@@ -22,8 +22,7 @@ pub fn search(entries: Vec<crate::model::Entry>, query: &String) -> Vec<crate::m
         })
         .collect::<Vec<(i64, crate::model::Entry)>>();
 
-    filtered_entries.sort_by_key(|(score, _)| score.clone());
-    filtered_entries.reverse();
+    filtered_entries.sort_by(|(a_score, _), (b_score, _)| b_score.cmp(a_score));
     return filtered_entries
         .into_iter()
         .map(|(_, entry)| entry)

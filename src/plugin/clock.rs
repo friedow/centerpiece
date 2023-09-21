@@ -79,7 +79,7 @@ impl ClockPlugin {
         let time_entry = crate::model::Entry {
             id: String::from("time-entry"),
             title: formatted_time,
-            action: String::from("open"),
+            action: String::from(""),
             meta: String::from("Clock Time"),
         };
         self.all_entries.push(time_entry.clone());
@@ -88,7 +88,7 @@ impl ClockPlugin {
         let date_entry = crate::model::Entry {
             id: String::from("date"),
             title: formatted_date,
-            action: String::from("open"),
+            action: String::from(""),
             meta: String::from("Clock Date"),
         };
         self.all_entries.push(date_entry.clone());

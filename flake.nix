@@ -27,7 +27,7 @@
 
       packages.${system}.default = pkgs.rustPlatform.buildRustPackage rec {
         pname = "centerpiece";
-        version = "0.1.0";
+        version = "0.3.0";
 
         inherit nativeBuildInputs buildInputs;
 

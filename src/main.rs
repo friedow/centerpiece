@@ -124,6 +124,7 @@ impl Application for Centerpiece {
             iced::widget::column(
                 self.plugins
                     .iter()
+                    .filter(|plugin| !plugin.entries.is_empty())
                     .map(|plugin| component::plugin::view(plugin, self.active_entry_id()))
                     .collect()
             ),

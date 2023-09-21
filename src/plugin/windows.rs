@@ -1,4 +1,4 @@
-use std::vec;
+use std::{vec, format};
 
 use iced::futures::StreamExt;
 
@@ -7,21 +7,7 @@ pub struct WindowsPlugin {
     all_entries: Vec<crate::model::Entry>,
     plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
     plugin_channel_in: iced::futures::channel::mpsc::Receiver<crate::model::PluginRequest>,
-}
-
-
-#[derive(thiserror::Error, Debug)]
-pub enum ParsingError {
-    #[error("unable to read desktop file")]
-    ReadError(#[from] std::io::Error),
-    #[error("unable to decode desktop file")]
-    DecodeError(#[from] freedesktop_desktop_entry::DecodeError),
-    #[error("desktop entry is hidden")]
-    IsHidden,
-    #[error("desktop entry is missing a name")]
-    MissingName,
-    #[error("desktop entry is missing an exec")]
-    MissingExec,
+    sway: swayipc::Connection,
 }
 
 impl WindowsPlugin {
@@ -41,29 +27,58 @@ impl WindowsPlugin {
     ) -> WindowsPlugin {
         let (app_channel_out, plugin_channel_in) = iced::futures::channel::mpsc::channel(100);
 
+        let connection_result = swayipc::Connection::new();
+        if let Err(error) = connection_result {
+            log::warn!(error = log::as_error!(error); "Failed to establish sway ipc connection");
+            panic!("Failed to establish sway ipc connection!");
+        }
+        let mut sway = connection_result.unwrap();
+
         return WindowsPlugin {
-            all_entries: WindowsPlugin::all_entries(),
+            all_entries: WindowsPlugin::all_entries(&mut sway),
             plugin_channel_in,
             plugin_channel_out,
             plugin: crate::model::Plugin {
                 id: String::from("windows"),
-                priority: 0,
-                title: String::from(" Windows"),
+                priority: 30,
+                title: String::from("  Windows"),
                 app_channel_out,
                 entries: vec![],
             },
+            sway,
         };
     }
 
-    fn all_entries() -> Vec<crate::model::Entry> {
-        use std::io::{stdin, stdout, Write};
-        let mut connection_result = swayipc::Connection::new();
-        if let Err(error) = connection_result {
-            log::warn!(error = log::as_error!(error); "Failed to establish sway ipc connection");
+    fn all_entries(sway: &mut swayipc::Connection) -> Vec<crate::model::Entry> {
+        let root_node_result = sway.get_tree();
+        if let Err(error) = root_node_result {
+            log::warn!(error = log::as_error!(error); "Failed to retrieve the root node");
             return vec![];
         }
-        let mut connection = connection_result.unwrap();
+        let root_node = root_node_result.unwrap();
 
+        return WindowsPlugin::get_window_nodes(root_node).into_iter().map(|node| crate::model::Entry {
+            id: node.id.to_string(),
+            title: node.name.unwrap_or(String::from("-- window name missing --")),
+            action: String::from("focus"),
+            meta: String::from("windows"),
+        }).collect();
+    }
+
+    fn get_window_nodes(node: swayipc::Node) -> Vec<swayipc::Node> {
+        if !node.nodes.is_empty() {
+            return node
+                .nodes
+                .into_iter()
+                .flat_map(|n| WindowsPlugin::get_window_nodes(n))
+                .collect();
+        }
+
+        if node.node_type == swayipc::NodeType::Con {
+            return vec![node];
+        }
+
+        return vec![];
     }
 
     async fn main(&mut self) -> ! {
@@ -92,13 +107,7 @@ impl WindowsPlugin {
     }
 
     fn search(&mut self, query: &String) {
-        let all_entries = self
-            .all_entries
-            .clone()
-            .into_iter()
-            .map(|extended_entry| extended_entry.entry)
-            .collect();
-        let filtered_entries = crate::plugin::utils::search(all_entries, query);
+        let filtered_entries = crate::plugin::utils::search(self.all_entries.clone(), query);
 
         self.plugin_channel_out
             .try_send(crate::Message::Clear(self.plugin.id.clone()))
@@ -112,21 +121,10 @@ impl WindowsPlugin {
     }
 
     fn activate(&mut self, entry_id: String) {
-        let entry_option = self.all_entries.iter().find(|e| e.entry.id == entry_id);
-        if entry_option.is_none() {
-            log::warn!(
-                "Entry activation failed: Unable to find entry with id {}.",
-                entry_id
-            );
-            return;
+        let focus_cmd_result = self.sway.run_command(format!("[con_id={}] focus", entry_id));
+        if let Err(error) = focus_cmd_result {
+            log::warn!(error = log::as_error!(error); "Failed to focus window");
         }
-
-        let cmd = entry_option.unwrap().cmd.clone();
-
-        std::process::Command::new(cmd[0].clone())
-            .args(&cmd[1..])
-            .spawn()
-            .expect("Command failure");
 
         self.plugin_channel_out.try_send(crate::Message::Exit).ok();
     }

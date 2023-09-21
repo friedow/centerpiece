@@ -113,6 +113,7 @@ impl Application for Centerpiece {
                 }
                 _ => None,
             }),
+            crate::plugin::windows::WindowsPlugin::spawn(),
             crate::plugin::applications::ApplicationsPlugin::spawn(),
             crate::plugin::clock::ClockPlugin::spawn(),
         ]);

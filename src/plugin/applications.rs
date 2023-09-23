@@ -27,8 +27,24 @@ impl std::hash::Hash for ExtendedEntry {
     }
 }
 
-impl ExtendedEntry {
-    pub fn try_from(path: &std::path::PathBuf) -> Result<ExtendedEntry, ParsingError> {
+#[derive(thiserror::Error, Debug)]
+pub enum ParsingError {
+    #[error("unable to read desktop file")]
+    ReadError(#[from] std::io::Error),
+    #[error("unable to decode desktop file")]
+    DecodeError(#[from] freedesktop_desktop_entry::DecodeError),
+    #[error("desktop entry is hidden")]
+    IsHidden,
+    #[error("desktop entry is missing a name")]
+    MissingName,
+    #[error("desktop entry is missing an exec")]
+    MissingExec,
+}
+
+impl TryFrom<&std::path::PathBuf> for ExtendedEntry {
+    type Error = ParsingError;
+
+    fn try_from(path: &std::path::PathBuf) -> Result<ExtendedEntry, ParsingError> {
         let bytes = std::fs::read_to_string(path)?;
         let desktop_entry = freedesktop_desktop_entry::DesktopEntry::decode(&path, &bytes)?;
 
@@ -79,7 +95,9 @@ impl ExtendedEntry {
             },
         });
     }
+}
 
+impl ExtendedEntry {
     fn is_visible(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> bool {
         let desktop = std::env::var("XDG_CURRENT_DESKTOP").unwrap_or(String::from("sway"));
         // filter entries where NotShowIn == current desktop
@@ -114,20 +132,6 @@ impl ExtendedEntry {
 
         return true;
     }
-}
-
-#[derive(thiserror::Error, Debug)]
-pub enum ParsingError {
-    #[error("unable to read desktop file")]
-    ReadError(#[from] std::io::Error),
-    #[error("unable to decode desktop file")]
-    DecodeError(#[from] freedesktop_desktop_entry::DecodeError),
-    #[error("desktop entry is hidden")]
-    IsHidden,
-    #[error("desktop entry is missing a name")]
-    MissingName,
-    #[error("desktop entry is missing an exec")]
-    MissingExec,
 }
 
 impl ApplicationsPlugin {

@@ -15,15 +15,15 @@ This project is currently in a very early state and tailored to my needs and dai
 
 ## Features
 
-- [ ] switch windows (sway)
+- [x] switch windows (sway)
 - [x] open applications (XDG based, scans for .desktop files)
 - [ ] open brave in app mode for special bookmarks
-- [ ] open local git repositories (terminal, editor, git gui)
+- [x] open local git repositories (terminal, editor, git gui)
 - [ ] open brave bookmarks
 - [ ] switch wifi networks
 - [ ] control audio devices
 - [ ] display resource monitor (cpu, gpu, ram, disks)
-- [x] display date, time
+- [x] display date and time
 - [ ] display weather
 - [ ] search brave history
 

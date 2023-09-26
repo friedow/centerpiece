@@ -13,19 +13,24 @@ This project is currently in a very early state and tailored to my needs and dai
 
 ![Screenshot of the applications in its default state.](./screenshots/search-view.png)
 
-## Features
+### Features
 
 - [x] switch windows (sway)
 - [x] open applications (XDG based, scans for .desktop files)
 - [ ] open brave in app mode for special bookmarks
 - [x] open local git repositories (terminal, editor, git gui)
+  - [ ] needs an index to increase speed
 - [ ] open brave bookmarks
 - [ ] switch wifi networks
 - [ ] control audio devices
 - [ ] display resource monitor (cpu, gpu, ram, disks)
+- [ ] display battery state
 - [x] display date and time
 - [ ] display weather
 - [ ] search brave history
+
+### TODO
+- [ ] nix build cache for this repo
 
 ### Development Setup
 

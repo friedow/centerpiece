@@ -57,11 +57,16 @@ impl WindowsPlugin {
         }
         let root_node = root_node_result.unwrap();
 
-        return WindowsPlugin::get_window_nodes(root_node).into_iter().map(|node| crate::model::Entry {
-            id: node.id.to_string(),
-            title: node.name.unwrap_or(String::from("-- window name missing --")),
-            action: String::from("focus"),
-            meta: String::from("windows"),
+        return WindowsPlugin::get_window_nodes(root_node).into_iter().map(|node| {
+            let name = node.name.unwrap_or(String::from("-- window name missing --"));
+            let app_id = node.app_id.unwrap_or(String::from("-- window app_id missing --"));
+            let title = if name != "" { name } else { app_id };
+            return crate::model::Entry {
+                id: node.id.to_string(),
+                title,
+                action: String::from("focus"),
+                meta: String::from("windows"),
+            }
         }).collect();
     }
 

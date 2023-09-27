@@ -26,6 +26,8 @@ struct Centerpiece {
     plugins: Vec<model::Plugin>,
 }
 
+pub const SCROLLABLE_ID: &str = "scrollable";
+
 impl Application for Centerpiece {
     type Message = Message;
     type Executor = iced::executor::Default;
@@ -123,13 +125,14 @@ impl Application for Centerpiece {
     fn view(&self) -> iced::Element<Message> {
         iced::widget::container(iced::widget::column![
             component::query_input::view(&self.query),
-            iced::widget::column(
+            iced::widget::scrollable(iced::widget::column(
                 self.plugins
                     .iter()
                     .filter(|plugin| !plugin.entries.is_empty())
                     .map(|plugin| component::plugin::view(plugin, self.active_entry_id()))
                     .collect()
-            ),
+            ))
+            .id(iced::widget::scrollable::Id::new(SCROLLABLE_ID)),
         ])
         .style(iced::theme::Container::Custom(Box::new(
             ApplicationWrapperStyle {},
@@ -211,27 +214,36 @@ impl Centerpiece {
         let entries = self.entries();
         if entries.len() == 0 {
             self.active_entry_index = 0;
-            return iced::Command::none();
+            return self.scroll_to_selected_entry();
         }
 
         if self.active_entry_index == 0 {
             self.active_entry_index = entries.len() - 1;
-            return iced::Command::none();
+            return self.scroll_to_selected_entry();
         }
 
         self.active_entry_index -= 1;
-        return iced::Command::none();
+        return self.scroll_to_selected_entry();
     }
 
     fn select_next_entry(&mut self) -> iced::Command<Message> {
         let entries = self.entries();
         if entries.len() == 0 || self.active_entry_index == entries.len() - 1 {
             self.active_entry_index = 0;
-            return iced::Command::none();
+            return self.scroll_to_selected_entry();
         }
 
         self.active_entry_index += 1;
-        return iced::Command::none();
+        return self.scroll_to_selected_entry();
+    }
+
+    fn scroll_to_selected_entry(&self) -> iced::Command<Message> {
+        let total_entries = self.entries().len() as f32;
+        let offset = (1.0 / (total_entries - 1.0)) * self.active_entry_index as f32;
+        return iced::widget::scrollable::snap_to(
+            iced::widget::scrollable::Id::new(SCROLLABLE_ID),
+            iced::widget::scrollable::RelativeOffset { x: 0.0, y: offset },
+        );
     }
 
     fn register_plugin(&mut self, plugin: crate::model::Plugin) -> iced::Command<Message> {

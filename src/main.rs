@@ -201,7 +201,7 @@ impl Centerpiece {
         }
 
         self.query = input;
-        return iced::Command::none();
+        return self.select_first_entry();
     }
 
     fn focus_search_input(&self) -> iced::Command<Message> {
@@ -210,11 +210,15 @@ impl Centerpiece {
         ));
     }
 
+    fn select_first_entry(&mut self) -> iced::Command<Message> {
+        self.active_entry_index = 0;
+        return self.scroll_to_selected_entry();
+    }
+
     fn select_previous_entry(&mut self) -> iced::Command<Message> {
         let entries = self.entries();
         if entries.len() == 0 {
-            self.active_entry_index = 0;
-            return self.scroll_to_selected_entry();
+            return self.select_first_entry();
         }
 
         if self.active_entry_index == 0 {
@@ -229,8 +233,7 @@ impl Centerpiece {
     fn select_next_entry(&mut self) -> iced::Command<Message> {
         let entries = self.entries();
         if entries.len() == 0 || self.active_entry_index == entries.len() - 1 {
-            self.active_entry_index = 0;
-            return self.scroll_to_selected_entry();
+            return self.select_first_entry();
         }
 
         self.active_entry_index += 1;

@@ -21,8 +21,13 @@ This project is currently in a very early state and tailored to my needs and dai
 - [x] open local git repositories (terminal, editor, git gui)
   - [ ] needs an index to increase speed
 - [ ] open brave bookmarks
+- [ ] convert between units (e.g. cm to inch)
 - [ ] switch wifi networks
 - [ ] control audio devices
+  - [ ] select default microphone / speaker
+  - [ ] control volume
+- [ ] list and run user defined scripts
+- [ ] run command in terminal (commands are prefixed with `:`)
 - [ ] display resource monitor (cpu, gpu, ram, disks)
 - [ ] display battery state
 - [x] display date and time
@@ -30,6 +35,7 @@ This project is currently in a very early state and tailored to my needs and dai
 - [ ] search brave history
 
 ### TODO
+
 - [ ] nix build cache for this repo
 
 ### Development Setup

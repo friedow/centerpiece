@@ -28,3 +28,4 @@ swayipc = "3.0.1"
 
 # git repositories plugin
 rust_search = "2.0.0"
+nucleo = "0.2.1"

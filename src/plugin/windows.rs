@@ -1,10 +1,11 @@
-use std::{vec, format};
+use std::{format, vec};
 
 use iced::futures::StreamExt;
 
 pub struct WindowsPlugin {
     plugin: crate::model::Plugin,
     all_entries: Vec<crate::model::Entry>,
+    matcher: nucleo::Matcher,
     plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
     plugin_channel_in: iced::futures::channel::mpsc::Receiver<crate::model::PluginRequest>,
     sway: swayipc::Connection,
@@ -46,6 +47,7 @@ impl WindowsPlugin {
                 entries: vec![],
             },
             sway,
+            matcher: nucleo::Matcher::default(),
         };
     }
 
@@ -57,17 +59,24 @@ impl WindowsPlugin {
         }
         let root_node = root_node_result.unwrap();
 
-        return WindowsPlugin::get_window_nodes(root_node).into_iter().map(|node| {
-            let name = node.name.unwrap_or(String::from("-- window name missing --"));
-            let app_id = node.app_id.unwrap_or(String::from("-- window app_id missing --"));
-            let title = if name != "" { name } else { app_id };
-            return crate::model::Entry {
-                id: node.id.to_string(),
-                title,
-                action: String::from("focus"),
-                meta: String::from("windows"),
-            }
-        }).collect();
+        return WindowsPlugin::get_window_nodes(root_node)
+            .into_iter()
+            .map(|node| {
+                let name = node
+                    .name
+                    .unwrap_or(String::from("-- window name missing --"));
+                let app_id = node
+                    .app_id
+                    .unwrap_or(String::from("-- window app_id missing --"));
+                let title = if name != "" { name } else { app_id };
+                return crate::model::Entry {
+                    id: node.id.to_string(),
+                    title,
+                    action: String::from("focus"),
+                    meta: String::from("windows"),
+                };
+            })
+            .collect();
     }
 
     fn get_window_nodes(node: swayipc::Node) -> Vec<swayipc::Node> {
@@ -111,8 +120,17 @@ impl WindowsPlugin {
         }
     }
 
-    fn search(&mut self, query: &String) {
-        let filtered_entries = crate::plugin::utils::search(self.all_entries.clone(), query);
+    fn search(&mut self, query: &str) {
+        // let filtered_entries = crate::plugin::utils::search(self.all_entries.clone(), query);
+        let pattern = nucleo::pattern::Atom::new(
+            query,
+            nucleo::pattern::CaseMatching::Smart,
+            nucleo::pattern::AtomKind::Fuzzy,
+            false,
+        );
+        let filtered_vec = pattern.match_list(self.all_entries.clone(), &mut self.matcher);
+        let filtered_entries: Vec<crate::model::Entry> =
+            filtered_vec.into_iter().map(|(e, _)| e).collect();
 
         self.plugin_channel_out
             .try_send(crate::Message::Clear(self.plugin.id.clone()))
@@ -126,7 +144,9 @@ impl WindowsPlugin {
     }
 
     fn activate(&mut self, entry_id: String) {
-        let focus_cmd_result = self.sway.run_command(format!("[con_id={}] focus", entry_id));
+        let focus_cmd_result = self
+            .sway
+            .run_command(format!("[con_id={}] focus", entry_id));
         if let Err(error) = focus_cmd_result {
             log::warn!(error = log::as_error!(error); "Failed to focus window");
         }

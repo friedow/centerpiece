@@ -2,6 +2,7 @@ use iced::futures::StreamExt;
 
 pub struct ApplicationsPlugin {
     plugin: crate::model::Plugin,
+    matcher: nucleo::Matcher,
     all_entries: Vec<ExtendedEntry>,
     plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
     plugin_channel_in: iced::futures::channel::mpsc::Receiver<crate::model::PluginRequest>,
@@ -151,10 +152,11 @@ impl ApplicationsPlugin {
     ) -> ApplicationsPlugin {
         let (app_channel_out, plugin_channel_in) = iced::futures::channel::mpsc::channel(100);
 
+        // let config = nucleo::Config::DEFAULT;
+        // let matcher = nucleo::Nucleo::new(config, _, None, 0);
+        let matcher = nucleo::Matcher::default();
+
         return ApplicationsPlugin {
-            all_entries: ApplicationsPlugin::all_entries(),
-            plugin_channel_in,
-            plugin_channel_out,
             plugin: crate::model::Plugin {
                 id: String::from("applications"),
                 priority: 29,
@@ -162,6 +164,10 @@ impl ApplicationsPlugin {
                 app_channel_out,
                 entries: vec![],
             },
+            matcher,
+            all_entries: ApplicationsPlugin::all_entries(),
+            plugin_channel_out,
+            plugin_channel_in,
         };
     }
 
@@ -207,14 +213,23 @@ impl ApplicationsPlugin {
         }
     }
 
-    fn search(&mut self, query: &String) {
-        let all_entries = self
+    fn search(&mut self, query: &str) {
+        let all_entries: Vec<crate::model::Entry> = self
             .all_entries
             .clone()
             .into_iter()
             .map(|extended_entry| extended_entry.entry)
             .collect();
-        let filtered_entries = crate::plugin::utils::search(all_entries, query);
+        // let filtered_entries = crate::plugin::utils::search(all_entries, query);
+        let pattern = nucleo::pattern::Atom::new(
+            query,
+            nucleo::pattern::CaseMatching::Smart,
+            nucleo::pattern::AtomKind::Fuzzy,
+            false,
+        );
+        let filtered_vec = pattern.match_list(all_entries, &mut self.matcher);
+        let filtered_entries: Vec<crate::model::Entry> =
+            filtered_vec.into_iter().map(|(e, _)| e).collect();
 
         self.plugin_channel_out
             .try_send(crate::Message::Clear(self.plugin.id.clone()))

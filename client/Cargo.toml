@@ -1,0 +1,31 @@
+[package]
+name = "centerpiece"
+version = "0.5.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# general
+log = { version = "0.4.20", features = ["kv_unstable_serde"] }
+simple_logger = { version = "4.2.0", features = ["colors", "threads", "timestamps", "stderr"] }
+thiserror = "1.0.48"
+
+# application window
+iced = { version = "0.10.0", features = ["svg"] }
+
+# search
+fuzzy-matcher = "0.3.7"
+
+# clock plugin
+async-std = "1.12.0"
+chrono = "0.4.26"
+
+# applications plugin
+freedesktop-desktop-entry = "0.5.0"
+
+# windows plugin
+swayipc = "3.0.1"
+
+# git repositories plugin
+rust_search = "2.0.0"

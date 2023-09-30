@@ -43,9 +43,9 @@ impl GitRepositoriesPlugin {
     fn all_entries() -> Vec<crate::model::Entry> {
         let git_directory_paths: Vec<String> = rust_search::SearchBuilder::default()
             .location("~/")
-            .search_input(".git")
-            .limit(100)
+            .search_input("\\.git")
             .strict()
+            .limit(100)
             .hidden()
             .custom_filter(|dir| {
                 let name = dir.file_name().to_str().unwrap();

@@ -5,6 +5,7 @@ mod model;
 mod plugin;
 
 pub fn main() -> iced::Result {
+    simple_logger::init_with_level(log::Level::Info).unwrap();
     return Centerpiece::run(Centerpiece::settings());
 }
 

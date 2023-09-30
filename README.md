@@ -38,6 +38,16 @@ This project is currently in a very early state and tailored to my needs and dai
 
 - [ ] nix build cache for this repo
 
+### Repository Structure
+
+#### /client
+
+Contains the graphical application and the plugin code that is needed during runtime. This is most of the plugin code which handles requests for searching and opening of entries.
+
+#### /services
+
+Computations for generating plugin entries can be time consuming. For example listing all git repositories entails searching your whole home directory for directories with the name `.git`. To avoid slowing down the graphical application during run time this directory contains code for small systemd services that write indices for plugins with time consuming queries.
+
 ### Development Setup
 
 #### Build Environment

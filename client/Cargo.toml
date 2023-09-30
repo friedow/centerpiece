@@ -17,6 +17,10 @@ iced = { version = "0.10.0", features = ["svg"] }
 # search
 fuzzy-matcher = "0.3.7"
 
+# reading index files
+serde = "1.0.188"
+serde_json = "1.0.94"
+
 # clock plugin
 async-std = "1.12.0"
 chrono = "0.4.26"
@@ -26,6 +30,3 @@ freedesktop-desktop-entry = "0.5.0"
 
 # windows plugin
 swayipc = "3.0.1"
-
-# git repositories plugin
-rust_search = "2.0.0"

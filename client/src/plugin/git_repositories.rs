@@ -1,6 +1,4 @@
 use iced::futures::StreamExt;
-use rust_search::FilterExt;
-use std::vec;
 
 pub struct GitRepositoriesPlugin {
     plugin: crate::model::Plugin,
@@ -41,36 +39,13 @@ impl GitRepositoriesPlugin {
     }
 
     fn all_entries() -> Vec<crate::model::Entry> {
-        let git_directory_paths: Vec<String> = rust_search::SearchBuilder::default()
-            .location("~/")
-            .search_input("\\.git")
-            .strict()
-            .limit(100)
-            .hidden()
-            .custom_filter(|dir| {
-                let name = dir.file_name().to_str().unwrap();
-                if name == ".git" {
-                    return true;
-                }
-                return !name.starts_with(".");
-            })
-            .build()
-            .collect();
+        let git_repository_paths: Vec<String> = crate::plugin::utils::read_index_file("git-repositories-index.json");
 
         let home = std::env::var("HOME").unwrap_or(String::from(""));
 
-        return git_directory_paths
+        return git_repository_paths
             .into_iter()
-            .filter_map(|git_directory_path| {
-                let git_repository_path_option = git_directory_path.strip_suffix("/.git");
-                if git_repository_path_option.is_none() {
-                    log::warn!(
-                        path = log::as_serde!(git_directory_path);
-                        "Unable to strip '/.git' suffix from path '{}'",
-                        git_directory_path
-                    );
-                }
-                let git_repository_path = git_repository_path_option?.to_string();
+            .filter_map(|git_repository_path| {
                 let git_repository_display_name = git_repository_path.replacen(&home, "~", 1);
 
                 return Some(crate::model::Entry {

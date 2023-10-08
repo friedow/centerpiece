@@ -82,7 +82,7 @@ impl ClockPlugin {
             action: String::from(""),
             meta: String::from("Clock Time"),
         };
-        self.all_entries.push(time_entry.clone());
+        self.all_entries.push(time_entry);
 
         let formatted_date = date.format("%A, %_d. %B %Y").to_string();
         let date_entry = crate::model::Entry {
@@ -91,7 +91,7 @@ impl ClockPlugin {
             action: String::from(""),
             meta: String::from("Clock Date"),
         };
-        self.all_entries.push(date_entry.clone());
+        self.all_entries.push(date_entry);
 
         self.search(self.last_query.clone());
     }

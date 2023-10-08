@@ -119,6 +119,7 @@ impl Application for Centerpiece {
             crate::plugin::git_repositories::GitRepositoriesPlugin::spawn(),
             crate::plugin::windows::WindowsPlugin::spawn(),
             crate::plugin::applications::ApplicationsPlugin::spawn(),
+            crate::plugin::resource_monitor::ResourceMonitorPlugin::spawn(),
             crate::plugin::clock::ClockPlugin::spawn(),
         ]);
     }

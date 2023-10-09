@@ -35,6 +35,10 @@ impl WindowsPlugin {
         }
         let mut sway = connection_result.unwrap();
 
+        let mut config = nucleo::Config::DEFAULT;
+        config.prefer_prefix = true;
+        let matcher = nucleo::Matcher::new(config);
+
         return WindowsPlugin {
             all_entries: WindowsPlugin::all_entries(&mut sway),
             plugin_channel_in,
@@ -47,7 +51,7 @@ impl WindowsPlugin {
                 entries: vec![],
             },
             sway,
-            matcher: nucleo::Matcher::default(),
+            matcher,
         };
     }
 

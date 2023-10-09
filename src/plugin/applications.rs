@@ -152,9 +152,11 @@ impl ApplicationsPlugin {
     ) -> ApplicationsPlugin {
         let (app_channel_out, plugin_channel_in) = iced::futures::channel::mpsc::channel(100);
 
-        // let config = nucleo::Config::DEFAULT;
         // let matcher = nucleo::Nucleo::new(config, _, None, 0);
-        let matcher = nucleo::Matcher::default();
+        // let matcher = nucleo::Matcher::default();
+        let mut config = nucleo::Config::DEFAULT;
+        config.prefer_prefix = true;
+        let matcher = nucleo::Matcher::new(config);
 
         return ApplicationsPlugin {
             plugin: crate::model::Plugin {

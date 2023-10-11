@@ -29,15 +29,15 @@ impl std::hash::Hash for ExtendedEntry {
 
 #[derive(thiserror::Error, Debug)]
 pub enum ParsingError {
-    #[error("unable to read desktop file")]
+    #[error("Failed to read desktop entry file.")]
     ReadError(#[from] std::io::Error),
-    #[error("unable to decode desktop file")]
+    #[error("Failed to decode desktop entry file.")]
     DecodeError(#[from] freedesktop_desktop_entry::DecodeError),
-    #[error("desktop entry is hidden")]
+    #[error("Desktop entry is hidden.")]
     IsHidden,
-    #[error("desktop entry is missing a name")]
+    #[error("Desktop entry is missing a name field.")]
     MissingName,
-    #[error("desktop entry is missing an exec")]
+    #[error("Desktop entry is missing an exec field.")]
     MissingExec,
 }
 
@@ -49,21 +49,17 @@ impl TryFrom<&std::path::PathBuf> for ExtendedEntry {
         let desktop_entry = freedesktop_desktop_entry::DesktopEntry::decode(&path, &bytes)?;
 
         if !ExtendedEntry::is_visible(&desktop_entry) {
-            log::info!(appid = log::as_serde!(desktop_entry.appid); "Desktop entry is hidden");
             return Err(ParsingError::IsHidden);
         }
 
         let locale = std::env::var("LANG").unwrap_or(String::from("en_US"));
         let name_option = desktop_entry.name(Some(&locale));
         if name_option.is_none() {
-            log::warn!(appid = log::as_serde!(desktop_entry.appid); "Unable to find name for desktop entry");
             return Err(ParsingError::MissingName);
         }
 
-        // error on entries missing an exec command
         let exec_option = desktop_entry.exec();
         if exec_option.is_none() {
-            log::warn!(appid = log::as_serde!(desktop_entry.appid); "Unable to find exec for desktop entry");
             return Err(ParsingError::MissingExec);
         }
 
@@ -171,12 +167,10 @@ impl ApplicationsPlugin {
         let desktop_entries: std::collections::HashSet<ExtendedEntry> = paths
             .filter_map(|path| {
                 let desktop_entry_result = ExtendedEntry::try_from(&path);
-
                 if let Err(error) = desktop_entry_result {
-                    log::warn!(err = log::as_error!(error); "Desktop entry cration failed");
-                    return None;
+                    log::warn!(target: "applications", error = log::as_error!(error); "Skipping desktop entry.");
                 }
-                return Some(desktop_entry_result.unwrap());
+                return desktop_entry_result.ok();
             })
             .collect();
         return desktop_entries.into_iter().collect();
@@ -192,9 +186,16 @@ impl ApplicationsPlugin {
     }
 
     fn register_plugin(&mut self) {
-        self.plugin_channel_out
-            .try_send(crate::Message::RegisterPlugin(self.plugin.clone()))
-            .ok();
+        let send_register_plugin_result = self
+            .plugin_channel_out
+            .try_send(crate::Message::RegisterPlugin(self.plugin.clone()));
+        if let Err(error) = send_register_plugin_result {
+            log::error!(
+                error = log::as_error!(error);
+                "Failed to send message to register the applications plugin.",
+            );
+            std::process::exit(1);
+        }
     }
 
     async fn update(&mut self) {
@@ -216,14 +217,29 @@ impl ApplicationsPlugin {
             .collect();
         let filtered_entries = crate::plugin::utils::search(all_entries, query);
 
-        self.plugin_channel_out
-            .try_send(crate::Message::Clear(self.plugin.id.clone()))
-            .ok();
+        let send_clear_entries_result = self
+            .plugin_channel_out
+            .try_send(crate::Message::Clear(self.plugin.id.clone()));
+        if let Err(error) = send_clear_entries_result {
+            log::warn!(
+                target: self.plugin.id.as_str(),
+                error = log::as_error!(error);
+                "Failed to send message to clear all entries for the applications plugin.",
+            );
+        }
 
         for entry in filtered_entries {
-            self.plugin_channel_out
-                .try_send(crate::Message::AppendEntry(self.plugin.id.clone(), entry))
-                .ok();
+            let entry_id = entry.id.clone();
+            let send_append_entry_result = self
+                .plugin_channel_out
+                .try_send(crate::Message::AppendEntry(self.plugin.id.clone(), entry));
+            if let Err(error) = send_append_entry_result {
+                log::warn!(
+                    target: self.plugin.id.as_str(),
+                    error = log::as_error!(error);
+                    "Failed to send message to append entry with id '{}' for the applications plugin.", &entry_id
+                );
+            }
         }
     }
 
@@ -231,7 +247,8 @@ impl ApplicationsPlugin {
         let entry_option = self.all_entries.iter().find(|e| e.entry.id == entry_id);
         if entry_option.is_none() {
             log::warn!(
-                "Entry activation failed: Unable to find entry with id {}.",
+                target: self.plugin.id.as_str(),
+                "Failed to activate entry with id for the  activation failed: Unable to find entry with id {}.",
                 entry_id
             );
             return;

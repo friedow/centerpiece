@@ -30,7 +30,7 @@ impl iced::widget::container::StyleSheet for Style {
             background: None,
             border_radius: iced::BorderRadius::from(0.1 * crate::REM),
             border_width: 1.,
-            border_color: iced::color!(0xffffff, 1.),
+            border_color: iced::Color::WHITE,
             text_color: None,
         };
     }

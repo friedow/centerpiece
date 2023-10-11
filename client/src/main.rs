@@ -39,6 +39,9 @@ impl Application for Centerpiece {
         let _ = iced::font::load(
             include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
         );
+        let _ = iced::font::load(
+            include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Light.ttf").as_slice(),
+        );
 
         return (
             Self {

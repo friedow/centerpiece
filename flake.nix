@@ -21,8 +21,12 @@
       devShells.${system}.default = pkgs.mkShell {
         inherit nativeBuildInputs buildInputs;
         packages = devInputs;
-        LD_LIBRARY_PATH =
-          pkgs.lib.makeLibraryPath [ pkgs.wayland pkgs.libxkbcommon ];
+        LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
+          pkgs.wayland
+          pkgs.libxkbcommon
+          pkgs.vulkan-loader
+          pkgs.libGL
+        ];
       };
 
       packages.${system}.default = pkgs.rustPlatform.buildRustPackage rec {
@@ -34,7 +38,12 @@
         postInstall = ''
           wrapProgram "$out/bin/${pname}" \
             --prefix LD_LIBRARY_PATH : ${
-              pkgs.lib.makeLibraryPath [ pkgs.wayland pkgs.libxkbcommon ]
+              pkgs.lib.makeLibraryPath [
+                pkgs.wayland
+                pkgs.libxkbcommon
+                pkgs.vulkan-loader
+                pkgs.libGL
+              ]
             }
         '';
 

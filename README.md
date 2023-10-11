@@ -19,7 +19,7 @@ This project is currently in a very early state and tailored to my needs and dai
 - [x] open applications (XDG based, scans for .desktop files)
 - [ ] open brave in app mode for special bookmarks
 - [x] open local git repositories (terminal, editor, git gui)
-  - [ ] needs an index to increase speed
+  - [x] needs an index to increase speed
 - [ ] open brave bookmarks
 - [ ] convert between units (e.g. cm to inch)
 - [ ] switch wifi networks
@@ -28,7 +28,7 @@ This project is currently in a very early state and tailored to my needs and dai
   - [ ] control volume
 - [ ] list and run user defined scripts
 - [ ] run command in terminal (commands are prefixed with `:`)
-- [ ] display resource monitor (cpu, gpu, ram, disks)
+- [x] display resource monitor (cpu, gpu, ram, disks)
 - [ ] display battery state
 - [x] display date and time
 - [ ] display weather
@@ -37,6 +37,7 @@ This project is currently in a very early state and tailored to my needs and dai
 ### TODO
 
 - [ ] nix build cache for this repo
+- [ ] nix module to configure systemd services and install app
 
 ### Repository Structure
 

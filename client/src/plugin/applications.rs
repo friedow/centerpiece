@@ -168,7 +168,8 @@ impl ApplicationsPlugin {
             .filter_map(|path| {
                 let desktop_entry_result = ExtendedEntry::try_from(&path);
                 if let Err(error) = desktop_entry_result {
-                    log::warn!(target: "applications", error = log::as_error!(error); "Skipping desktop entry.");
+                    log::warn!(target: "applications", error = log::as_error!(error); "Skipping desktop entry with path '{}'.", &path.to_str().unwrap());
+                    return None;
                 }
                 return desktop_entry_result.ok();
             })
@@ -192,7 +193,7 @@ impl ApplicationsPlugin {
         if let Err(error) = send_register_plugin_result {
             log::error!(
                 error = log::as_error!(error);
-                "Failed to send message to register the applications plugin.",
+                "Failed to send message to register the plugin.",
             );
             std::process::exit(1);
         }
@@ -224,7 +225,7 @@ impl ApplicationsPlugin {
             log::warn!(
                 target: self.plugin.id.as_str(),
                 error = log::as_error!(error);
-                "Failed to send message to clear all entries for the applications plugin.",
+                "Failed to send message to clear all entries.",
             );
         }
 
@@ -237,7 +238,7 @@ impl ApplicationsPlugin {
                 log::warn!(
                     target: self.plugin.id.as_str(),
                     error = log::as_error!(error);
-                    "Failed to send message to append entry with id '{}' for the applications plugin.", &entry_id
+                    "Failed to send message to append entry with id '{}'.", &entry_id
                 );
             }
         }
@@ -248,7 +249,7 @@ impl ApplicationsPlugin {
         if entry_option.is_none() {
             log::warn!(
                 target: self.plugin.id.as_str(),
-                "Failed to activate entry with id for the  activation failed: Unable to find entry with id {}.",
+                "Failed to activate entry with id '{}'.",
                 entry_id
             );
             return;
@@ -261,6 +262,13 @@ impl ApplicationsPlugin {
             .spawn()
             .expect("Command failure");
 
-        self.plugin_channel_out.try_send(crate::Message::Exit).ok();
+        let send_exit_result = self.plugin_channel_out.try_send(crate::Message::Exit);
+        if let Err(error) = send_exit_result {
+            log::warn!(
+                target: self.plugin.id.as_str(),
+                error = log::as_error!(error);
+                "Failed to send message to exit the application.",
+            );
+        }
     }
 }

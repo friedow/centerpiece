@@ -131,10 +131,14 @@ impl Application for Centerpiece {
                 self.plugins
                     .iter()
                     .filter(|plugin| !plugin.entries.is_empty())
-                    .map(|plugin| component::plugin::view(plugin, self.active_entry_id()))
+                    .enumerate()
+                    .map(|(index, plugin)| component::plugin::view(plugin, index != 0, self.active_entry_id()))
                     .collect()
             ))
-            .id(iced::widget::scrollable::Id::new(SCROLLABLE_ID)),
+            .id(iced::widget::scrollable::Id::new(SCROLLABLE_ID))
+            .style(iced::theme::Scrollable::Custom(Box::new(
+                ScrollableStyle {},
+            ))),
         ])
         .style(iced::theme::Container::Custom(Box::new(
             ApplicationWrapperStyle {},
@@ -351,6 +355,45 @@ impl iced::widget::container::StyleSheet for ApplicationWrapperStyle {
             border_radius: iced::BorderRadius::from(0.25 * REM),
             border_width: 0.,
             text_color: None,
+        };
+    }
+}
+
+struct ScrollableStyle {}
+impl iced::widget::scrollable::StyleSheet for ScrollableStyle {
+    type Style = iced::Theme;
+
+    fn active(&self, _style: &Self::Style) -> iced::widget::scrollable::Scrollbar {
+        return iced::widget::scrollable::Scrollbar {
+            background: None,
+            border_radius: iced::BorderRadius::from(0.),
+            border_width: 0.,
+            border_color: iced::Color::TRANSPARENT,
+            scroller: iced::widget::scrollable::Scroller {
+                color: iced::Color::WHITE,
+                border_radius: iced::BorderRadius::from(0.25 * REM),
+                border_width: 4.,
+                border_color: iced::Color::BLACK,
+            },
+        };
+    }
+
+    fn hovered(
+            &self,
+            _style: &Self::Style,
+            _is_mouse_over_scrollbar: bool,
+        ) -> iced::widget::scrollable::Scrollbar {
+        return iced::widget::scrollable::Scrollbar {
+            background: None,
+            border_radius: iced::BorderRadius::from(0.),
+            border_width: 0.,
+            border_color: iced::Color::TRANSPARENT,
+            scroller: iced::widget::scrollable::Scroller {
+                color: iced::Color::WHITE,
+                border_radius: iced::BorderRadius::from(0.25 * REM),
+                border_width: 4.,
+                border_color: iced::Color::BLACK,
+            },
         };
     }
 }

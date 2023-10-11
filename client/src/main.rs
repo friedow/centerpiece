@@ -168,7 +168,7 @@ impl Centerpiece {
 
         settings.window = iced::window::Settings {
             transparent: true,
-            size: (550, 350),
+            size: (650, 400),
             decorations: false,
             level: iced::window::Level::AlwaysOnTop,
             resizable: false,

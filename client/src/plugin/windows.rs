@@ -1,4 +1,4 @@
-use std::{vec, format};
+use std::{format, vec};
 
 use iced::futures::StreamExt;
 
@@ -57,17 +57,24 @@ impl WindowsPlugin {
         }
         let root_node = root_node_result.unwrap();
 
-        return WindowsPlugin::get_window_nodes(root_node).into_iter().map(|node| {
-            let name = node.name.unwrap_or(String::from("-- window name missing --"));
-            let app_id = node.app_id.unwrap_or(String::from("-- window app_id missing --"));
-            let title = if name != "" { name } else { app_id };
-            return crate::model::Entry {
-                id: node.id.to_string(),
-                title,
-                action: String::from("focus"),
-                meta: String::from("windows"),
-            }
-        }).collect();
+        return WindowsPlugin::get_window_nodes(root_node)
+            .into_iter()
+            .map(|node| {
+                let name = node
+                    .name
+                    .unwrap_or(String::from("-- window name missing --"));
+                let app_id = node
+                    .app_id
+                    .unwrap_or(String::from("-- window app_id missing --"));
+                let title = if name != "" { name } else { app_id };
+                return crate::model::Entry {
+                    id: node.id.to_string(),
+                    title,
+                    action: String::from("focus"),
+                    meta: String::from("windows"),
+                };
+            })
+            .collect();
     }
 
     fn get_window_nodes(node: swayipc::Node) -> Vec<swayipc::Node> {
@@ -126,7 +133,9 @@ impl WindowsPlugin {
     }
 
     fn activate(&mut self, entry_id: String) {
-        let focus_cmd_result = self.sway.run_command(format!("[con_id={}] focus", entry_id));
+        let focus_cmd_result = self
+            .sway
+            .run_command(format!("[con_id={}] focus", entry_id));
         if let Err(error) = focus_cmd_result {
             log::warn!(error = log::as_error!(error); "Failed to focus window");
         }

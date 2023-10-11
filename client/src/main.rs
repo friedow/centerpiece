@@ -135,7 +135,11 @@ impl Application for Centerpiece {
                     .iter()
                     .filter(|plugin| !plugin.entries.is_empty())
                     .enumerate()
-                    .map(|(index, plugin)| component::plugin::view(plugin, index != 0, self.active_entry_id()))
+                    .map(|(index, plugin)| component::plugin::view(
+                        plugin,
+                        index != 0,
+                        self.active_entry_id()
+                    ))
                     .collect()
             ))
             .id(iced::widget::scrollable::Id::new(SCROLLABLE_ID))
@@ -382,10 +386,10 @@ impl iced::widget::scrollable::StyleSheet for ScrollableStyle {
     }
 
     fn hovered(
-            &self,
-            _style: &Self::Style,
-            _is_mouse_over_scrollbar: bool,
-        ) -> iced::widget::scrollable::Scrollbar {
+        &self,
+        _style: &Self::Style,
+        _is_mouse_over_scrollbar: bool,
+    ) -> iced::widget::scrollable::Scrollbar {
         return iced::widget::scrollable::Scrollbar {
             background: None,
             border_radius: iced::BorderRadius::from(0.),

@@ -39,7 +39,8 @@ impl GitRepositoriesPlugin {
     }
 
     fn all_entries() -> Vec<crate::model::Entry> {
-        let git_repository_paths: Vec<String> = crate::plugin::utils::read_index_file("git-repositories-index.json");
+        let git_repository_paths: Vec<String> =
+            crate::plugin::utils::read_index_file("git-repositories-index.json");
 
         let home = std::env::var("HOME").unwrap_or(String::from(""));
 

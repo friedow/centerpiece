@@ -37,7 +37,7 @@ where
     if let Err(error) = home_directory_result {
         log::error!(
             error = log::as_error!(error);
-            "Could read HOME environment variable",
+            "Could not read HOME environment variable",
         );
         std::process::exit(1);
     }

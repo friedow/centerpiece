@@ -1,8 +1,10 @@
+use std::format;
+
+use anyhow::Context;
 use iced::futures::StreamExt;
 
 pub struct GitRepositoriesPlugin {
     plugin: crate::model::Plugin,
-    all_entries: Vec<crate::model::Entry>,
     plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
     plugin_channel_in: iced::futures::channel::mpsc::Receiver<crate::model::PluginRequest>,
 }
@@ -25,7 +27,6 @@ impl GitRepositoriesPlugin {
         let (app_channel_out, plugin_channel_in) = iced::futures::channel::mpsc::channel(100);
 
         return GitRepositoriesPlugin {
-            all_entries: GitRepositoriesPlugin::all_entries(),
             plugin_channel_in,
             plugin_channel_out,
             plugin: crate::model::Plugin {
@@ -33,7 +34,7 @@ impl GitRepositoriesPlugin {
                 priority: 28,
                 title: String::from("󰘬 Git Repositories"),
                 app_channel_out,
-                entries: vec![],
+                entries: GitRepositoriesPlugin::all_entries(),
             },
         };
     }
@@ -60,81 +61,104 @@ impl GitRepositoriesPlugin {
     }
 
     async fn main(&mut self) -> ! {
-        self.register_plugin();
-        self.search(&String::from(""));
+        let register_plugin_result = self.register_plugin();
+        if let Err(error) = register_plugin_result {
+            log::error!(
+                target: self.plugin.id.as_str(),
+                "{}", error,
+            );
+            std::process::exit(1);
+        }
 
         loop {
-            self.update().await;
+            let update_result = self.update().await;
+            if let Err(error) = update_result {
+                log::warn!(
+                    target: self.plugin.id.as_str(),
+                    "{}", error,
+                );
+            }
         }
     }
 
-    fn register_plugin(&mut self) {
+    fn register_plugin(&mut self) -> anyhow::Result<()> {
         self.plugin_channel_out
             .try_send(crate::Message::RegisterPlugin(self.plugin.clone()))
-            .ok();
+            .context("Failed to send message to register plugin.")?;
+        return Ok(());
     }
 
-    async fn update(&mut self) {
+    async fn update(&mut self) -> anyhow::Result<()> {
         let plugin_request = self.plugin_channel_in.select_next_some().await;
 
         match plugin_request {
-            crate::model::PluginRequest::Search(query) => self.search(&query),
+            crate::model::PluginRequest::Search(query) => self.search(&query)?,
             crate::model::PluginRequest::Timeout => (),
-            crate::model::PluginRequest::Activate(entry_id) => self.activate(entry_id),
+            crate::model::PluginRequest::Activate(entry_id) => self.activate(entry_id)?,
         }
+
+        return Ok(());
     }
 
-    fn search(&mut self, query: &String) {
-        let filtered_entries = crate::plugin::utils::search(self.all_entries.clone(), query);
+    fn search(&mut self, query: &String) -> anyhow::Result<()> {
+        let filtered_entries = crate::plugin::utils::search(self.plugin.entries.clone(), query);
 
         self.plugin_channel_out
             .try_send(crate::Message::Clear(self.plugin.id.clone()))
-            .ok();
+            .context(format!(
+                "Failed to send message to clear entries while searching for '{}'.",
+                query
+            ))?;
 
         for entry in filtered_entries {
+            let entry_id = entry.id.clone();
             self.plugin_channel_out
                 .try_send(crate::Message::AppendEntry(self.plugin.id.clone(), entry))
-                .ok();
+                .context(format!(
+                    "Failed to send message to append the entry with '{}' while searching for '{}'.",
+                    entry_id,
+                    query
+                ))?;
         }
+
+        return Ok(());
     }
 
-    fn activate(&mut self, entry_id: String) {
-        let terminal_launch_result = std::process::Command::new("alacritty")
+    fn activate(&mut self, entry_id: String) -> anyhow::Result<()> {
+        std::process::Command::new("alacritty")
             .arg("--working-directory")
             .arg(&entry_id)
-            .spawn();
+            .spawn()
+            .context(format!(
+                "Failed to launch terminal while activating entry with id '{}'.",
+                entry_id
+            ))?;
 
-        if let Err(error) = terminal_launch_result {
-            log::warn!(
-                error = log::as_error!(error);
-                "Failed to launch terminal",
-            );
-        }
-
-        let editor_launch_result = std::process::Command::new("sublime_text")
+        std::process::Command::new("sublime_text")
             .arg("--new-window")
             .arg(&entry_id)
-            .spawn();
+            .spawn()
+            .context(format!(
+                "Failed to launch editor while activating entry with id '{}'.",
+                entry_id
+            ))?;
 
-        if let Err(error) = editor_launch_result {
-            log::warn!(
-                error = log::as_error!(error);
-                "Failed to launch editor",
-            );
-        }
-
-        let git_ui_launch_result = std::process::Command::new("sublime_merge")
+        std::process::Command::new("sublime_merge")
             .arg("--new-window")
             .arg(&entry_id)
-            .spawn();
+            .spawn()
+            .context(format!(
+                "Failed to launch git ui while activating entry with id '{}'.",
+                entry_id
+            ))?;
 
-        if let Err(error) = git_ui_launch_result {
-            log::warn!(
-                error = log::as_error!(error);
-                "Failed to launch git ui",
-            );
-        }
+        self.plugin_channel_out
+            .try_send(crate::Message::Exit)
+            .context(format!(
+                "Failed to send message to exit application while activating entry with id '{}'.",
+                entry_id
+            ))?;
 
-        self.plugin_channel_out.try_send(crate::Message::Exit).ok();
+        return Ok(());
     }
 }

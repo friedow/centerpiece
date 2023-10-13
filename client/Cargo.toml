@@ -10,6 +10,7 @@ edition = "2021"
 log = { version = "0.4.20", features = ["kv_unstable_serde"] }
 simple_logger = { version = "4.2.0", features = ["colors", "threads", "timestamps", "stderr"] }
 thiserror = "1.0.48"
+anyhow = "1.0.75"
 
 # application window
 iced = { version = "0.10.0", features = ["svg"] }

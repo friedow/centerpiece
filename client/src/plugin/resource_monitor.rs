@@ -100,6 +100,8 @@ impl ResourceMonitorPlugin {
             .try_send(crate::Message::RegisterPlugin(self.memory_plugin.clone()))
             .context("Failed to send message to register the memory plugin.")?;
 
+        // TODO: Add battery plugin
+
         return Ok(());
     }
 

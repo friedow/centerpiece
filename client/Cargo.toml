@@ -35,6 +35,5 @@ swayipc = "3.0.1"
 sysinfo = "0.29.10"
 battery = "0.7.8"
 
-
 # brave history
 sqlite = "0.31.1"

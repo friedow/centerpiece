@@ -1,3 +1,4 @@
+use anyhow::Context;
 use iced::futures::StreamExt;
 
 pub struct ApplicationsPlugin {
@@ -27,44 +28,36 @@ impl std::hash::Hash for ExtendedEntry {
     }
 }
 
-#[derive(thiserror::Error, Debug)]
-pub enum ParsingError {
-    #[error("Failed to read desktop entry file.")]
-    ReadError(#[from] std::io::Error),
-    #[error("Failed to decode desktop entry file.")]
-    DecodeError(#[from] freedesktop_desktop_entry::DecodeError),
-    #[error("Desktop entry is hidden.")]
-    IsHidden,
-    #[error("Desktop entry is missing a name field.")]
-    MissingName,
-    #[error("Desktop entry is missing an exec field.")]
-    MissingExec,
-}
-
 impl TryFrom<&std::path::PathBuf> for ExtendedEntry {
-    type Error = ParsingError;
+    type Error = anyhow::Error;
 
-    fn try_from(path: &std::path::PathBuf) -> Result<ExtendedEntry, ParsingError> {
+    fn try_from(path: &std::path::PathBuf) -> anyhow::Result<ExtendedEntry> {
+        let pathstr = path.to_str().unwrap_or("");
         let bytes = std::fs::read_to_string(path)?;
         let desktop_entry = freedesktop_desktop_entry::DesktopEntry::decode(&path, &bytes)?;
 
         if !ExtendedEntry::is_visible(&desktop_entry) {
-            return Err(ParsingError::IsHidden);
+            return Err(anyhow::anyhow!(
+                "Desktop entry at path '{}' is hidden.",
+                pathstr
+            ));
         }
 
         let locale = std::env::var("LANG").unwrap_or(String::from("en_US"));
-        let name_option = desktop_entry.name(Some(&locale));
-        if name_option.is_none() {
-            return Err(ParsingError::MissingName);
-        }
+        let title = desktop_entry
+            .name(Some(&locale))
+            .context(format!(
+                "Desktop entry at path '{}' is missing the 'name' field.",
+                pathstr
+            ))?
+            .to_string();
 
-        let exec_option = desktop_entry.exec();
-        if exec_option.is_none() {
-            return Err(ParsingError::MissingExec);
-        }
-
-        let cmd = exec_option
-            .unwrap()
+        let cmd = desktop_entry
+            .exec()
+            .context(format!(
+                "Desktop entry at path '{}' is missing the 'exec' field.",
+                pathstr
+            ))?
             .split_ascii_whitespace()
             .filter_map(|s| {
                 if s.starts_with("%") {
@@ -85,7 +78,7 @@ impl TryFrom<&std::path::PathBuf> for ExtendedEntry {
             cmd,
             entry: crate::model::Entry {
                 id: desktop_entry.appid.to_string(),
-                title: name_option.unwrap().to_string(),
+                title,
                 action: String::from("open"),
                 meta,
             },
@@ -168,7 +161,7 @@ impl ApplicationsPlugin {
             .filter_map(|path| {
                 let desktop_entry_result = ExtendedEntry::try_from(&path);
                 if let Err(error) = desktop_entry_result {
-                    log::warn!(target: "applications", error = log::as_error!(error); "Skipping desktop entry with path '{}'.", &path.to_str().unwrap());
+                    log::warn!(target: "applications", "Skipping desktop entry: '{}'.", error);
                     return None;
                 }
                 return desktop_entry_result.ok();
@@ -178,38 +171,55 @@ impl ApplicationsPlugin {
     }
 
     async fn main(&mut self) -> ! {
-        self.register_plugin();
-        self.search(&String::from(""));
-
-        loop {
-            self.update().await;
-        }
-    }
-
-    fn register_plugin(&mut self) {
-        let send_register_plugin_result = self
-            .plugin_channel_out
-            .try_send(crate::Message::RegisterPlugin(self.plugin.clone()));
-        if let Err(error) = send_register_plugin_result {
+        let register_plugin_result = self.register_plugin();
+        if let Err(error) = register_plugin_result {
             log::error!(
-                error = log::as_error!(error);
-                "Failed to send message to register the plugin.",
+                target: self.plugin.id.as_str(),
+                "{}", error
             );
             std::process::exit(1);
         }
-    }
 
-    async fn update(&mut self) {
-        let plugin_request = self.plugin_channel_in.select_next_some().await;
+        let search_result = self.search(&String::from(""));
+        if let Err(error) = search_result {
+            log::warn!(
+                target: self.plugin.id.as_str(),
+                "{}", error
+            );
+        }
 
-        match plugin_request {
-            crate::model::PluginRequest::Search(query) => self.search(&query),
-            crate::model::PluginRequest::Timeout => (),
-            crate::model::PluginRequest::Activate(entry_id) => self.activate(entry_id),
+        loop {
+            let update_result = self.update().await;
+            if let Err(error) = update_result {
+                log::warn!(
+                    target: self.plugin.id.as_str(),
+                    "{}", error
+                );
+            }
         }
     }
 
-    fn search(&mut self, query: &String) {
+    fn register_plugin(&mut self) -> anyhow::Result<()> {
+        self.plugin_channel_out
+            .try_send(crate::Message::RegisterPlugin(self.plugin.clone()))
+            .context("Failed to send message to register plugin.")?;
+
+        return Ok(());
+    }
+
+    async fn update(&mut self) -> anyhow::Result<()> {
+        let plugin_request = self.plugin_channel_in.select_next_some().await;
+
+        match plugin_request {
+            crate::model::PluginRequest::Search(query) => self.search(&query)?,
+            crate::model::PluginRequest::Timeout => (),
+            crate::model::PluginRequest::Activate(entry_id) => self.activate(entry_id)?,
+        }
+
+        return Ok(());
+    }
+
+    fn search(&mut self, query: &String) -> anyhow::Result<()> {
         let all_entries = self
             .all_entries
             .clone()
@@ -218,57 +228,55 @@ impl ApplicationsPlugin {
             .collect();
         let filtered_entries = crate::plugin::utils::search(all_entries, query);
 
-        let send_clear_entries_result = self
-            .plugin_channel_out
-            .try_send(crate::Message::Clear(self.plugin.id.clone()));
-        if let Err(error) = send_clear_entries_result {
-            log::warn!(
-                target: self.plugin.id.as_str(),
-                error = log::as_error!(error);
-                "Failed to send message to clear all entries.",
-            );
-        }
+        self.plugin_channel_out
+            .try_send(crate::Message::Clear(self.plugin.id.clone()))
+            .context(format!(
+                "Failed to send message to clear entries while searching for '{}'.",
+                query
+            ))?;
 
         for entry in filtered_entries {
             let entry_id = entry.id.clone();
-            let send_append_entry_result = self
+            self
                 .plugin_channel_out
-                .try_send(crate::Message::AppendEntry(self.plugin.id.clone(), entry));
-            if let Err(error) = send_append_entry_result {
-                log::warn!(
-                    target: self.plugin.id.as_str(),
-                    error = log::as_error!(error);
-                    "Failed to send message to append entry with id '{}'.", &entry_id
-                );
-            }
+                .try_send(crate::Message::AppendEntry(self.plugin.id.clone(), entry))
+                .context(format!(
+                    "Failed to send message to append the entry with '{}' while searching for '{}'.",
+                    entry_id,
+                    query
+                ))?;
         }
+
+        return Ok(());
     }
 
-    fn activate(&mut self, entry_id: String) {
-        let entry_option = self.all_entries.iter().find(|e| e.entry.id == entry_id);
-        if entry_option.is_none() {
-            log::warn!(
-                target: self.plugin.id.as_str(),
-                "Failed to activate entry with id '{}'.",
+    fn activate(&mut self, entry_id: String) -> anyhow::Result<()> {
+        let entry = self
+            .all_entries
+            .iter()
+            .find(|e| e.entry.id == entry_id)
+            .context(format!(
+                "Failed to find entry with id '{}' while activating it.",
                 entry_id
-            );
-            return;
-        }
+            ))?;
 
-        let cmd = entry_option.unwrap().cmd.clone();
+        let cmd = entry.cmd.clone();
 
         std::process::Command::new(cmd[0].clone())
             .args(&cmd[1..])
             .spawn()
-            .expect("Command failure");
+            .context(format!(
+                "Failed to launch application while activating entry with id '{}'.",
+                entry_id
+            ))?;
 
-        let send_exit_result = self.plugin_channel_out.try_send(crate::Message::Exit);
-        if let Err(error) = send_exit_result {
-            log::warn!(
-                target: self.plugin.id.as_str(),
-                error = log::as_error!(error);
-                "Failed to send message to exit the application.",
-            );
-        }
+        self.plugin_channel_out
+            .try_send(crate::Message::Exit)
+            .context(format!(
+                "Failed to send message to exit application while activating entry with id '{}'.",
+                entry_id
+            ))?;
+
+        return Ok(());
     }
 }

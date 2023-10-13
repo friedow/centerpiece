@@ -1,5 +1,3 @@
-use std::format;
-
 use anyhow::Context;
 use iced::futures::StreamExt;
 

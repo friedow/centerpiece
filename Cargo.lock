@@ -447,7 +447,6 @@ dependencies = [
  "sqlite",
  "swayipc",
  "sysinfo",
- "thiserror",
 ]
 
 [[package]]

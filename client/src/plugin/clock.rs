@@ -78,20 +78,15 @@ impl ClockPlugin {
         }
     }
 
-    fn register_plugin(
-        &mut self,
-    ) -> anyhow::Result<()> {
-        self
-            .plugin_channel_out
+    fn register_plugin(&mut self) -> anyhow::Result<()> {
+        self.plugin_channel_out
             .try_send(crate::Message::RegisterPlugin(self.plugin.clone()))
             .context("Failed to send message to register plugin.")?;
 
         return Ok(());
     }
 
-    async fn update(
-        &mut self,
-    ) -> anyhow::Result<()> {
+    async fn update(&mut self) -> anyhow::Result<()> {
         let plugin_request_future = self.plugin_channel_in.select_next_some();
         let plugin_request =
             async_std::future::timeout(std::time::Duration::from_secs(1), plugin_request_future)
@@ -103,17 +98,14 @@ impl ClockPlugin {
             crate::model::PluginRequest::Timeout => {
                 self.plugin.entries = ClockPlugin::all_entries();
                 self.search(self.last_query.clone())?;
-            },
+            }
             crate::model::PluginRequest::Activate(_) => (),
         }
 
         return Ok(());
     }
 
-    fn search(
-        &mut self,
-        query: String,
-    ) -> anyhow::Result<()> {
+    fn search(&mut self, query: String) -> anyhow::Result<()> {
         self.last_query = query.clone();
 
         let filtered_entries = crate::plugin::utils::search(self.plugin.entries.clone(), &query);

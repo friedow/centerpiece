@@ -1,5 +1,4 @@
-use std::format;
-
+use anyhow::Context;
 use iced::futures::StreamExt;
 use sysinfo::{CpuExt, DiskExt, SystemExt};
 
@@ -60,72 +59,80 @@ impl ResourceMonitorPlugin {
     }
 
     async fn main(&mut self) -> ! {
-        self.register_plugin();
-        self.update_entries();
+        let register_plugin_result = self.register_plugins();
+        if let Err(error) = register_plugin_result {
+            log::error!(
+                target: "resource-monitor",
+                "{}", error,
+            );
+            std::process::exit(1);
+        }
+
+        let update_entries_result = self.update_entries();
+        if let Err(error) = update_entries_result {
+            log::warn!(
+                target: "resource-monitor",
+                "{}", error,
+            );
+        }
 
         loop {
-            self.update().await;
+            let update_result = self.update().await;
+            if let Err(error) = update_result {
+                log::warn!(
+                    target: "resource-monitor",
+                    "{}", error,
+                );
+            }
         }
     }
 
-    fn register_plugin(&mut self) {
-        let register_cpu_plugin_result = self
-            .plugin_channel_out
-            .try_send(crate::Message::RegisterPlugin(self.cpu_plugin.clone()));
-        if let Err(error) = register_cpu_plugin_result {
-            log::warn!(
-                error = log::as_error!(error);
-                "Failed to register cpu plugin",
-            );
-        }
+    fn register_plugins(&mut self) -> anyhow::Result<()> {
+        self.plugin_channel_out
+            .try_send(crate::Message::RegisterPlugin(self.cpu_plugin.clone()))
+            .context("Failed to send message to register the cpu plugin.")?;
 
-        let register_disk_plugin_result = self
-            .plugin_channel_out
-            .try_send(crate::Message::RegisterPlugin(self.disk_plugin.clone()));
-        if let Err(error) = register_disk_plugin_result {
-            log::warn!(
-                error = log::as_error!(error);
-                "Failed to register disk plugin",
-            );
-        }
+        self.plugin_channel_out
+            .try_send(crate::Message::RegisterPlugin(self.disk_plugin.clone()))
+            .context("Failed to send message to register the disk plugin.")?;
 
-        let register_memory_plugin_result = self
-            .plugin_channel_out
-            .try_send(crate::Message::RegisterPlugin(self.memory_plugin.clone()));
-        if let Err(error) = register_memory_plugin_result {
-            log::warn!(
-                error = log::as_error!(error);
-                "Failed to register memory plugin",
-            );
-        }
+        self.plugin_channel_out
+            .try_send(crate::Message::RegisterPlugin(self.memory_plugin.clone()))
+            .context("Failed to send message to register the memory plugin.")?;
+
+        return Ok(());
     }
 
-    async fn update(&mut self) {
+    async fn update(&mut self) -> anyhow::Result<()> {
         let plugin_request_future = self.plugin_channel_in.select_next_some();
         let plugin_request =
-            async_std::future::timeout(std::time::Duration::from_secs(1), plugin_request_future)
+            async_std::future::timeout(std::time::Duration::from_secs(2), plugin_request_future)
                 .await
                 .unwrap_or(crate::model::PluginRequest::Timeout);
 
         match plugin_request {
-            crate::model::PluginRequest::Search(query) => self.search(query),
-            crate::model::PluginRequest::Timeout => self.update_entries(),
+            crate::model::PluginRequest::Search(query) => self.search(query)?,
+            crate::model::PluginRequest::Timeout => self.update_entries()?,
             crate::model::PluginRequest::Activate(_) => (),
         }
+
+        return Ok(());
     }
 
-    fn update_entries(&mut self) {
+    fn update_entries(&mut self) -> anyhow::Result<()> {
         self.sysinfo.refresh_all();
 
         self.update_cpu_entries();
-        self.update_disk_entries();
+        self.update_disk_entries()?;
         self.update_memory_entries();
 
-        self.search(self.last_query.clone());
+        self.search(self.last_query.clone())?;
+        return Ok(());
     }
 
     fn update_memory_entries(&mut self) {
         self.memory_plugin.entries.clear();
+
         let perentage_used = 100 * self.sysinfo.used_memory() / self.sysinfo.total_memory();
         let total_memory_in_gb = self.sysinfo.total_memory() as f64 / 10_f64.powf(9.);
         let used_memory_in_gb = self.sysinfo.used_memory() as f64 / 10_f64.powf(9.);
@@ -143,15 +150,15 @@ impl ResourceMonitorPlugin {
         });
     }
 
-    fn update_disk_entries(&mut self) {
+    fn update_disk_entries(&mut self) -> anyhow::Result<()> {
         self.disk_plugin.entries.clear();
+
         for disk in self.sysinfo.disks() {
-            let mount_point_option = disk.mount_point().to_str();
-            if mount_point_option.is_none() {
-                log::warn!("Unable to convert mount point path to string.",);
-                continue;
-            }
-            let mount_point = mount_point_option.unwrap().to_string();
+            let mount_point = disk
+                .mount_point()
+                .to_str()
+                .context("Unable to convert mount point path to string.")?
+                .to_string();
 
             let used_space = disk.total_space() - disk.available_space();
             let perentage_used = 100 * used_space / disk.total_space();
@@ -170,10 +177,13 @@ impl ResourceMonitorPlugin {
                 meta: String::from("Resource Monitor Disks"),
             });
         }
+
+        return Ok(());
     }
 
     fn update_cpu_entries(&mut self) {
         self.cpu_plugin.entries.clear();
+
         for cpu_core in self.sysinfo.cpus() {
             self.cpu_plugin.entries.push(crate::model::Entry {
                 id: cpu_core.name().to_string(),
@@ -189,21 +199,30 @@ impl ResourceMonitorPlugin {
         }
     }
 
-    fn search(&mut self, query: String) {
+    fn search(&mut self, query: String) -> anyhow::Result<()> {
         for plugin in vec![&self.cpu_plugin, &self.disk_plugin, &self.memory_plugin] {
             let filtered_entries = crate::plugin::utils::search(plugin.entries.clone(), &query);
 
             self.plugin_channel_out
                 .try_send(crate::Message::Clear(plugin.id.clone()))
-                .ok();
+                .context(format!(
+                    "Failed to send message to clear entries while searching for '{}'.",
+                    query
+                ))?;
 
             for entry in filtered_entries {
+                let entry_id = entry.id.clone();
                 self.plugin_channel_out
                     .try_send(crate::Message::AppendEntry(plugin.id.clone(), entry))
-                    .ok();
+                    .context(format!(
+                        "Failed to send message to append the entry with '{}' while searching for '{}'.",
+                        entry_id,
+                        query
+                    ))?;
             }
         }
 
         self.last_query = query;
+        return Ok(());
     }
 }

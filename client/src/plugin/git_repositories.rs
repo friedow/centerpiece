@@ -102,22 +102,14 @@ impl GitRepositoriesPlugin {
         let filtered_entries = crate::plugin::utils::search(self.plugin.entries.clone(), query);
 
         self.plugin_channel_out
-            .try_send(crate::Message::Clear(self.plugin.id.clone()))
+            .try_send(crate::Message::UpdateEntries(
+                self.plugin.id.clone(),
+                filtered_entries,
+            ))
             .context(format!(
-                "Failed to send message to clear entries while searching for '{}'.",
+                "Failed to send message to update entries while searching for '{}'.",
                 query
             ))?;
-
-        for entry in filtered_entries {
-            let entry_id = entry.id.clone();
-            self.plugin_channel_out
-                .try_send(crate::Message::AppendEntry(self.plugin.id.clone(), entry))
-                .context(format!(
-                    "Failed to send message to append the entry with '{}' while searching for '{}'.",
-                    entry_id,
-                    query
-                ))?;
-        }
 
         return Ok(());
     }

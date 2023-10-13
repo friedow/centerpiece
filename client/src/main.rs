@@ -16,9 +16,7 @@ pub enum Message {
     Event(iced::Event),
     FontLoaded(Result<(), iced::font::Error>),
     RegisterPlugin(model::Plugin),
-    // should be UpdateEntries instead of AppendEntry & Clear
-    AppendEntry(String, model::Entry),
-    Clear(String),
+    UpdateEntries(String, Vec<model::Entry>),
     Exit,
 }
 
@@ -96,9 +94,7 @@ impl Application for Centerpiece {
 
             Message::RegisterPlugin(plugin) => self.register_plugin(plugin),
 
-            Message::AppendEntry(plugin_id, entry) => self.append_entry(plugin_id, entry),
-
-            Message::Clear(plugin_id) => self.clear_entries(plugin_id),
+            Message::UpdateEntries(plugin_id, entries) => self.update_entries(plugin_id, entries),
 
             Message::Exit => iced::window::close(),
         }
@@ -271,10 +267,10 @@ impl Centerpiece {
         return iced::Command::none();
     }
 
-    fn append_entry(
+    fn update_entries(
         &mut self,
         plugin_id: String,
-        entry: crate::model::Entry,
+        entries: Vec<crate::model::Entry>,
     ) -> iced::Command<Message> {
         let plugin = self
             .plugins
@@ -289,30 +285,11 @@ impl Centerpiece {
         }
 
         let plugin = plugin.unwrap();
-        plugin.entries.push(entry);
-        return iced::Command::none();
-    }
-
-    fn clear_entries(&mut self, plugin_id: String) -> iced::Command<Message> {
-        let plugin = self
-            .plugins
-            .iter_mut()
-            .find(|plugin| plugin.id == plugin_id);
-        if plugin.is_none() {
-            println!(
-                "Clearing entries failed. Could not find plugin with id {:?}",
-                plugin_id
-            );
-            return iced::Command::none();
-        }
-
-        let plugin = plugin.unwrap();
-        plugin.entries.clear();
+        plugin.entries = entries;
         return iced::Command::none();
     }
 
     fn activate_selected_entry(&mut self) -> iced::Command<Message> {
-        println!("activating 1");
         let active_entry_id_option = self.active_entry_id();
         if active_entry_id_option.is_none() {
             return iced::Command::none();
@@ -329,8 +306,6 @@ impl Centerpiece {
             return iced::Command::none();
         }
         let plugin = plugin_option.unwrap();
-
-        println!("activating 2");
 
         plugin
             .app_channel_out

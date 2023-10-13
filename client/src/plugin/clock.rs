@@ -3,7 +3,6 @@ use iced::futures::StreamExt;
 pub struct ClockPlugin {
     plugin: crate::model::Plugin,
     last_query: String,
-    all_entries: Vec<crate::model::Entry>,
     plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
     plugin_channel_in: iced::futures::channel::mpsc::Receiver<crate::model::PluginRequest>,
 }
@@ -27,7 +26,6 @@ impl ClockPlugin {
 
         return ClockPlugin {
             last_query: String::new(),
-            all_entries: vec![],
             plugin_channel_in,
             plugin_channel_out,
             plugin: crate::model::Plugin {
@@ -41,29 +39,48 @@ impl ClockPlugin {
     }
 
     async fn main(&mut self) -> ! {
-        self.register_plugin();
-        self.update_entries();
-
-        loop {
-            self.update().await;
-        }
-    }
-
-    fn register_plugin(&mut self) {
-        let send_register_plugin_result = self
-            .plugin_channel_out
-            .try_send(crate::Message::RegisterPlugin(self.plugin.clone()));
-
-        if let Err(error) = send_register_plugin_result {
+        let register_plugin_result = self.register_plugin();
+        if let Err(error) = register_plugin_result {
             log::error!(
+                target: self.plugin.id.as_str(),
                 error = log::as_error!(error);
-                "Failed to send message to register the clock plugin.",
+                "Failed to register plugin.",
             );
             std::process::exit(1);
         }
+
+        let update_entries_result = self.update_entries();
+        if let Err(error) = update_entries_result {
+            log::warn!(
+                target: self.plugin.id.as_str(),
+                error = log::as_error!(error);
+                "Failed to update entries.",
+            );
+        }
+
+        loop {
+            let update_result = self.update().await;
+            if let Err(error) = update_result {
+                log::warn!(
+                    target: self.plugin.id.as_str(),
+                    error = log::as_error!(error);
+                    "Error during update loop.",
+                );
+            }
+        }
     }
 
-    async fn update(&mut self) {
+    fn register_plugin(
+        &mut self,
+    ) -> Result<(), iced::futures::channel::mpsc::TrySendError<crate::Message>> {
+        return self
+            .plugin_channel_out
+            .try_send(crate::Message::RegisterPlugin(self.plugin.clone()));
+    }
+
+    async fn update(
+        &mut self,
+    ) -> Result<(), iced::futures::channel::mpsc::TrySendError<crate::Message>> {
         let plugin_request_future = self.plugin_channel_in.select_next_some();
         let plugin_request =
             async_std::future::timeout(std::time::Duration::from_secs(1), plugin_request_future)
@@ -73,12 +90,14 @@ impl ClockPlugin {
         match plugin_request {
             crate::model::PluginRequest::Search(query) => self.search(query),
             crate::model::PluginRequest::Timeout => self.update_entries(),
-            crate::model::PluginRequest::Activate(_) => (),
+            crate::model::PluginRequest::Activate(_) => Ok(()),
         }
     }
 
-    fn update_entries(&mut self) {
-        self.all_entries.clear();
+    fn update_entries(
+        &mut self,
+    ) -> Result<(), iced::futures::channel::mpsc::TrySendError<crate::Message>> {
+        self.plugin.entries.clear();
         let date = chrono::Local::now();
 
         let formatted_time = date.format("%H:%M:%S").to_string();
@@ -88,7 +107,8 @@ impl ClockPlugin {
             action: String::from(""),
             meta: String::from("Clock Time"),
         };
-        self.all_entries.push(time_entry);
+        // TODO: remove all_entries
+        self.plugin.entries.push(time_entry);
 
         let formatted_date = date.format("%A, %_d. %B %Y").to_string();
         let date_entry = crate::model::Entry {
@@ -97,37 +117,27 @@ impl ClockPlugin {
             action: String::from(""),
             meta: String::from("Clock Date"),
         };
-        self.all_entries.push(date_entry);
+        self.plugin.entries.push(date_entry);
 
-        self.search(self.last_query.clone());
+        return self.search(self.last_query.clone());
     }
 
-    fn search(&mut self, query: String) {
+    fn search(
+        &mut self,
+        query: String,
+    ) -> Result<(), iced::futures::channel::mpsc::TrySendError<crate::Message>> {
         self.last_query = query.clone();
 
-        let filtered_entries = crate::plugin::utils::search(self.all_entries.clone(), &query);
+        let filtered_entries = crate::plugin::utils::search(self.plugin.entries.clone(), &query);
 
-        let send_clear_entries_result = self
-            .plugin_channel_out
-            .try_send(crate::Message::Clear(self.plugin.id.clone()));
-        if let Err(error) = send_clear_entries_result {
-            log::warn!(
-                error = log::as_error!(error);
-                "Failed to send message to clear all entries for the clock plugin.",
-            );
-        }
+        self.plugin_channel_out
+            .try_send(crate::Message::Clear(self.plugin.id.clone()))?;
 
         for entry in filtered_entries {
-            let entry_id = entry.id.clone();
-            let send_append_entry_result = self
-                .plugin_channel_out
-                .try_send(crate::Message::AppendEntry(self.plugin.id.clone(), entry));
-            if let Err(error) = send_append_entry_result {
-                log::warn!(
-                    error = log::as_error!(error);
-                    "Failed to send message to append entry with id '{}' for the clock plugin.", &entry_id
-                );
-            }
+            self.plugin_channel_out
+                .try_send(crate::Message::AppendEntry(self.plugin.id.clone(), entry))?;
         }
+
+        return Ok(());
     }
 }

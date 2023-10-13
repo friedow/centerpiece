@@ -16,6 +16,7 @@ pub enum Message {
     Event(iced::Event),
     FontLoaded(Result<(), iced::font::Error>),
     RegisterPlugin(model::Plugin),
+    // should be UpdateEntries instead of AppendEntry & Clear
     AppendEntry(String, model::Entry),
     Clear(String),
     Exit,

@@ -4,6 +4,7 @@ use sysinfo::{CpuExt, DiskExt, SystemExt};
 
 pub struct ResourceMonitorPlugin {
     sysinfo: sysinfo::System,
+    battery_plugin: crate::model::Plugin,
     cpu_plugin: crate::model::Plugin,
     disk_plugin: crate::model::Plugin,
     memory_plugin: crate::model::Plugin,
@@ -34,24 +35,31 @@ impl ResourceMonitorPlugin {
             last_query: String::new(),
             plugin_channel_in,
             plugin_channel_out,
+            battery_plugin: crate::model::Plugin {
+                id: String::from("battery"),
+                priority: 14,
+                title: String::from("󰁼 Battery"),
+                app_channel_out: app_channel_out.clone(),
+                entries: vec![],
+            },
             cpu_plugin: crate::model::Plugin {
                 id: String::from("cpu-usage"),
                 priority: 13,
-                title: String::from("󰅐 CPU"),
+                title: String::from("󰍛 CPU"),
                 app_channel_out: app_channel_out.clone(),
                 entries: vec![],
             },
             disk_plugin: crate::model::Plugin {
                 id: String::from("disk-usage"),
                 priority: 12,
-                title: String::from("󰅐 Disks"),
+                title: String::from("󱛟 Disks"),
                 app_channel_out: app_channel_out.clone(),
                 entries: vec![],
             },
             memory_plugin: crate::model::Plugin {
                 id: String::from("memory-usage"),
                 priority: 11,
-                title: String::from("󰅐 Memory"),
+                title: String::from("󱓱 Memory"),
                 app_channel_out,
                 entries: vec![],
             },
@@ -89,6 +97,10 @@ impl ResourceMonitorPlugin {
 
     fn register_plugins(&mut self) -> anyhow::Result<()> {
         self.plugin_channel_out
+            .try_send(crate::Message::RegisterPlugin(self.battery_plugin.clone()))
+            .context("Failed to send message to register the battery plugin.")?;
+
+        self.plugin_channel_out
             .try_send(crate::Message::RegisterPlugin(self.cpu_plugin.clone()))
             .context("Failed to send message to register the cpu plugin.")?;
 
@@ -99,8 +111,6 @@ impl ResourceMonitorPlugin {
         self.plugin_channel_out
             .try_send(crate::Message::RegisterPlugin(self.memory_plugin.clone()))
             .context("Failed to send message to register the memory plugin.")?;
-
-        // TODO: Add battery plugin
 
         return Ok(());
     }
@@ -124,11 +134,52 @@ impl ResourceMonitorPlugin {
     fn update_entries(&mut self) -> anyhow::Result<()> {
         self.sysinfo.refresh_all();
 
+        self.update_battery_entries()?;
         self.update_cpu_entries();
         self.update_disk_entries()?;
         self.update_memory_entries();
 
         self.search(self.last_query.clone())?;
+        return Ok(());
+    }
+
+    fn update_battery_entries(&mut self) -> anyhow::Result<()> {
+        self.battery_plugin.entries.clear();
+
+        let batteries = battery::Manager::new()
+            .context("Failed to create battery manager.")?
+            .batteries()
+            .context("Failed to list batteries using the battery manager.")?;
+
+        for battery_result in batteries {
+            let battery =
+                battery_result.context("Failed to get battery using the batteries iterator.")?;
+
+            let state_of_charge = battery.state_of_charge() * 100.0;
+
+            let time_to_full_remaining = match battery.time_to_full() {
+                Some(time_to_full) => format!(": {time_to_full:?} remaining"),
+                None => String::new(),
+            };
+
+            let time_to_empty_remaining = match battery.time_to_empty() {
+                Some(time_to_empty) => format!(": {time_to_empty:?} remaining"),
+                None => String::new(),
+            };
+
+            let title = format!(
+                "{state_of_charge:.0?}% – {state}{time_to_full_remaining}{time_to_empty_remaining}",
+                state = battery.state(),
+            );
+
+            self.battery_plugin.entries.push(crate::model::Entry {
+                id: String::from("battery"),
+                title,
+                action: String::from(""),
+                meta: String::from("Resource Monitor Battery"),
+            });
+        }
+
         return Ok(());
     }
 
@@ -202,7 +253,12 @@ impl ResourceMonitorPlugin {
     }
 
     fn search(&mut self, query: String) -> anyhow::Result<()> {
-        for plugin in vec![&self.cpu_plugin, &self.disk_plugin, &self.memory_plugin] {
+        for plugin in vec![
+            &self.battery_plugin,
+            &self.cpu_plugin,
+            &self.disk_plugin,
+            &self.memory_plugin,
+        ] {
             let filtered_entries = crate::plugin::utils::search(plugin.entries.clone(), &query);
 
             self.plugin_channel_out

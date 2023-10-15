@@ -1,3 +1,4 @@
+use std::ops::Rem;
 use anyhow::Context;
 use iced::futures::StreamExt;
 use sysinfo::{CpuExt, DiskExt, SystemExt};
@@ -158,12 +159,12 @@ impl ResourceMonitorPlugin {
             let state_of_charge = battery.state_of_charge() * 100.0;
 
             let time_to_full_remaining = match battery.time_to_full() {
-                Some(time_to_full) => format!(": {time_to_full:?} remaining"),
+                Some(time_to_full) => to_display(time_to_full),
                 None => String::new(),
             };
 
             let time_to_empty_remaining = match battery.time_to_empty() {
-                Some(time_to_empty) => format!(": {time_to_empty:?} remaining"),
+                Some(time_to_empty) => to_display(time_to_empty),
                 None => String::new(),
             };
 
@@ -276,4 +277,18 @@ impl ResourceMonitorPlugin {
         self.last_query = query;
         return Ok(());
     }
+}
+
+fn to_display(time_to_empty: battery::units::Time) -> String {
+    let mut formatted_time_remaining = String::from(":");
+    let hours = (time_to_empty.value / 60.0 / 60.0).round();
+    if hours > 0.0 {
+        formatted_time_remaining.push_str(format!(" {hours:.0}h").as_str())
+    }
+    let minutes = (time_to_empty.value / 60.0).rem(60.0).round();
+    if minutes > 0.0 {
+        formatted_time_remaining.push_str(format!(" {minutes:.0}m").as_str())
+    }
+    formatted_time_remaining.push_str(" remaining");
+    formatted_time_remaining
 }

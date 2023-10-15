@@ -27,6 +27,7 @@ struct Centerpiece {
 }
 
 pub const SCROLLABLE_ID: &str = "scrollable";
+pub const APP_ID: &str = "centerpiece";
 
 impl Application for Centerpiece {
     type Message = Message;
@@ -171,6 +172,7 @@ impl Centerpiece {
             stretch: iced::font::Stretch::Normal,
             monospaced: true,
         };
+        settings.id = Some(APP_ID.into());
 
         settings.window = iced::window::Settings {
             transparent: true,
@@ -183,9 +185,15 @@ impl Centerpiece {
             max_size: None,
             icon: None,
             visible: true,
-            platform_specific: iced::window::PlatformSpecific::default(),
+            platform_specific: Self::platform_specific_settings(),
         };
         return settings;
+    }
+
+    fn platform_specific_settings() -> iced::window::PlatformSpecific {
+        let mut specific = iced::window::PlatformSpecific::default();
+        specific.application_id = APP_ID.into();
+        specific
     }
 
     fn entries(&self) -> Vec<&model::Entry> {

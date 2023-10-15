@@ -26,10 +26,12 @@ This project is currently in a very early state and tailored to my needs and dai
 - [ ] control audio devices
   - [ ] select default microphone / speaker
   - [ ] control volume
+- [ ] run system commands (lock, sleep, restart, shutdown)
 - [ ] list and run user defined scripts
 - [ ] run command in terminal (commands are prefixed with `:`)
+- [ ] unit converter (https://github.com/printfn/fend)
 - [x] display resource monitor (cpu, gpu, ram, disks)
-- [ ] display battery state
+- [x] display battery state
 - [x] display date and time
 - [ ] display weather
 - [ ] search brave history
@@ -38,6 +40,7 @@ This project is currently in a very early state and tailored to my needs and dai
 
 - [ ] nix build cache for this repo
 - [ ] nix module to configure systemd services and install app
+- [ ] use a gif instead of a png to showcase app in readme
 
 ### Repository Structure
 

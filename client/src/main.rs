@@ -116,12 +116,13 @@ impl Application for Centerpiece {
                 }
                 _ => None,
             }),
-            crate::plugin::windows::WindowsPlugin::spawn(),
-            crate::plugin::applications::ApplicationsPlugin::spawn(),
-            crate::plugin::brave::BravePlugin::spawn(),
-            crate::plugin::git_repositories::GitRepositoriesPlugin::spawn(),
-            crate::plugin::resource_monitor::ResourceMonitorPlugin::spawn(),
-            crate::plugin::clock::ClockPlugin::spawn(),
+            crate::plugin::windows::Plugin::spawn(),
+            crate::plugin::applications::Plugin::spawn(),
+            crate::plugin::brave::progressive_web_apps::Plugin::spawn(),
+            crate::plugin::git_repositories::Plugin::spawn(),
+            crate::plugin::brave::bookmarks::Plugin::spawn(),
+            crate::plugin::resource_monitor::Plugin::spawn(),
+            crate::plugin::clock::Plugin::spawn(),
         ]);
     }
 

@@ -1,20 +1,20 @@
 use anyhow::Context;
 use iced::futures::StreamExt;
 
-pub struct WindowsPlugin {
+pub struct Plugin {
     plugin: crate::model::Plugin,
     plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
     plugin_channel_in: iced::futures::channel::mpsc::Receiver<crate::model::PluginRequest>,
     sway: swayipc::Connection,
 }
 
-impl WindowsPlugin {
+impl Plugin {
     pub fn spawn() -> iced::Subscription<crate::Message> {
         return iced::subscription::channel(
-            std::any::TypeId::of::<WindowsPlugin>(),
+            std::any::TypeId::of::<Plugin>(),
             100,
             |plugin_channel_out| async {
-                let mut plugin = WindowsPlugin::new(plugin_channel_out);
+                let mut plugin = Plugin::new(plugin_channel_out);
                 plugin.main().await
             },
         );
@@ -22,30 +22,30 @@ impl WindowsPlugin {
 
     pub fn new(
         plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
-    ) -> WindowsPlugin {
+    ) -> Plugin {
         let (app_channel_out, plugin_channel_in) = iced::futures::channel::mpsc::channel(100);
 
         let connection_result = swayipc::Connection::new();
         if let Err(error) = connection_result {
             log::error!(
                 target: "windows",
-                "{}", error,
+                "{:?}", error,
             );
             std::process::exit(1);
         }
         let mut sway = connection_result.unwrap();
 
-        let entries_result = WindowsPlugin::all_entries(&mut sway);
+        let entries_result = Plugin::all_entries(&mut sway);
         if let Err(error) = entries_result {
             log::error!(
                 target: "windows",
-                "{}", error,
+                "{:?}", error,
             );
             std::process::exit(1);
         }
         let entries = entries_result.unwrap();
 
-        return WindowsPlugin {
+        return Plugin {
             plugin_channel_in,
             plugin_channel_out,
             plugin: crate::model::Plugin {
@@ -62,7 +62,7 @@ impl WindowsPlugin {
     fn all_entries(sway: &mut swayipc::Connection) -> anyhow::Result<Vec<crate::model::Entry>> {
         let root_node = sway.get_tree()?;
 
-        let entries = WindowsPlugin::get_window_nodes(root_node)
+        let entries = Plugin::get_window_nodes(root_node)
             .into_iter()
             .map(|node| {
                 let name = node
@@ -89,7 +89,7 @@ impl WindowsPlugin {
             return node
                 .nodes
                 .into_iter()
-                .flat_map(|n| WindowsPlugin::get_window_nodes(n))
+                .flat_map(|n| Plugin::get_window_nodes(n))
                 .collect();
         }
 
@@ -105,7 +105,7 @@ impl WindowsPlugin {
         if let Err(error) = register_plugin_result {
             log::error!(
                 target: self.plugin.id.as_str(),
-                "{}", error,
+                "{:?}", error,
             );
             std::process::exit(1);
         }
@@ -115,7 +115,7 @@ impl WindowsPlugin {
             if let Err(error) = update_result {
                 log::warn!(
                     target: self.plugin.id.as_str(),
-                    "{}", error,
+                    "{:?}", error,
                 );
             }
         }

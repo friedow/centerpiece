@@ -29,6 +29,7 @@ pub fn search(entries: Vec<crate::model::Entry>, query: &String) -> Vec<crate::m
         .collect::<Vec<crate::model::Entry>>();
 }
 
+// TODO: this function should return a result and propagate errors
 pub fn read_index_file<T>(file_name: &str) -> T
 where
     T: serde::de::DeserializeOwned,

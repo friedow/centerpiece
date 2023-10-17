@@ -1,7 +1,7 @@
 use anyhow::Context;
 use iced::futures::StreamExt;
 
-pub struct ApplicationsPlugin {
+pub struct Plugin {
     plugin: crate::model::Plugin,
     all_entries: Vec<ExtendedEntry>,
     plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
@@ -123,13 +123,13 @@ impl ExtendedEntry {
     }
 }
 
-impl ApplicationsPlugin {
+impl Plugin {
     pub fn spawn() -> iced::Subscription<crate::Message> {
         return iced::subscription::channel(
-            std::any::TypeId::of::<ApplicationsPlugin>(),
+            std::any::TypeId::of::<Plugin>(),
             100,
             |plugin_channel_out| async {
-                let mut plugin = ApplicationsPlugin::new(plugin_channel_out);
+                let mut plugin = Plugin::new(plugin_channel_out);
                 plugin.main().await
             },
         );
@@ -137,11 +137,11 @@ impl ApplicationsPlugin {
 
     pub fn new(
         plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
-    ) -> ApplicationsPlugin {
+    ) -> Plugin {
         let (app_channel_out, plugin_channel_in) = iced::futures::channel::mpsc::channel(100);
 
-        return ApplicationsPlugin {
-            all_entries: ApplicationsPlugin::all_entries(),
+        return Plugin {
+            all_entries: Plugin::all_entries(),
             plugin_channel_in,
             plugin_channel_out,
             plugin: crate::model::Plugin {
@@ -161,7 +161,7 @@ impl ApplicationsPlugin {
             .filter_map(|path| {
                 let desktop_entry_result = ExtendedEntry::try_from(&path);
                 if let Err(error) = desktop_entry_result {
-                    log::warn!(target: "applications", "Skipping desktop entry: '{}'.", error);
+                    log::warn!(target: "applications", "Skipping desktop entry: '{:?}'.", error);
                     return None;
                 }
                 return desktop_entry_result.ok();
@@ -175,7 +175,7 @@ impl ApplicationsPlugin {
         if let Err(error) = register_plugin_result {
             log::error!(
                 target: self.plugin.id.as_str(),
-                "{}", error
+                "{:?}", error
             );
             std::process::exit(1);
         }
@@ -184,7 +184,7 @@ impl ApplicationsPlugin {
         if let Err(error) = search_result {
             log::warn!(
                 target: self.plugin.id.as_str(),
-                "{}", error
+                "{:?}", error
             );
         }
 
@@ -193,7 +193,7 @@ impl ApplicationsPlugin {
             if let Err(error) = update_result {
                 log::warn!(
                     target: self.plugin.id.as_str(),
-                    "{}", error
+                    "{:?}", error
                 );
             }
         }

@@ -1,19 +1,19 @@
 use anyhow::Context;
 use iced::futures::StreamExt;
 
-pub struct GitRepositoriesPlugin {
+pub struct Plugin {
     plugin: crate::model::Plugin,
     plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
     plugin_channel_in: iced::futures::channel::mpsc::Receiver<crate::model::PluginRequest>,
 }
 
-impl GitRepositoriesPlugin {
+impl Plugin {
     pub fn spawn() -> iced::Subscription<crate::Message> {
         return iced::subscription::channel(
-            std::any::TypeId::of::<GitRepositoriesPlugin>(),
+            std::any::TypeId::of::<Plugin>(),
             100,
             |plugin_channel_out| async {
-                let mut plugin = GitRepositoriesPlugin::new(plugin_channel_out);
+                let mut plugin = Plugin::new(plugin_channel_out);
                 plugin.main().await
             },
         );
@@ -21,10 +21,10 @@ impl GitRepositoriesPlugin {
 
     pub fn new(
         plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
-    ) -> GitRepositoriesPlugin {
+    ) -> Plugin {
         let (app_channel_out, plugin_channel_in) = iced::futures::channel::mpsc::channel(100);
 
-        return GitRepositoriesPlugin {
+        return Plugin {
             plugin_channel_in,
             plugin_channel_out,
             plugin: crate::model::Plugin {
@@ -32,7 +32,7 @@ impl GitRepositoriesPlugin {
                 priority: 28,
                 title: String::from("󰘬 Git Repositories"),
                 app_channel_out,
-                entries: GitRepositoriesPlugin::all_entries(),
+                entries: Plugin::all_entries(),
             },
         };
     }
@@ -63,7 +63,7 @@ impl GitRepositoriesPlugin {
         if let Err(error) = register_plugin_result {
             log::error!(
                 target: self.plugin.id.as_str(),
-                "{}", error,
+                "{:?}", error,
             );
             std::process::exit(1);
         }
@@ -73,7 +73,7 @@ impl GitRepositoriesPlugin {
             if let Err(error) = update_result {
                 log::warn!(
                     target: self.plugin.id.as_str(),
-                    "{}", error,
+                    "{:?}", error,
                 );
             }
         }

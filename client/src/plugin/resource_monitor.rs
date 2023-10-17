@@ -3,7 +3,7 @@ use anyhow::Context;
 use iced::futures::StreamExt;
 use sysinfo::{CpuExt, DiskExt, SystemExt};
 
-pub struct ResourceMonitorPlugin {
+pub struct Plugin {
     sysinfo: sysinfo::System,
     battery_plugin: crate::model::Plugin,
     cpu_plugin: crate::model::Plugin,
@@ -14,13 +14,13 @@ pub struct ResourceMonitorPlugin {
     plugin_channel_in: iced::futures::channel::mpsc::Receiver<crate::model::PluginRequest>,
 }
 
-impl ResourceMonitorPlugin {
+impl Plugin {
     pub fn spawn() -> iced::Subscription<crate::Message> {
         return iced::subscription::channel(
-            std::any::TypeId::of::<ResourceMonitorPlugin>(),
+            std::any::TypeId::of::<Plugin>(),
             100,
             |plugin_channel_out| async {
-                let mut plugin = ResourceMonitorPlugin::new(plugin_channel_out);
+                let mut plugin = Plugin::new(plugin_channel_out);
                 plugin.main().await
             },
         );
@@ -28,10 +28,10 @@ impl ResourceMonitorPlugin {
 
     pub fn new(
         plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
-    ) -> ResourceMonitorPlugin {
+    ) -> Plugin {
         let (app_channel_out, plugin_channel_in) = iced::futures::channel::mpsc::channel(100);
 
-        return ResourceMonitorPlugin {
+        return Plugin {
             sysinfo: sysinfo::System::new_all(),
             last_query: String::new(),
             plugin_channel_in,
@@ -72,7 +72,7 @@ impl ResourceMonitorPlugin {
         if let Err(error) = register_plugin_result {
             log::error!(
                 target: "resource-monitor",
-                "{}", error,
+                "{:?}", error,
             );
             std::process::exit(1);
         }
@@ -81,7 +81,7 @@ impl ResourceMonitorPlugin {
         if let Err(error) = update_entries_result {
             log::warn!(
                 target: "resource-monitor",
-                "{}", error,
+                "{:?}", error,
             );
         }
 
@@ -90,7 +90,7 @@ impl ResourceMonitorPlugin {
             if let Err(error) = update_result {
                 log::warn!(
                     target: "resource-monitor",
-                    "{}", error,
+                    "{:?}", error,
                 );
             }
         }

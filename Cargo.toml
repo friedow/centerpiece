@@ -1,5 +1,9 @@
 [workspace]
 
+default-members = [
+    "client",
+]
+
 members = [
     "client",
     "services/index-git-repositories",

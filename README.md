@@ -31,6 +31,7 @@ This project is currently in a very early state and tailored to my needs and dai
 - [ ] run command in terminal (commands are prefixed with `:`)
 - [ ] unit converter (https://github.com/printfn/fend)
 - [x] display resource monitor (cpu, gpu, ram, disks)
+  - [ ] split those into seperate files
 - [x] display battery state
 - [x] display date and time
 - [ ] display weather
@@ -39,6 +40,7 @@ This project is currently in a very early state and tailored to my needs and dai
 ### TODO
 
 - [ ] nix build cache for this repo
+- [ ] use crane as a build tool
 - [ ] nix module to configure systemd services and install app
 - [ ] use a gif instead of a png to showcase app in readme
 

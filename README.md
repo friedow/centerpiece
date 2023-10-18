@@ -18,9 +18,11 @@ This project is currently in a very early state and tailored to my needs and dai
 - [x] switch windows (sway)
 - [x] open applications (XDG based, scans for .desktop files)
 - [ ] open brave in app mode for special bookmarks
+- [ ] open firefox in app mode for special bookmarks
 - [x] open local git repositories (terminal, editor, git gui)
   - [x] needs an index to increase speed
 - [ ] open brave bookmarks
+- [ ] open firefox bookmarks
 - [ ] convert between units (e.g. cm to inch)
 - [ ] switch wifi networks
 - [ ] control audio devices
@@ -36,6 +38,7 @@ This project is currently in a very early state and tailored to my needs and dai
 - [x] display date and time
 - [ ] display weather
 - [ ] search brave history
+- [ ] search firefox history
 
 ### TODO
 

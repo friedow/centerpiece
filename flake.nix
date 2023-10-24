@@ -111,6 +111,7 @@
       };
       checks.${system} = {
         inherit (self.outputs.packages.${system}) default index-git-repositories;
+        shell = self.outputs.devShells.${system}.default;
         inherit cargoClippy;
       };
     };

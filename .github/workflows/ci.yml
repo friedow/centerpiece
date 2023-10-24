@@ -1,0 +1,36 @@
+name: "ci"
+
+on:
+  workflow_dispatch: # allows manual triggering
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+  merge_group:
+
+jobs:
+  flake-check:
+    runs-on: ubuntu-latest
+    environment: cachix
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Nix Flakes doesn't work on shallow clones
+    - uses: cachix/install-nix-action@v23
+      with:
+        extra_nix_config: |
+          access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+    - uses: cachix/cachix-action@v12
+      with:
+        name: friedow
+        # If you chose API tokens for write access OR if you have a private cache
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+    - uses: DeterminateSystems/magic-nix-cache-action@v2
+      with:
+        diagnostic-endpoint: ""
+    - name: "flake check"
+      run: nix flake check -Lvv --no-update-lock-file

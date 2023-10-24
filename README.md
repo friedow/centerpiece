@@ -28,6 +28,10 @@ This project is currently in a very early state and tailored to my needs and dai
 - [ ] control audio devices
   - [ ] select default microphone / speaker
   - [ ] control volume
+- [ ] control mpd:
+    - [ ] select playlist
+    - [ ] add to playlist
+    - [ ] play, pause, stop, next track, prev track
 - [ ] run system commands (lock, sleep, restart, shutdown)
 - [ ] list and run user defined scripts
 - [ ] run command in terminal (commands are prefixed with `:`)
@@ -42,8 +46,8 @@ This project is currently in a very early state and tailored to my needs and dai
 
 ### TODO
 
-- [ ] nix build cache for this repo
-- [ ] use crane as a build tool
+- [x] nix build cache for this repo
+- [x] use crane as a build tool
 - [ ] nix module to configure systemd services and install app
 - [ ] use a gif instead of a png to showcase app in readme
 

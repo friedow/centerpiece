@@ -74,7 +74,7 @@ impl Plugin {
                 target: "resource-monitor",
                 "{:?}", error,
             );
-            std::process::exit(1);
+            panic!();
         }
 
         let update_entries_result = self.update_entries();

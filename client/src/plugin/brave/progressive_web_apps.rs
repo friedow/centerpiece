@@ -28,7 +28,7 @@ impl Plugin {
                 target: "brave-progressive-web-apps",
                 "{:?}", error
             );
-            std::process::exit(1);
+            panic!();
         }
 
         return Plugin {
@@ -72,7 +72,7 @@ impl Plugin {
                 target: self.plugin.id.as_str(),
                 "{:?}", error,
             );
-            std::process::exit(1);
+            panic!();
         }
 
         loop {

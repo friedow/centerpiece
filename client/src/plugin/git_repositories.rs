@@ -65,7 +65,7 @@ impl Plugin {
                 target: self.plugin.id.as_str(),
                 "{:?}", error,
             );
-            std::process::exit(1);
+            panic!();
         }
 
         loop {

@@ -38,6 +38,7 @@ This project is currently in a very early state and tailored to my needs and dai
 - [ ] unit converter (https://github.com/printfn/fend)
 - [x] display resource monitor (cpu, gpu, ram, disks)
   - [ ] split those into seperate files
+  - [ ] color background of entries based on the usage percentage
 - [x] display battery state
 - [x] display date and time
 - [ ] display weather

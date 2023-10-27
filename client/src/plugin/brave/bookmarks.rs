@@ -29,7 +29,7 @@ impl Plugin {
                 "{:?}", error
             );
             // TODO: process exit terminates the parent process as well! This is unwanted
-            std::process::exit(1);
+            panic!();
         }
 
         return Plugin {
@@ -65,7 +65,7 @@ impl Plugin {
                 target: self.plugin.id.as_str(),
                 "{:?}", error,
             );
-            std::process::exit(1);
+            panic!();
         }
 
         loop {

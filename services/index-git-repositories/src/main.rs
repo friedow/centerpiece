@@ -44,7 +44,7 @@ fn write_index_file(git_repository_paths: Vec<&str>) {
             error = log::as_error!(error);
             "Could read HOME environment variable",
         );
-        std::process::exit(1);
+        panic!();
     }
     let home_directory = home_directory_result.unwrap();
 
@@ -54,7 +54,7 @@ fn write_index_file(git_repository_paths: Vec<&str>) {
             error = log::as_error!(error);
             "Error while creating cache directory",
         );
-        std::process::exit(1);
+        panic!();
     }
 
     let index_file_path = cache_directory_path.join("git-repositories-index.json");
@@ -65,7 +65,7 @@ fn write_index_file(git_repository_paths: Vec<&str>) {
             error = log::as_error!(error);
             "Error while creating index file",
         );
-        std::process::exit(1);
+        panic!();
     }
     let index_file = index_file_result.unwrap();
 
@@ -75,6 +75,6 @@ fn write_index_file(git_repository_paths: Vec<&str>) {
             error = log::as_error!(error);
             "Error while writing index file",
         );
-        std::process::exit(1);
+        panic!();
     }
 }

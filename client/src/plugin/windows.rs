@@ -31,7 +31,7 @@ impl Plugin {
                 target: "windows",
                 "{:?}", error,
             );
-            std::process::exit(1);
+            panic!();
         }
         let mut sway = connection_result.unwrap();
 
@@ -41,7 +41,7 @@ impl Plugin {
                 target: "windows",
                 "{:?}", error,
             );
-            std::process::exit(1);
+            panic!();
         }
         let entries = entries_result.unwrap();
 
@@ -107,7 +107,7 @@ impl Plugin {
                 target: self.plugin.id.as_str(),
                 "{:?}", error,
             );
-            std::process::exit(1);
+            panic!();
         }
 
         loop {

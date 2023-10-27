@@ -40,7 +40,7 @@ where
             error = log::as_error!(error);
             "Could not read HOME environment variable",
         );
-        std::process::exit(1);
+        panic!();
     }
     let home_directory = home_directory_result.unwrap();
 
@@ -53,7 +53,7 @@ where
             error = log::as_error!(error);
             "Error while opening index file",
         );
-        std::process::exit(1);
+        panic!();
     }
     let index_file = index_file_result.unwrap();
 
@@ -64,7 +64,7 @@ where
             error = log::as_error!(error);
             "Error while reading index file",
         );
-        std::process::exit(1);
+        panic!();
     }
     let git_repository_paths = git_repository_paths_result.unwrap();
     git_repository_paths

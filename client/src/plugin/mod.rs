@@ -6,4 +6,4 @@ pub mod resource_monitor;
 pub mod utils;
 pub mod windows;
 
-pub mod plugin_process;
+pub mod plugin;

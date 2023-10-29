@@ -41,7 +41,8 @@ pub trait Plugin {
         self.register_plugin(&mut plugin_channel_out, &mut app_channel_out)?;
 
         loop {
-            self.update(&mut plugin_channel_out, &mut plugin_channel_in).await?;
+            self.update(&mut plugin_channel_out, &mut plugin_channel_in)
+                .await?;
         }
     }
 
@@ -57,19 +58,31 @@ pub trait Plugin {
         return Ok(());
     }
 
-    async fn update(&mut self, plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>, plugin_channel_in: &mut iced::futures::channel::mpsc::Receiver<crate::model::PluginRequest>) -> anyhow::Result<()> {
+    async fn update(
+        &mut self,
+        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
+        plugin_channel_in: &mut iced::futures::channel::mpsc::Receiver<crate::model::PluginRequest>,
+    ) -> anyhow::Result<()> {
         let plugin_request = plugin_channel_in.select_next_some().await;
 
         match plugin_request {
-            crate::model::PluginRequest::Search(query) => self.search(&query, plugin_channel_out)?,
+            crate::model::PluginRequest::Search(query) => {
+                self.search(&query, plugin_channel_out)?
+            }
             crate::model::PluginRequest::Timeout => (),
-            crate::model::PluginRequest::Activate(entry_id) => self.activate(entry_id, plugin_channel_out)?,
+            crate::model::PluginRequest::Activate(entry_id) => {
+                self.activate(entry_id, plugin_channel_out)?
+            }
         }
 
         return Ok(());
     }
 
-    fn search(&mut self, query: &String, plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>) -> anyhow::Result<()> {
+    fn search(
+        &mut self,
+        query: &String,
+        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
+    ) -> anyhow::Result<()> {
         let filtered_entries = crate::plugin::utils::search(self.entries(), query);
 
         plugin_channel_out
@@ -85,5 +98,9 @@ pub trait Plugin {
         return Ok(());
     }
 
-    fn activate(&mut self, entry_id: String, plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>) -> anyhow::Result<()>;
+    fn activate(
+        &mut self,
+        entry_id: String,
+        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
+    ) -> anyhow::Result<()>;
 }

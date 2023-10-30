@@ -8,25 +8,27 @@ pub struct WindowsPlugin {
 
 impl WindowsPlugin {
     pub fn spawn() -> iced::Subscription<crate::Message> {
-        if let Ok(mut plugin) = Self::try_new() {
-            return iced::subscription::channel(
-                std::any::TypeId::of::<Self>(),
-                100,
-                |plugin_channel_out| async move {
-                    let (app_channel_out, plugin_channel_in) =
-                        iced::futures::channel::mpsc::channel(100);
-                    let main_loop_result = plugin
-                        .main(plugin_channel_out, app_channel_out, plugin_channel_in)
-                        .await;
-                    if let Err(error) = main_loop_result {
-                        Self::log_and_panic(error);
-                    }
-                    loop {}
-                },
-            );
-        } else {
-            iced::Subscription::<crate::Message>::none()
+        let plugin_result = PluginType::new();
+        if let Err(_) = plugin_result {
+            return iced::Subscription::<crate::Message>::none()
         }
+
+        let mut plugin = plugin_result.unwrap();
+        return iced::subscription::channel(
+            std::any::TypeId::of::<Self>(),
+            100,
+            |plugin_channel_out| async move {
+                let (app_channel_out, plugin_channel_in) =
+                    iced::futures::channel::mpsc::channel(100);
+                let main_loop_result = plugin
+                    .main(plugin_channel_out, app_channel_out, plugin_channel_in)
+                    .await;
+                if let Err(error) = main_loop_result {
+                    Self::log_and_panic(error);
+                }
+                loop {}
+            },
+        );
     }
 
     fn get_window_nodes(node: swayipc::Node) -> Vec<swayipc::Node> {

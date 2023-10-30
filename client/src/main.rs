@@ -117,7 +117,7 @@ impl Application for Centerpiece {
                 }
                 _ => None,
             }),
-            crate::plugin::windows::WindowsPlugin::spawn(),
+            crate::plugin::utils::spawn::<crate::plugin::windows::WindowsPlugin>(),
             crate::plugin::applications::Plugin::spawn(),
             crate::plugin::brave::progressive_web_apps::Plugin::spawn(),
             crate::plugin::git_repositories::Plugin::spawn(),

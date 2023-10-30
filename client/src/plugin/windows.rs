@@ -1,4 +1,4 @@
-use crate::plugin::plugin::Plugin;
+use crate::plugin::utils::Plugin;
 use anyhow::Context;
 
 pub struct WindowsPlugin {
@@ -7,30 +7,6 @@ pub struct WindowsPlugin {
 }
 
 impl WindowsPlugin {
-    pub fn spawn() -> iced::Subscription<crate::Message> {
-        let plugin_result = PluginType::new();
-        if let Err(_) = plugin_result {
-            return iced::Subscription::<crate::Message>::none()
-        }
-
-        let mut plugin = plugin_result.unwrap();
-        return iced::subscription::channel(
-            std::any::TypeId::of::<Self>(),
-            100,
-            |plugin_channel_out| async move {
-                let (app_channel_out, plugin_channel_in) =
-                    iced::futures::channel::mpsc::channel(100);
-                let main_loop_result = plugin
-                    .main(plugin_channel_out, app_channel_out, plugin_channel_in)
-                    .await;
-                if let Err(error) = main_loop_result {
-                    Self::log_and_panic(error);
-                }
-                loop {}
-            },
-        );
-    }
-
     fn get_window_nodes(node: swayipc::Node) -> Vec<swayipc::Node> {
         if !node.nodes.is_empty() {
             return node
@@ -45,10 +21,6 @@ impl WindowsPlugin {
         }
 
         return vec![];
-    }
-
-    fn try_new() -> Result<Self, ()> {
-        Ok(Self::new())
     }
 }
 
@@ -71,15 +43,15 @@ impl Plugin for WindowsPlugin {
         let connection_result =
             swayipc::Connection::new().context("Failed to establish sway ipc connection.");
         if let Err(error) = connection_result {
-            Self::log_and_panic(error);
-            panic!("");
+            log::error!(target: Self::id(), "{:?}", error);
+            panic!();
         }
         let mut sway = connection_result.unwrap();
 
         let root_node_result = sway.get_tree().context("Failed to get_tree from sway ipc.");
         if let Err(error) = root_node_result {
-            Self::log_and_panic(error);
-            panic!("");
+            log::error!(target: Self::id(), "{:?}", error);
+            panic!();
         }
         let root_node = root_node_result.unwrap();
 

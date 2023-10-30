@@ -1,5 +1,5 @@
-use anyhow::Context;
 use crate::plugin::plugin::Plugin;
+use anyhow::Context;
 
 pub struct WindowsPlugin {
     sway: swayipc::Connection,
@@ -8,22 +8,25 @@ pub struct WindowsPlugin {
 
 impl WindowsPlugin {
     pub fn spawn() -> iced::Subscription<crate::Message> {
-        return iced::subscription::channel(
-            std::any::TypeId::of::<Self>(),
-            100,
-            |plugin_channel_out| async {
-                let (app_channel_out, plugin_channel_in) =
-                    iced::futures::channel::mpsc::channel(100);
-                let mut plugin = Self::new();
-                let main_loop_result = plugin
-                    .main(plugin_channel_out, app_channel_out, plugin_channel_in)
-                    .await;
-                if let Err(error) = main_loop_result {
-                    Self::log_and_panic(error);
-                }
-                loop {}
-            },
-        );
+        if let Ok(mut plugin) = Self::try_new() {
+            return iced::subscription::channel(
+                std::any::TypeId::of::<Self>(),
+                100,
+                |plugin_channel_out| async move {
+                    let (app_channel_out, plugin_channel_in) =
+                        iced::futures::channel::mpsc::channel(100);
+                    let main_loop_result = plugin
+                        .main(plugin_channel_out, app_channel_out, plugin_channel_in)
+                        .await;
+                    if let Err(error) = main_loop_result {
+                        Self::log_and_panic(error);
+                    }
+                    loop {}
+                },
+            );
+        } else {
+            iced::Subscription::<crate::Message>::none()
+        }
     }
 
     fn get_window_nodes(node: swayipc::Node) -> Vec<swayipc::Node> {
@@ -40,6 +43,10 @@ impl WindowsPlugin {
         }
 
         return vec![];
+    }
+
+    fn try_new() -> Result<Self, ()> {
+        Ok(Self::new())
     }
 }
 
@@ -59,7 +66,8 @@ impl Plugin for WindowsPlugin {
     }
 
     fn new() -> Self {
-        let connection_result = swayipc::Connection::new().context("Failed to establish sway ipc connection.");
+        let connection_result =
+            swayipc::Connection::new().context("Failed to establish sway ipc connection.");
         if let Err(error) = connection_result {
             Self::log_and_panic(error);
             panic!("");
@@ -95,7 +103,11 @@ impl Plugin for WindowsPlugin {
         return Self { sway, entries };
     }
 
-    fn activate(&mut self, entry_id: String, plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>) -> anyhow::Result<()> {
+    fn activate(
+        &mut self,
+        entry_id: String,
+        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
+    ) -> anyhow::Result<()> {
         self.sway
             .run_command(format!("[con_id={}] focus", entry_id))
             .context(format!(

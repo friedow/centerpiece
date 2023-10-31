@@ -64,7 +64,7 @@ impl Plugin for WindowsPlugin {
                 let app_id = node
                     .app_id
                     .unwrap_or(String::from("-- window app_id missing --"));
-                let title = if name != "" { name } else { app_id };
+                let title = if !name.is_empty() { name } else { app_id };
                 return crate::model::Entry {
                     id: node.id.to_string(),
                     title,

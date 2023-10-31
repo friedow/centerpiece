@@ -19,7 +19,9 @@ pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>(
                 panic!();
             }
 
-            loop {}
+            loop {
+                async_std::task::sleep(std::time::Duration::from_secs(u64::max_value())).await;
+            }
         },
     );
 }

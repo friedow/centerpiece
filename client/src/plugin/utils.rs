@@ -20,7 +20,7 @@ pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>(
             }
 
             loop {
-                async_std::task::sleep(std::time::Duration::from_secs(u64::max_value())).await;
+                panic!("This point of execution should have never been reached.");
             }
         },
     );

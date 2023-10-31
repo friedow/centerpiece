@@ -123,7 +123,7 @@ impl Application for Centerpiece {
             crate::plugin::git_repositories::Plugin::spawn(),
             crate::plugin::brave::bookmarks::Plugin::spawn(),
             crate::plugin::resource_monitor::Plugin::spawn(),
-            crate::plugin::clock::Plugin::spawn(),
+            crate::plugin::utils::spawn::<crate::plugin::clock::ClockPlugin>(),
         ]);
     }
 

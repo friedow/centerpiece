@@ -20,7 +20,7 @@ pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>(
             }
 
             loop {
-                panic!("This point of execution should have never been reached.");
+                unreachable!();
             }
         },
     );
@@ -31,6 +31,9 @@ pub trait Plugin {
     fn id() -> &'static str;
     fn priority() -> u32;
     fn title() -> &'static str;
+    fn update_timeout() -> Option<std::time::Duration> {
+        return None;
+    }
 
     fn new() -> Self;
 
@@ -56,9 +59,10 @@ pub trait Plugin {
         let (mut app_channel_out, mut plugin_channel_in) =
             iced::futures::channel::mpsc::channel(100);
         self.register_plugin(&mut plugin_channel_out, &mut app_channel_out)?;
+        let mut last_query = String::from("");
 
         loop {
-            self.update(&mut plugin_channel_out, &mut plugin_channel_in)
+            self.update(&mut plugin_channel_out, &mut plugin_channel_in, &mut last_query)
                 .await?;
         }
     }
@@ -79,17 +83,25 @@ pub trait Plugin {
         &mut self,
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
         plugin_channel_in: &mut iced::futures::channel::mpsc::Receiver<crate::model::PluginRequest>,
+        last_query: &mut String,
     ) -> anyhow::Result<()> {
-        let plugin_request = plugin_channel_in.select_next_some().await;
+        let plugin_request_future = plugin_channel_in.select_next_some();
+        let plugin_request = match Self::update_timeout() {
+            Some(update_timeout) => async_std::future::timeout(update_timeout, plugin_request_future)
+                .await
+                .unwrap_or(crate::model::PluginRequest::Timeout),
+            None => plugin_request_future.await,
+        };
 
         match plugin_request {
             crate::model::PluginRequest::Search(query) => {
-                self.search(&query, plugin_channel_out)?
+                self.search(&query, plugin_channel_out)?;
+                *last_query = query;
+            },
+            crate::model::PluginRequest::Timeout => {
+                self.search(last_query, plugin_channel_out)?;
             }
-            crate::model::PluginRequest::Timeout => (),
-            crate::model::PluginRequest::Activate(entry_id) => {
-                self.activate(entry_id, plugin_channel_out)?
-            }
+            crate::model::PluginRequest::Activate(entry_id) => self.activate(entry_id, plugin_channel_out)?,
         }
 
         return Ok(());
@@ -117,9 +129,11 @@ pub trait Plugin {
 
     fn activate(
         &mut self,
-        entry_id: String,
-        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
-    ) -> anyhow::Result<()>;
+        _entry_id: String,
+        _plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
+    ) -> anyhow::Result<()> {
+        return Ok(());
+    }
 }
 
 

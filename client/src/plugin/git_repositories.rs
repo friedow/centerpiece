@@ -23,12 +23,18 @@ impl Plugin for GitRepositoriesPlugin {
     }
 
     fn new() -> Self {
+        return Self { entries: vec![] };
+    }
+
+    fn update_entries(&mut self) -> anyhow::Result<()> {
+        self.entries.clear();
+
         let git_repository_paths: Vec<String> =
             crate::plugin::utils::read_index_file("git-repositories-index.json");
 
         let home = std::env::var("HOME").unwrap_or(String::from(""));
 
-        let entries = git_repository_paths
+        self.entries = git_repository_paths
             .into_iter()
             .filter_map(|git_repository_path| {
                 let git_repository_display_name = git_repository_path.replacen(&home, "~", 1);
@@ -42,7 +48,7 @@ impl Plugin for GitRepositoriesPlugin {
             })
             .collect();
 
-        return Self { entries };
+        return Ok(());
     }
 
     fn activate(

@@ -1,5 +1,5 @@
-use fuzzy_matcher::FuzzyMatcher;
 use anyhow::Context;
+use fuzzy_matcher::FuzzyMatcher;
 use iced::futures::StreamExt;
 
 pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>(
@@ -39,6 +39,10 @@ pub trait Plugin {
 
     fn entries(&self) -> Vec<crate::model::Entry>;
 
+    fn update_entries(&mut self) -> anyhow::Result<()> {
+        return Ok(());
+    }
+
     fn plugin(
         &self,
         app_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::model::PluginRequest>,
@@ -56,14 +60,20 @@ pub trait Plugin {
         &mut self,
         mut plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
+        self.update_entries()?;
+
         let (mut app_channel_out, mut plugin_channel_in) =
             iced::futures::channel::mpsc::channel(100);
         self.register_plugin(&mut plugin_channel_out, &mut app_channel_out)?;
         let mut last_query = String::from("");
 
         loop {
-            self.update(&mut plugin_channel_out, &mut plugin_channel_in, &mut last_query)
-                .await?;
+            self.update(
+                &mut plugin_channel_out,
+                &mut plugin_channel_in,
+                &mut last_query,
+            )
+            .await?;
         }
     }
 
@@ -87,9 +97,11 @@ pub trait Plugin {
     ) -> anyhow::Result<()> {
         let plugin_request_future = plugin_channel_in.select_next_some();
         let plugin_request = match Self::update_timeout() {
-            Some(update_timeout) => async_std::future::timeout(update_timeout, plugin_request_future)
-                .await
-                .unwrap_or(crate::model::PluginRequest::Timeout),
+            Some(update_timeout) => {
+                async_std::future::timeout(update_timeout, plugin_request_future)
+                    .await
+                    .unwrap_or(crate::model::PluginRequest::Timeout)
+            }
             None => plugin_request_future.await,
         };
 
@@ -97,11 +109,14 @@ pub trait Plugin {
             crate::model::PluginRequest::Search(query) => {
                 self.search(&query, plugin_channel_out)?;
                 *last_query = query;
-            },
+            }
             crate::model::PluginRequest::Timeout => {
+                self.update_entries()?;
                 self.search(last_query, plugin_channel_out)?;
             }
-            crate::model::PluginRequest::Activate(entry_id) => self.activate(entry_id, plugin_channel_out)?,
+            crate::model::PluginRequest::Activate(entry_id) => {
+                self.activate(entry_id, plugin_channel_out)?
+            }
         }
 
         return Ok(());
@@ -135,7 +150,6 @@ pub trait Plugin {
         return Ok(());
     }
 }
-
 
 pub fn search(entries: Vec<crate::model::Entry>, query: &String) -> Vec<crate::model::Entry> {
     let matcher = fuzzy_matcher::skim::SkimMatcherV2::default();

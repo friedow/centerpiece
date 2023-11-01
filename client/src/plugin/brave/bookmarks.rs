@@ -23,20 +23,18 @@ impl Plugin for BookmarksPlugin {
     }
 
     fn new() -> Self {
-        let bookmarks_root_result = crate::plugin::brave::utils::read_bookmarks_file();
-        if let Err(error) = bookmarks_root_result {
-            log::error!(target: Self::id(), "{:?}", error);
-            panic!();
-        }
+        return Self { entries: vec![] };
+    }
 
-        let entries = bookmarks_root_result
-            .unwrap()
+    fn update_entries(&mut self) -> anyhow::Result<()> {
+        self.entries.clear();
+        self.entries = crate::plugin::brave::utils::read_bookmarks_file()?
             .get_bookmarks_recursive(&vec![String::from("Progressive Web Apps")])
             .into_iter()
             .map(|bookmark| bookmark.into())
             .collect();
 
-        return Self { entries };
+        return Ok(());
     }
 
     fn activate(

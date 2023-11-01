@@ -1,10 +1,12 @@
 use crate::plugin::utils::Plugin;
 
-pub struct ClockPlugin {}
+pub struct ClockPlugin {
+    entries: Vec<crate::model::Entry>,
+}
 
 impl Plugin for ClockPlugin {
     fn new() -> Self {
-        return Self {};
+        return Self { entries: vec![] };
     }
 
     fn id() -> &'static str {
@@ -23,9 +25,11 @@ impl Plugin for ClockPlugin {
         return Some(std::time::Duration::from_secs(1));
     }
 
-    fn entries(&self) -> Vec<crate::model::Entry> {
+    fn update_entries(&mut self) -> anyhow::Result<()> {
+        self.entries.clear();
+
         let date = chrono::Local::now();
-        return vec![
+        self.entries = vec![
             crate::model::Entry {
                 id: String::from("time-entry"),
                 title: date.format("%H:%M:%S").to_string(),
@@ -39,5 +43,11 @@ impl Plugin for ClockPlugin {
                 meta: String::from("Clock Date"),
             },
         ];
+
+        return Ok(());
+    }
+
+    fn entries(&self) -> Vec<crate::model::Entry> {
+        return self.entries.clone();
     }
 }

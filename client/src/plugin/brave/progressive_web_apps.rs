@@ -23,34 +23,27 @@ impl Plugin for ProgressiveWebAppsPlugin {
     }
 
     fn new() -> Self {
-        let bookmarks_root_result = crate::plugin::brave::utils::read_bookmarks_file();
-        if let Err(error) = bookmarks_root_result {
-            log::error!(target: Self::id(), "{:?}", error);
-            panic!();
-        }
+        return Self { entries: vec![] };
+    }
 
-        let bookmarks_root = bookmarks_root_result.unwrap();
+    fn update_entries(&mut self) -> anyhow::Result<()> {
+        self.entries.clear();
+
         let folder_name = String::from("Progressive Web Apps");
-        let pwa_folder_result = bookmarks_root
+        let bookmarks_root = crate::plugin::brave::utils::read_bookmarks_file()?;
+        let pwa_folder = bookmarks_root
             .find_bookmarks_folder_recursive(&folder_name)
             .ok_or(anyhow::anyhow!(
                 "Unable to find a bookmarks folder named '{}'.",
                 folder_name
-            ));
-
-        if let Err(error) = pwa_folder_result {
-            log::error!(target: Self::id(), "{:?}", error);
-            panic!();
-        }
-
-        let entries = pwa_folder_result
-            .unwrap()
+            ))?;
+        self.entries = pwa_folder
             .get_bookmarks_recursive(&vec![])
             .into_iter()
             .map(|bookmark| bookmark.into())
             .collect();
 
-        return Self { entries };
+        return Ok(());
     }
 
     fn activate(

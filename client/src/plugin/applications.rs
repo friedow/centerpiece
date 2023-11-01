@@ -135,9 +135,7 @@ impl Plugin {
         );
     }
 
-    pub fn new(
-        plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
-    ) -> Plugin {
+    pub fn new(plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>) -> Plugin {
         let (app_channel_out, plugin_channel_in) = iced::futures::channel::mpsc::channel(100);
 
         return Plugin {

@@ -7,5 +7,5 @@ edition = "2021"
 log = { version = "0.4.20", features = ["kv_unstable_serde"] }
 simple_logger = { version = "4.2.0", features = ["colors", "threads", "timestamps", "stderr"] }
 
-serde_json = "1.0.94"
+serde_json = "1.0.108"
 rust_search = "2.0.0"

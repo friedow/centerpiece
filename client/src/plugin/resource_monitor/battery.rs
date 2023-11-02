@@ -1,7 +1,6 @@
 use crate::plugin::utils::Plugin;
 use anyhow::Context;
 use std::ops::Rem;
-use sysinfo::SystemExt;
 
 pub struct BatteryPlugin {
     entries: Vec<crate::model::Entry>,

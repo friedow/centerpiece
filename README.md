@@ -17,33 +17,34 @@ This project is currently in a very early state and tailored to my needs and dai
 
 - [x] switch windows (sway)
 - [x] open applications (XDG based, scans for .desktop files)
-- [ ] open brave in app mode for special bookmarks
-- [ ] open firefox in app mode for special bookmarks
+- [x] open browser in app-mode for special bookmarks
+  - [x] brave
 - [x] open local git repositories (terminal, editor, git gui)
   - [x] needs an index to increase speed
-- [ ] open brave bookmarks
-- [ ] open firefox bookmarks
-- [ ] convert between units (e.g. cm to inch)
+- [ ] open bookmarks
+  - [x] brave
+  - [ ] firefox
 - [ ] switch wifi networks
 - [ ] control audio devices
   - [ ] select default microphone / speaker
   - [ ] control volume
 - [ ] control mpd:
-    - [ ] select playlist
-    - [ ] add to playlist
-    - [ ] play, pause, stop, next track, prev track
+  - [ ] select playlist
+  - [ ] add to playlist
+  - [ ] play, pause, stop, next track, prev track
 - [ ] run system commands (lock, sleep, restart, shutdown)
 - [ ] list and run user defined scripts
 - [ ] run command in terminal (commands are prefixed with `:`)
 - [ ] unit converter (https://github.com/printfn/fend)
 - [x] display resource monitor (cpu, gpu, ram, disks)
-  - [ ] split those into seperate files
+  - [x] split those into seperate files
   - [ ] color background of entries based on the usage percentage
 - [x] display battery state
 - [x] display date and time
 - [ ] display weather
-- [ ] search brave history
-- [ ] search firefox history
+- [ ] search browser history
+  - [ ] search brave history
+  - [ ] search firefox history
 
 ### TODO
 

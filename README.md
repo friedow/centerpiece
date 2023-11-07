@@ -32,7 +32,7 @@ This project is currently in a very early state and tailored to my needs and dai
   - [ ] select playlist
   - [ ] add to playlist
   - [ ] play, pause, stop, next track, prev track
-- [ ] run system commands (lock, sleep, restart, shutdown)
+- [x] run system commands (lock, sleep, restart, shutdown)
 - [ ] list and run user defined scripts
 - [ ] run command in terminal (commands are prefixed with `:`)
 - [ ] unit converter (https://github.com/printfn/fend)

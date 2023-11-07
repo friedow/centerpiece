@@ -124,8 +124,8 @@ impl Application for Centerpiece {
             >(),
             crate::plugin::utils::spawn::<crate::plugin::git_repositories::GitRepositoriesPlugin>(),
             crate::plugin::utils::spawn::<crate::plugin::brave::bookmarks::BookmarksPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::resource_monitor::battery::BatteryPlugin>(
-            ),
+            crate::plugin::utils::spawn::<crate::plugin::system::SystemPlugin>(),
+            crate::plugin::utils::spawn::<crate::plugin::resource_monitor::battery::BatteryPlugin>(),
             crate::plugin::utils::spawn::<crate::plugin::resource_monitor::cpu::CpuPlugin>(),
             crate::plugin::utils::spawn::<crate::plugin::resource_monitor::memory::MemoryPlugin>(),
             crate::plugin::utils::spawn::<crate::plugin::resource_monitor::disks::DisksPlugin>(),
@@ -318,7 +318,6 @@ impl Centerpiece {
                 .iter()
                 .any(|entry| entry.id == *active_entry_id)
         })?;
-
 
         plugin
             .app_channel_out

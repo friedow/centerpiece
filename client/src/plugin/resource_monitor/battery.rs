@@ -61,6 +61,7 @@ impl Plugin for BatteryPlugin {
                 title,
                 action: String::from(""),
                 meta: String::from("Resource Monitor Battery"),
+                command: None,
             });
         }
 

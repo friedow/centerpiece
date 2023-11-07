@@ -39,22 +39,22 @@ impl Plugin for BookmarksPlugin {
 
     fn activate(
         &mut self,
-        entry_id: String,
+        entry: crate::model::Entry,
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
         std::process::Command::new("brave")
-            .arg(&entry_id)
+            .arg(&entry.id)
             .spawn()
             .context(format!(
                 "Failed to launch brave in app mode while activating entry with id '{}'.",
-                entry_id
+                entry.id
             ))?;
 
         plugin_channel_out
             .try_send(crate::Message::Exit)
             .context(format!(
                 "Failed to send message to exit application while activating entry with id '{}'.",
-                entry_id
+                entry.id
             ))?;
 
         return Ok(());

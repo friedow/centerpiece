@@ -77,7 +77,7 @@ impl Application for Centerpiece {
                 iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
                     key_code: iced::keyboard::KeyCode::Enter,
                     ..
-                }) => self.activate_selected_entry(),
+                }) => self.activate_selected_entry().unwrap_or(iced::Command::none()),
 
                 iced::Event::Keyboard(iced::keyboard::Event::KeyReleased {
                     key_code: iced::keyboard::KeyCode::Escape,
@@ -305,29 +305,26 @@ impl Centerpiece {
         return iced::Command::none();
     }
 
-    fn activate_selected_entry(&mut self) -> iced::Command<Message> {
-        let active_entry_id_option = self.active_entry_id();
-        if active_entry_id_option.is_none() {
-            return iced::Command::none();
-        }
-        let active_entry_id = active_entry_id_option.unwrap().clone();
+    fn activate_selected_entry(&mut self) -> Option<iced::Command<Message>> {
+        let active_entry_id = self.active_entry_id()?.clone();
 
-        let plugin_option = self.plugins.iter_mut().find(|plugin| {
+        let entry = self.entries().into_iter().find(|entry| {
+            entry.id == *active_entry_id
+        })?.clone();
+
+        let plugin = self.plugins.iter_mut().find(|plugin| {
             plugin
                 .entries
                 .iter()
-                .any(|entry| entry.id.eq(&active_entry_id))
-        });
-        if plugin_option.is_none() {
-            return iced::Command::none();
-        }
-        let plugin = plugin_option.unwrap();
+                .any(|entry| entry.id == *active_entry_id)
+        })?;
+
 
         plugin
             .app_channel_out
-            .try_send(model::PluginRequest::Activate(active_entry_id.clone()))
+            .try_send(model::PluginRequest::Activate(entry))
             .ok();
-        return iced::Command::none();
+        return Some(iced::Command::none());
     }
 }
 

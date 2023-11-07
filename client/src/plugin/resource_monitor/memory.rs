@@ -45,6 +45,7 @@ impl Plugin for MemoryPlugin {
             title,
             action: String::from(""),
             meta: String::from("Resource Monitor Memory RAM"),
+            command: None,
         });
 
         return Ok(());

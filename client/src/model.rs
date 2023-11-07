@@ -13,10 +13,25 @@ pub struct Entry {
     pub title: String,
     pub action: String,
     pub meta: String,
+    pub command: Option<Vec<String>>,
+}
+
+impl Eq for Entry {}
+
+impl PartialEq for Entry {
+    fn eq(&self, other: &Self) -> bool {
+        return self.id == other.id;
+    }
+}
+
+impl std::hash::Hash for Entry {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
 }
 
 pub enum PluginRequest {
     Search(String),
     Timeout,
-    Activate(String),
+    Activate(Entry),
 }

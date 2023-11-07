@@ -70,6 +70,7 @@ impl Plugin for WindowsPlugin {
                     title,
                     action: String::from("focus"),
                     meta: String::from(Self::id()),
+                    command: None,
                 };
             })
             .collect();
@@ -79,21 +80,21 @@ impl Plugin for WindowsPlugin {
 
     fn activate(
         &mut self,
-        entry_id: String,
+        entry: crate::model::Entry,
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
         self.sway
-            .run_command(format!("[con_id={}] focus", entry_id))
+            .run_command(format!("[con_id={}] focus", entry.id))
             .context(format!(
                 "Failed to focus window while activating entry with id '{}'.",
-                entry_id
+                entry.id
             ))?;
 
         plugin_channel_out
             .try_send(crate::Message::Exit)
             .context(format!(
                 "Failed to send message to exit application while activating entry with id '{}'.",
-                entry_id
+                entry.id
             ))?;
 
         return Ok(());

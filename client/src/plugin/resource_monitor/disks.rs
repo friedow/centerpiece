@@ -54,6 +54,7 @@ impl Plugin for DisksPlugin {
                 title,
                 action: String::from(""),
                 meta: String::from("Resource Monitor Disks"),
+                command: None,
             });
         }
 

@@ -42,6 +42,7 @@ impl Plugin for CpuPlugin {
                 ),
                 action: String::from(""),
                 meta: String::from("Resource Monitor CPU"),
+                command: None,
             });
         }
 

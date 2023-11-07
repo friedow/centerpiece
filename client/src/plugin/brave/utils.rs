@@ -47,6 +47,7 @@ impl Into<crate::model::Entry> for &UrlBookmark {
             title: self.name.clone(),
             action: String::from("open"),
             meta: String::from("Bookmarks"),
+            command: None,
         };
     }
 }

@@ -44,6 +44,7 @@ impl Plugin for GitRepositoriesPlugin {
                     title: git_repository_display_name,
                     action: String::from("focus"),
                     meta: String::from("windows"),
+                    command: None,
                 });
             })
             .collect();
@@ -53,41 +54,41 @@ impl Plugin for GitRepositoriesPlugin {
 
     fn activate(
         &mut self,
-        entry_id: String,
+        entry: crate::model::Entry,
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
         std::process::Command::new("alacritty")
             .arg("--working-directory")
-            .arg(&entry_id)
+            .arg(&entry.id)
             .spawn()
             .context(format!(
                 "Failed to launch terminal while activating entry with id '{}'.",
-                entry_id
+                entry.id
             ))?;
 
         std::process::Command::new("sublime_text")
             .arg("--new-window")
-            .arg(&entry_id)
+            .arg(&entry.id)
             .spawn()
             .context(format!(
                 "Failed to launch editor while activating entry with id '{}'.",
-                entry_id
+                entry.id
             ))?;
 
         std::process::Command::new("sublime_merge")
             .arg("--new-window")
-            .arg(&entry_id)
+            .arg(&entry.id)
             .spawn()
             .context(format!(
                 "Failed to launch git ui while activating entry with id '{}'.",
-                entry_id
+                entry.id
             ))?;
 
         plugin_channel_out
             .try_send(crate::Message::Exit)
             .context(format!(
                 "Failed to send message to exit application while activating entry with id '{}'.",
-                entry_id
+                entry.id
             ))?;
 
         return Ok(());

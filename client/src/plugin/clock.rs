@@ -35,12 +35,14 @@ impl Plugin for ClockPlugin {
                 title: date.format("%H:%M:%S").to_string(),
                 action: String::from(""),
                 meta: String::from("Clock Time"),
+                command: None,
             },
             crate::model::Entry {
                 id: String::from("date"),
                 title: date.format("%A, %_d. %B %Y").to_string(),
                 action: String::from(""),
                 meta: String::from("Clock Date"),
+                command: None,
             },
         ];
 

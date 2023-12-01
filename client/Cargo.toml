@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 # general
 log = { version = "0.4.20", features = ["kv_unstable_serde"] }
-simple_logger = { version = "4.2.0", features = ["colors", "threads", "timestamps", "stderr"] }
+simple_logger = { version = "4.3.0", features = ["colors", "threads", "timestamps", "stderr"] }
 anyhow = { version = "1.0.75", features = ["backtrace"] }
 
 # application window

@@ -30,7 +30,7 @@ chrono = "0.4.26"
 freedesktop-desktop-entry = "0.5.0"
 
 # windows plugin
-swayipc = "3.0.1"
+swayipc = "3.0.2"
 
 # system monitor plugin
 sysinfo = "0.29.11"

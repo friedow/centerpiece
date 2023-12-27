@@ -1,5 +1,4 @@
 use anyhow::Context;
-use fuzzy_matcher::FuzzyMatcher;
 use iced::futures::StreamExt;
 
 pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>(

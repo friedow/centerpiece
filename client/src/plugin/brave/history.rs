@@ -1,8 +1,6 @@
 use crate::plugin::utils::Plugin;
 use anyhow::Context;
 
-use sqlite::State;
-
 pub struct HistoryPlugin {
     entries: Vec<crate::model::Entry>,
 }
@@ -13,7 +11,7 @@ impl Plugin for HistoryPlugin {
     }
 
     fn priority() -> u32 {
-        return 99;
+        return 0;
     }
 
     fn title() -> &'static str {
@@ -25,17 +23,29 @@ impl Plugin for HistoryPlugin {
     }
 
     fn new() -> Self {
-        println!("------------------------------------------ HELLOOOOOOOOOO");
+        return Self { entries: vec![] };
+    }
 
-        let home_directory = std::env::var("HOME").unwrap();
+    fn update_entries(&mut self) -> anyhow::Result<()> {
+        self.entries.clear();
+
+        let home_directory =
+            std::env::var("HOME").context("Could not read HOME environment variable")?;
+
+        let cache_directory_path = std::path::Path::new(&home_directory).join(".cache/centerpiece");
+        std::fs::create_dir_all(&cache_directory_path)
+            .context("Error while creating cache directory")?;
 
         let history_file_path = std::path::Path::new(&home_directory)
             .join(".config/BraveSoftware/Brave-Browser/Default/History");
+        let history_cache_file_path = cache_directory_path.join("brave-history.sqlite");
 
-        // TODO: database is locked, needs to becopied first
-        let connection = sqlite::open(history_file_path).unwrap();
+        std::fs::copy(&history_file_path, &history_cache_file_path)
+            .context("Error while creating cache directory")?;
 
-        let query = "SELECT * FROM urls";
+        let connection = sqlite::open(history_cache_file_path).unwrap();
+
+        let query = "SELECT title, url FROM urls ORDER BY visit_count DESC, last_visit_time DESC";
         connection.execute(query).unwrap();
         let url_rows = connection
             .prepare(query)
@@ -43,17 +53,20 @@ impl Plugin for HistoryPlugin {
             .into_iter()
             .map(|row| row.unwrap());
 
-        for url_row in url_rows {
-            println!("title = {}", url_row.read::<&str, _>("title"));
-            println!("url = {}", url_row.read::<&str, _>("url"));
-        }
+        self.entries = url_rows
+            .map(|row| {
+                let title = row.read::<&str, _>("title");
+                let url = row.read::<&str, _>("url");
 
-        return Self { entries: vec![] };
-    }
-
-    fn update_entries(&mut self) -> anyhow::Result<()> {
-        self.entries.clear();
-        // TODO: add entries here
+                return crate::model::Entry {
+                    id: url.to_string(),
+                    title: title.to_string(),
+                    action: String::from("open"),
+                    meta: String::from("History"),
+                    command: None,
+                };
+            })
+            .collect();
 
         return Ok(());
     }
@@ -67,7 +80,7 @@ impl Plugin for HistoryPlugin {
             .arg(&entry.id)
             .spawn()
             .context(format!(
-                "Failed to launch brave in app mode while activating entry with id '{}'.",
+                "Failed to launch brave while activating entry with id '{}'.",
                 entry.id
             ))?;
 

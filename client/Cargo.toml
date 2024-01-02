@@ -8,19 +8,18 @@ edition = "2021"
 [dependencies]
 # general
 log = { version = "0.4.20", features = ["kv_unstable_serde"] }
-simple_logger = { version = "4.2.0", features = ["colors", "threads", "timestamps", "stderr"] }
-anyhow = { version = "1.0.75", features = ["backtrace"] }
+simple_logger = { version = "4.3.3", features = ["colors", "threads", "timestamps", "stderr"] }
+anyhow = { version = "1.0.78", features = ["backtrace"] }
 
 # application window
 iced = { version = "0.10.0", features = ["svg"] }
 
 # plugins
-fuzzy-matcher = "0.3.7"
-async-trait = "0.1.74"
+async-trait = "0.1.76"
 async-std = "1.12.0"
 
 # reading index files
-serde = "1.0.190"
+serde = "1.0.193"
 serde_json = "1.0.108"
 
 # clock plugin
@@ -33,11 +32,11 @@ freedesktop-desktop-entry = "0.5.0"
 swayipc = "3.0.1"
 
 # system monitor plugin
-sysinfo = "0.29.10"
+sysinfo = "0.29.11"
 battery = "0.7.8"
 
 # brave history
-sqlite = "0.31.1"
+sqlite = "0.32.0"
 
 # wifi
 networkmanager = "0.4.0"

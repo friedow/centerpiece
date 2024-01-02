@@ -77,7 +77,9 @@ impl Application for Centerpiece {
                 iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
                     key_code: iced::keyboard::KeyCode::Enter,
                     ..
-                }) => self.activate_selected_entry().unwrap_or(iced::Command::none()),
+                }) => self
+                    .activate_selected_entry()
+                    .unwrap_or(iced::Command::none()),
 
                 iced::Event::Keyboard(iced::keyboard::Event::KeyReleased {
                     key_code: iced::keyboard::KeyCode::Escape,
@@ -131,6 +133,7 @@ impl Application for Centerpiece {
             crate::plugin::utils::spawn::<crate::plugin::resource_monitor::memory::MemoryPlugin>(),
             crate::plugin::utils::spawn::<crate::plugin::resource_monitor::disks::DisksPlugin>(),
             crate::plugin::utils::spawn::<crate::plugin::clock::ClockPlugin>(),
+            crate::plugin::utils::spawn::<crate::plugin::brave::history::HistoryPlugin>(),
         ]);
     }
 
@@ -309,9 +312,11 @@ impl Centerpiece {
     fn activate_selected_entry(&mut self) -> Option<iced::Command<Message>> {
         let active_entry_id = self.active_entry_id()?.clone();
 
-        let entry = self.entries().into_iter().find(|entry| {
-            entry.id == *active_entry_id
-        })?.clone();
+        let entry = self
+            .entries()
+            .into_iter()
+            .find(|entry| entry.id == *active_entry_id)?
+            .clone();
 
         let plugin = self.plugins.iter_mut().find(|plugin| {
             plugin

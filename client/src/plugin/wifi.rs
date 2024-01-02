@@ -2,8 +2,8 @@ use std::println;
 
 use anyhow::Context;
 use dbus::blocking::Connection;
-use networkmanager::devices::{Any, Device, WiFiDevice, Wired, Wireless};
-use networkmanager::{Error, NetworkManager};
+use networkmanager::devices::{Device, Wireless};
+use networkmanager::NetworkManager;
 
 use crate::plugin::utils::Plugin;
 
@@ -14,29 +14,56 @@ pub struct WifiPlugin {
 impl WifiPlugin {
     fn get_access_point_entries(&self) -> Result<Vec<crate::model::Entry>, networkmanager::Error> {
         let dbus_connection = Connection::new_system()?;
-        println!("---- dbus constructed");
         let nm = NetworkManager::new(&dbus_connection);
-        println!("---- nm constructed");
         let device = nm.get_device_by_ip_iface("wlo1")?;
 
         match device {
             Device::WiFi(wifi_device) => {
-                println!("---- wwifi device found");
                 wifi_device.request_scan(std::collections::HashMap::new())?;
-                return Ok(wifi_device
-                    .get_access_points()?
+                let mut access_points = wifi_device.get_access_points()?;
+                access_points.sort_by_key(|access_point| access_point.strength().ok().unwrap());
+                access_points.reverse();
+                access_points.sort_by_key(|access_point| access_point.ssid().ok().unwrap());
+                access_points.dedup_by_key(|access_point| access_point.ssid().ok().unwrap());
+                access_points.sort_by_key(|access_point| access_point.strength().ok().unwrap());
+                access_points.reverse();
+
+                let wifi_network_entries: Vec<crate::model::Entry> = access_points
                     .into_iter()
                     .filter_map(|access_point| {
                         let ssid = access_point.ssid().ok()?;
+                        let strength = access_point.strength().ok()?;
+
+                        let strength_icon = match access_point.rsn_flags().ok()? {
+                            0 => match strength {
+                                0..=20 => "󰤯",
+                                21..=40 => "󰤟",
+                                41..=60 => "󰤢",
+                                61..=80 => "󰤥",
+                                81..=100 => "󰤨",
+                                _ => "󰤫",
+                            },
+                            _ => match strength {
+                                0..=20 => "󰤬",
+                                21..=40 => "󰤡",
+                                41..=60 => "󰤤",
+                                61..=80 => "󰤧",
+                                81..=100 => "󰤪",
+                                _ => "󰤫",
+                            },
+                        };
+
+                        println!("{}", access_point.wpa_flags().ok()?);
                         return Some(crate::model::Entry {
                             id: ssid.clone(),
-                            title: ssid,
+                            title: format!("{} {}", strength_icon, ssid),
                             action: String::from("connect"),
-                            meta: String::from("Wifi WLAN Wireless Lan"),
+                            meta: String::from("wifi wlan wireless lan"),
                             command: None,
                         });
                     })
-                    .collect());
+                    .collect();
+                return Ok(wifi_network_entries);
             }
             _ => {}
         }
@@ -65,14 +92,14 @@ impl Plugin for WifiPlugin {
     fn update_entries(&mut self) -> anyhow::Result<()> {
         self.entries.clear();
 
-        println!("TEST===================================================================================");
         let access_point_entries_result = self.get_access_point_entries();
         if let Err(error) = access_point_entries_result {
             println!("{:?}", error);
-            return Err(anyhow::anyhow!("Toast"));
+            return Err(anyhow::anyhow!("Failed to get access points."));
         }
 
         self.entries = access_point_entries_result.unwrap();
+
         return Ok(());
     }
 

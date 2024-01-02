@@ -8,12 +8,14 @@ edition = "2021"
 [dependencies]
 # general
 log = { version = "0.4.20", features = ["kv_unstable_serde"] }
-simple_logger = { version = "4.2.0", features = ["colors", "threads", "timestamps", "stderr"] }
-anyhow = { version = "1.0.75", features = ["backtrace"] }
+simple_logger = { version = "4.3.3", features = ["colors", "threads", "timestamps", "stderr"] }
+anyhow = { version = "1.0.78", features = ["backtrace"] }
 
 # application window
 iced = { version = "0.10.0", features = ["svg"] }
-async-trait = "0.1.74"
+
+# plugins
+async-trait = "0.1.76"
 async-std = "1.12.0"
 
 # reading index files
@@ -34,4 +36,4 @@ sysinfo = "0.29.11"
 battery = "0.7.8"
 
 # brave history
-sqlite = "0.31.1"
+sqlite = "0.32.0"

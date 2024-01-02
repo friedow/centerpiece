@@ -34,6 +34,8 @@ impl WifiPlugin {
                         let ssid = access_point.ssid().ok()?;
                         let strength = access_point.strength().ok()?;
 
+                        // TODO: highlight connected network
+                        // TODO: double check error handling
                         let strength_icon = match access_point.rsn_flags().ok()? {
                             0 => match strength {
                                 0..=20 => "󰤯",

@@ -15,7 +15,6 @@ anyhow = { version = "1.0.78", features = ["backtrace"] }
 iced = { version = "0.10.0", features = ["svg"] }
 
 # plugins
-fuzzy-matcher = "0.3.7"
 async-trait = "0.1.76"
 async-std = "1.12.0"
 

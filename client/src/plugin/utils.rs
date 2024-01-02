@@ -1,5 +1,4 @@
 use anyhow::Context;
-use fuzzy_matcher::FuzzyMatcher;
 use iced::futures::StreamExt;
 
 pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>(
@@ -152,31 +151,18 @@ pub trait Plugin {
 }
 
 pub fn search(entries: Vec<crate::model::Entry>, query: &String) -> Vec<crate::model::Entry> {
-    let matcher = fuzzy_matcher::skim::SkimMatcherV2::default();
-
     if query.is_empty() {
         let mut sorted_entries = entries.clone();
         sorted_entries.sort_by_key(|entry| entry.title.clone());
         return sorted_entries;
     }
 
-    let mut filtered_entries = entries
+    return entries
         .into_iter()
-        .filter_map(|entry| {
-            let keywords = format!("{} {}", entry.title, entry.meta);
-            let match_result = matcher.fuzzy_indices(&keywords, query);
-            if match_result.is_none() {
-                return None;
-            }
-            let (score, _) = match_result.unwrap();
-            return Some((score, entry));
+        .filter(|entry| {
+            let keywords = format!("{} {}", entry.title, entry.meta).to_lowercase();
+            return keywords.contains(&query.to_lowercase());
         })
-        .collect::<Vec<(i64, crate::model::Entry)>>();
-
-    filtered_entries.sort_by(|(a_score, _), (b_score, _)| b_score.cmp(a_score));
-    return filtered_entries
-        .into_iter()
-        .map(|(_, entry)| entry)
         .collect::<Vec<crate::model::Entry>>();
 }
 

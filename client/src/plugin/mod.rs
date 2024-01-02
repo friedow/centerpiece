@@ -5,4 +5,5 @@ pub mod git_repositories;
 pub mod resource_monitor;
 pub mod system;
 pub mod utils;
+pub mod wifi;
 pub mod windows;

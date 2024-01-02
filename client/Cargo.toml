@@ -38,3 +38,7 @@ battery = "0.7.8"
 
 # brave history
 sqlite = "0.31.1"
+
+# wifi
+networkmanager = "0.4.0"
+dbus = "0.9.7"

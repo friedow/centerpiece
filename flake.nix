@@ -2,7 +2,8 @@
   description = "Your trusty omnibox search.";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    home-manager.url = "github:nix-community/home-manager";
     crane = {
       url = "github:ipetkov/crane";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -14,6 +15,7 @@
       self,
       nixpkgs,
       crane,
+      home-manager,
     }:
     let
       system = "x86_64-linux";
@@ -106,6 +108,7 @@
             inherit cargoArtifacts;
             pname = "index-git-repositories";
             cargoExtraArgs = "-p ${pname}";
+            meta.mainProgram = pname;
           }
         );
       };
@@ -113,6 +116,10 @@
         inherit (self.outputs.packages.${system}) default index-git-repositories;
         shell = self.outputs.devShells.${system}.default;
         inherit cargoClippy;
+      };
+      hmModules.${system}.default = import ./home-manager-module.nix {
+        centerpiece = self.outputs.packages.${system}.default;
+        inherit (self.outputs.packages.${system}) index-git-repositories;
       };
     };
 }

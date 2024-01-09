@@ -15,7 +15,16 @@ impl WifiPlugin {
     fn get_access_point_entries(&self) -> Result<Vec<crate::model::Entry>, networkmanager::Error> {
         let dbus_connection = Connection::new_system()?;
         let nm = NetworkManager::new(&dbus_connection);
-        let device = nm.get_device_by_ip_iface("wlo1")?;
+        let devices = nm.get_devices()?;
+        let device = devices
+            .into_iter()
+            .find(|device| {
+                return match device {
+                    Device::WiFi(_) => true,
+                    _ => false,
+                };
+            })
+            .ok_or(networkmanager::Error::UnsupportedDevice)?;
 
         match device {
             Device::WiFi(wifi_device) => {

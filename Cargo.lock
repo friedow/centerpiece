@@ -1917,8 +1917,7 @@ dependencies = [
 [[package]]
 name = "networkmanager"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5bc2c3495d1d015f7ad8fbbdd88a4fe329d9ee44d4bca4448e3fadf6c297876e"
+source = "git+https://github.com/exit91/networkmanager-rs#c941897bf7a17e05e666e23377f0ac6fbaf79752"
 dependencies = [
  "dbus",
  "num-derive",

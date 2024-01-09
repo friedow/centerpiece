@@ -18,6 +18,7 @@ pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>(
                 panic!();
             }
 
+            #[allow(clippy::never_loop)]
             loop {
                 unreachable!();
             }

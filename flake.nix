@@ -27,14 +27,15 @@
         cargo
       ];
 
-      nativeBuildInputs =
-        with pkgs;
-        [
-          # cmake pkgconf
-          makeWrapper
-        ];
+      nativeBuildInputs = with pkgs; [
+        makeWrapper
+        # wifi plugin
+        # cargo networkmanager dependency
+        pkgconf
+        dbus
+      ];
 
-      buildInputs = with pkgs; [ ];
+      buildInputs = with pkgs; [ dbus ];
 
       cargoTOML = builtins.fromTOML (builtins.readFile (./. + "/Cargo.toml"));
 
@@ -50,7 +51,12 @@
           src = craneLib.path ./.;
           filter = assetOrCargo;
         };
-        inherit pname version;
+        inherit
+          pname
+          version
+          buildInputs
+          nativeBuildInputs
+        ;
       };
       cargoArtifacts = craneLib.buildDepsOnly commonArgs;
       cargoClippy = craneLib.cargoClippy (

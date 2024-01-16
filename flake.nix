@@ -21,7 +21,11 @@
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
 
-      devInputs = with pkgs; [ rustc rustfmt cargo ];
+      devInputs = with pkgs; [
+        rustc
+        rustfmt
+        cargo
+      ];
 
       nativeBuildInputs = with pkgs; [
         makeWrapper
@@ -31,7 +35,7 @@
         dbus
       ];
 
-      buildInputs = with pkgs; [ ];
+      buildInputs = with pkgs; [ dbus ];
 
       cargoTOML = builtins.fromTOML (builtins.readFile (./. + "/Cargo.toml"));
 
@@ -40,21 +44,30 @@
 
       craneLib = crane.lib.${system};
       assetFilter = path: _type: builtins.match ".*ttf$" path != null;
-      assetOrCargo = path: type:
-        (assetFilter path type) || (craneLib.filterCargoSources path type);
+      assetOrCargo =
+        path: type: (assetFilter path type) || (craneLib.filterCargoSources path type);
       commonArgs = {
         src = pkgs.lib.cleanSourceWith {
           src = craneLib.path ./.;
           filter = assetOrCargo;
         };
-        inherit pname version;
+        inherit
+          pname
+          version
+          buildInputs
+          nativeBuildInputs
+        ;
       };
       cargoArtifacts = craneLib.buildDepsOnly commonArgs;
-      cargoClippy = craneLib.cargoClippy (commonArgs // {
-        inherit cargoArtifacts;
-        cargoClippyExtraArgs = "--all-targets --all-features";
-      });
-    in {
+      cargoClippy = craneLib.cargoClippy (
+        commonArgs
+        // {
+          inherit cargoArtifacts;
+          cargoClippyExtraArgs = "--all-targets --all-features";
+        }
+      );
+    in
+    {
       devShells.${system}.default = pkgs.mkShell {
         inherit nativeBuildInputs buildInputs;
         packages = devInputs;
@@ -106,8 +119,7 @@
         );
       };
       checks.${system} = {
-        inherit (self.outputs.packages.${system})
-          default index-git-repositories;
+        inherit (self.outputs.packages.${system}) default index-git-repositories;
         shell = self.outputs.devShells.${system}.default;
         inherit cargoClippy;
       };

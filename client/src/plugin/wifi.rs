@@ -1,9 +1,8 @@
-use std::println;
-
-use anyhow::Context;
+use anyhow::{anyhow, Context, Result};
 use dbus::blocking::Connection;
 use networkmanager::devices::{Device, Wireless};
 use networkmanager::NetworkManager;
+use std::matches;
 
 use crate::plugin::utils::Plugin;
 
@@ -12,74 +11,91 @@ pub struct WifiPlugin {
 }
 
 impl WifiPlugin {
-    fn get_access_point_entries(&self) -> Result<Vec<crate::model::Entry>, networkmanager::Error> {
+    fn get_access_point_entries(&self) -> Result<Vec<crate::model::Entry>> {
+        // get wifi device
         let dbus_connection = Connection::new_system()?;
         let nm = NetworkManager::new(&dbus_connection);
-        let devices = nm.get_devices()?;
-        let device = devices
+        let devices = nm
+            .get_devices()
+            .map_err(|_| anyhow!("Unable to get network devices."))?;
+
+        let first_wifi_device = devices
             .into_iter()
-            .find(|device| {
-                return match device {
-                    Device::WiFi(_) => true,
-                    _ => false,
+            .find(|device| matches!(device, Device::WiFi(_)))
+            .ok_or(anyhow!("Unable to find a wifi network device."))?;
+
+        let wifi_device = match first_wifi_device {
+            Device::WiFi(wifi_device) => wifi_device,
+            _ => unreachable!("The found wifi network device is no wifi network device."),
+        };
+
+        // get access points
+        wifi_device
+            .request_scan(std::collections::HashMap::new())
+            .map_err(|_| anyhow!("Failed to request scan for wifi access points."))?;
+        let mut access_points = wifi_device
+            .get_access_points()
+            .map_err(|_| anyhow!("Failed to get access points from wifi device."))?;
+
+        let active_access_point_ssid = match wifi_device.active_access_point() {
+            Ok(access_point) => access_point.ssid().unwrap_or(String::new()),
+            Err(_) => String::new(),
+        };
+
+        // dedup access points by name and sort by signal strengh
+        access_points.sort_by_key(|access_point| access_point.strength().ok().unwrap());
+        access_points.reverse();
+        access_points.sort_by_key(|access_point| access_point.ssid().ok().unwrap());
+        access_points.dedup_by_key(|access_point| access_point.ssid().ok().unwrap());
+        access_points.sort_by_key(|access_point| access_point.strength().ok().unwrap());
+        access_points.reverse();
+
+        let wifi_network_entries: Vec<crate::model::Entry> = access_points
+            .into_iter()
+            .filter_map(|access_point| {
+                let ssid = access_point.ssid().ok()?;
+                let strength = access_point.strength().ok()?;
+
+                let strength_icon = match access_point.rsn_flags().ok()? {
+                    0 => match strength {
+                        0..=20 => "󰤯",
+                        21..=40 => "󰤟",
+                        41..=60 => "󰤢",
+                        61..=80 => "󰤥",
+                        81..=100 => "󰤨",
+                        _ => "󰤫",
+                    },
+                    _ => match strength {
+                        0..=20 => "󰤬",
+                        21..=40 => "󰤡",
+                        41..=60 => "󰤤",
+                        61..=80 => "󰤧",
+                        81..=100 => "󰤪",
+                        _ => "󰤫",
+                    },
                 };
+
+                let connected_icon = match active_access_point_ssid == ssid {
+                    true => String::from(" 󰄬"),
+                    false => String::new(),
+                };
+
+                return Some(crate::model::Entry {
+                    id: ssid.clone(),
+                    title: format!("{}{} {}", strength_icon, connected_icon, ssid.clone()),
+                    action: String::from("connect"),
+                    meta: String::from("wifi wlan wireless lan"),
+                    command: Some(vec![
+                        String::from("nmcli"),
+                        String::from("device"),
+                        String::from("wifi"),
+                        String::from("connect"),
+                        ssid,
+                    ]),
+                });
             })
-            .ok_or(networkmanager::Error::UnsupportedDevice)?;
-
-        match device {
-            Device::WiFi(wifi_device) => {
-                wifi_device.request_scan(std::collections::HashMap::new())?;
-                let mut access_points = wifi_device.get_access_points()?;
-                access_points.sort_by_key(|access_point| access_point.strength().ok().unwrap());
-                access_points.reverse();
-                access_points.sort_by_key(|access_point| access_point.ssid().ok().unwrap());
-                access_points.dedup_by_key(|access_point| access_point.ssid().ok().unwrap());
-                access_points.sort_by_key(|access_point| access_point.strength().ok().unwrap());
-                access_points.reverse();
-
-                let wifi_network_entries: Vec<crate::model::Entry> = access_points
-                    .into_iter()
-                    .filter_map(|access_point| {
-                        let ssid = access_point.ssid().ok()?;
-                        let strength = access_point.strength().ok()?;
-
-                        // TODO: highlight connected network
-                        // TODO: double check error handling
-                        let strength_icon = match access_point.rsn_flags().ok()? {
-                            0 => match strength {
-                                0..=20 => "󰤯",
-                                21..=40 => "󰤟",
-                                41..=60 => "󰤢",
-                                61..=80 => "󰤥",
-                                81..=100 => "󰤨",
-                                _ => "󰤫",
-                            },
-                            _ => match strength {
-                                0..=20 => "󰤬",
-                                21..=40 => "󰤡",
-                                41..=60 => "󰤤",
-                                61..=80 => "󰤧",
-                                81..=100 => "󰤪",
-                                _ => "󰤫",
-                            },
-                        };
-
-                        println!("{}", access_point.wpa_flags().ok()?);
-                        return Some(crate::model::Entry {
-                            id: ssid.clone(),
-                            title: format!("{} {}", strength_icon, ssid),
-                            action: String::from("connect"),
-                            meta: String::from("wifi wlan wireless lan"),
-                            command: None,
-                        });
-                    })
-                    .collect();
-                return Ok(wifi_network_entries);
-            }
-            _ => {}
-        }
-
-        return Err(networkmanager::Error::UnsupportedDevice);
+            .collect();
+        return Ok(wifi_network_entries);
     }
 }
 
@@ -102,15 +118,7 @@ impl Plugin for WifiPlugin {
 
     fn update_entries(&mut self) -> anyhow::Result<()> {
         self.entries.clear();
-
-        let access_point_entries_result = self.get_access_point_entries();
-        if let Err(error) = access_point_entries_result {
-            println!("{:?}", error);
-            return Err(anyhow::anyhow!("Failed to get access points."));
-        }
-
-        self.entries = access_point_entries_result.unwrap();
-
+        self.entries = self.get_access_point_entries()?;
         return Ok(());
     }
 

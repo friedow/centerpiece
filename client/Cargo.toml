@@ -39,6 +39,5 @@ battery = "0.7.8"
 sqlite = "0.32.0"
 
 # wifi
-# TODO: revert this to "0.4.0" when https://github.com/truehumandesign/networkmanager-rs/pull/9 is merged
-networkmanager = { git = "https://github.com/exit91/networkmanager-rs" }
+networkmanager = "0.4.1"
 dbus = "0.9.7"

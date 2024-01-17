@@ -6,7 +6,7 @@ mod plugin;
 
 pub fn main() -> iced::Result {
     simple_logger::init_with_level(log::Level::Info).unwrap();
-    return Centerpiece::run(Centerpiece::settings());
+    Centerpiece::run(Centerpiece::settings())
 }
 
 #[derive(Debug, Clone)]
@@ -43,14 +43,14 @@ impl Application for Centerpiece {
             include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Light.ttf").as_slice(),
         );
 
-        return (
+        (
             Self {
                 query: String::from(""),
                 active_entry_index: 0,
                 plugins: vec![],
             },
             iced::Command::perform(async {}, move |()| Message::Loaded),
-        );
+        )
     }
 
     fn title(&self) -> String {
@@ -104,7 +104,7 @@ impl Application for Centerpiece {
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-        return iced::subscription::Subscription::batch(vec![
+        iced::subscription::Subscription::batch(vec![
             iced::subscription::events_with(|event, _status| match event {
                 iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
                     modifiers: _,
@@ -128,20 +128,21 @@ impl Application for Centerpiece {
             crate::plugin::utils::spawn::<crate::plugin::brave::bookmarks::BookmarksPlugin>(),
             crate::plugin::utils::spawn::<crate::plugin::system::SystemPlugin>(),
             crate::plugin::utils::spawn::<crate::plugin::wifi::WifiPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::resource_monitor::battery::BatteryPlugin>(),
+            crate::plugin::utils::spawn::<crate::plugin::resource_monitor::battery::BatteryPlugin>(
+            ),
             crate::plugin::utils::spawn::<crate::plugin::resource_monitor::cpu::CpuPlugin>(),
             crate::plugin::utils::spawn::<crate::plugin::resource_monitor::memory::MemoryPlugin>(),
             crate::plugin::utils::spawn::<crate::plugin::resource_monitor::disks::DisksPlugin>(),
             crate::plugin::utils::spawn::<crate::plugin::clock::ClockPlugin>(),
             crate::plugin::utils::spawn::<crate::plugin::brave::history::HistoryPlugin>(),
-        ]);
+        ])
     }
 
     fn view(&self) -> iced::Element<Message> {
         let entries = self.entries();
 
         iced::widget::container(iced::widget::column![
-            component::query_input::view(&self.query, entries.len() > 0),
+            component::query_input::view(&self.query, !entries.is_empty()),
             iced::widget::scrollable(iced::widget::column(
                 self.plugins
                     .iter()
@@ -166,27 +167,28 @@ impl Application for Centerpiece {
     }
 
     fn theme(&self) -> iced::Theme {
-        return iced::Theme::Dark;
+        iced::Theme::Dark
     }
 
     fn style(&self) -> iced::theme::Application {
-        return iced::theme::Application::Custom(Box::new(SandboxStyle {}));
+        iced::theme::Application::Custom(Box::new(SandboxStyle {}))
     }
 }
 
 impl Centerpiece {
     fn settings() -> iced::Settings<()> {
-        let mut settings = iced::Settings::default();
-        settings.default_text_size = REM;
-        settings.default_font = iced::Font {
+        let default_text_size = REM;
+
+        let default_font = iced::Font {
             family: iced::font::Family::Name("FiraCode Nerd Font"),
             weight: iced::font::Weight::Normal,
             stretch: iced::font::Stretch::Normal,
             monospaced: true,
         };
-        settings.id = Some(APP_ID.into());
 
-        settings.window = iced::window::Settings {
+        let id = Some(APP_ID.into());
+
+        let window = iced::window::Settings {
             transparent: true,
             size: (650, 400),
             decorations: false,
@@ -199,13 +201,20 @@ impl Centerpiece {
             visible: true,
             platform_specific: Self::platform_specific_settings(),
         };
-        return settings;
+
+        iced::Settings {
+            id,
+            window,
+            default_font,
+            default_text_size,
+            ..Default::default()
+        }
     }
 
     fn platform_specific_settings() -> iced::window::PlatformSpecific {
-        let mut specific = iced::window::PlatformSpecific::default();
-        specific.application_id = APP_ID.into();
-        specific
+        iced::window::PlatformSpecific {
+            application_id: APP_ID.into(),
+        }
     }
 
     fn entries(&self) -> Vec<&model::Entry> {
@@ -219,10 +228,10 @@ impl Centerpiece {
     fn active_entry_id(&self) -> Option<&String> {
         let entries = self.entries();
         let active_entry = entries.get(self.active_entry_index);
-        return match active_entry {
+        match active_entry {
             Some(entry) => Some(&entry.id),
             None => None,
-        };
+        }
     }
 
     fn search(&mut self, input: String) -> iced::Command<Message> {
@@ -233,23 +242,23 @@ impl Centerpiece {
         }
 
         self.query = input;
-        return self.select_first_entry();
+        self.select_first_entry()
     }
 
     fn focus_search_input(&self) -> iced::Command<Message> {
-        return iced::widget::text_input::focus(iced::widget::text_input::Id::new(
+        iced::widget::text_input::focus(iced::widget::text_input::Id::new(
             component::query_input::SEARCH_INPUT_ID,
-        ));
+        ))
     }
 
     fn select_first_entry(&mut self) -> iced::Command<Message> {
         self.active_entry_index = 0;
-        return self.scroll_to_selected_entry();
+        self.scroll_to_selected_entry()
     }
 
     fn select_previous_entry(&mut self) -> iced::Command<Message> {
         let entries = self.entries();
-        if entries.len() == 0 {
+        if entries.is_empty() {
             return self.select_first_entry();
         }
 
@@ -259,32 +268,32 @@ impl Centerpiece {
         }
 
         self.active_entry_index -= 1;
-        return self.scroll_to_selected_entry();
+        self.scroll_to_selected_entry()
     }
 
     fn select_next_entry(&mut self) -> iced::Command<Message> {
         let entries = self.entries();
-        if entries.len() == 0 || self.active_entry_index == entries.len() - 1 {
+        if entries.is_empty() || self.active_entry_index == entries.len() - 1 {
             return self.select_first_entry();
         }
 
         self.active_entry_index += 1;
-        return self.scroll_to_selected_entry();
+        self.scroll_to_selected_entry()
     }
 
     fn scroll_to_selected_entry(&self) -> iced::Command<Message> {
         let total_entries = self.entries().len() as f32;
         let offset = (1.0 / (total_entries - 1.0)) * self.active_entry_index as f32;
-        return iced::widget::scrollable::snap_to(
+        iced::widget::scrollable::snap_to(
             iced::widget::scrollable::Id::new(SCROLLABLE_ID),
             iced::widget::scrollable::RelativeOffset { x: 0.0, y: offset },
-        );
+        )
     }
 
     fn register_plugin(&mut self, plugin: crate::model::Plugin) -> iced::Command<Message> {
         self.plugins.push(plugin);
         self.plugins.sort_by(|a, b| b.priority.cmp(&a.priority));
-        return iced::Command::none();
+        iced::Command::none()
     }
 
     fn update_entries(
@@ -306,7 +315,7 @@ impl Centerpiece {
 
         let plugin = plugin.unwrap();
         plugin.entries = entries;
-        return iced::Command::none();
+        iced::Command::none()
     }
 
     fn activate_selected_entry(&mut self) -> Option<iced::Command<Message>> {
@@ -329,7 +338,7 @@ impl Centerpiece {
             .app_channel_out
             .try_send(model::PluginRequest::Activate(entry))
             .ok();
-        return Some(iced::Command::none());
+        Some(iced::Command::none())
     }
 }
 
@@ -352,13 +361,13 @@ impl iced::widget::container::StyleSheet for ApplicationWrapperStyle {
     type Style = iced::Theme;
 
     fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
-        return iced::widget::container::Appearance {
+        iced::widget::container::Appearance {
             background: Some(iced::Background::Color(iced::Color::BLACK)),
             border_color: iced::Color::TRANSPARENT,
             border_radius: iced::BorderRadius::from(0.25 * REM),
             border_width: 0.,
             text_color: None,
-        };
+        }
     }
 }
 
@@ -367,7 +376,7 @@ impl iced::widget::scrollable::StyleSheet for ScrollableStyle {
     type Style = iced::Theme;
 
     fn active(&self, _style: &Self::Style) -> iced::widget::scrollable::Scrollbar {
-        return iced::widget::scrollable::Scrollbar {
+        iced::widget::scrollable::Scrollbar {
             background: None,
             border_radius: iced::BorderRadius::from(0.),
             border_width: 0.,
@@ -378,7 +387,7 @@ impl iced::widget::scrollable::StyleSheet for ScrollableStyle {
                 border_width: 4.,
                 border_color: iced::Color::BLACK,
             },
-        };
+        }
     }
 
     fn hovered(
@@ -386,7 +395,7 @@ impl iced::widget::scrollable::StyleSheet for ScrollableStyle {
         _style: &Self::Style,
         _is_mouse_over_scrollbar: bool,
     ) -> iced::widget::scrollable::Scrollbar {
-        return iced::widget::scrollable::Scrollbar {
+        iced::widget::scrollable::Scrollbar {
             background: None,
             border_radius: iced::BorderRadius::from(0.),
             border_width: 0.,
@@ -397,6 +406,6 @@ impl iced::widget::scrollable::StyleSheet for ScrollableStyle {
                 border_width: 4.,
                 border_color: iced::Color::BLACK,
             },
-        };
+        }
     }
 }

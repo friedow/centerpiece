@@ -80,7 +80,7 @@ impl WifiPlugin {
                     false => String::new(),
                 };
 
-                return Some(crate::model::Entry {
+                Some(crate::model::Entry {
                     id: ssid.clone(),
                     title: format!("{}{} {}", strength_icon, connected_icon, ssid.clone()),
                     action: String::from("connect"),
@@ -92,38 +92,38 @@ impl WifiPlugin {
                         String::from("connect"),
                         ssid,
                     ]),
-                });
+                })
             })
             .collect();
-        return Ok(wifi_network_entries);
+        Ok(wifi_network_entries)
     }
 }
 
 impl Plugin for WifiPlugin {
     fn new() -> Self {
-        return Self { entries: vec![] };
+        Self { entries: vec![] }
     }
 
     fn id() -> &'static str {
-        return "wifi";
+        "wifi"
     }
 
     fn priority() -> u32 {
-        return 18;
+        18
     }
 
     fn title() -> &'static str {
-        return "󰖩 Wifi";
+        "󰖩 Wifi"
     }
 
     fn update_entries(&mut self) -> anyhow::Result<()> {
         self.entries.clear();
         self.entries = self.get_access_point_entries()?;
-        return Ok(());
+        Ok(())
     }
 
     fn entries(&self) -> Vec<crate::model::Entry> {
-        return self.entries.clone();
+        self.entries.clone()
     }
 
     fn activate(
@@ -146,6 +146,6 @@ impl Plugin for WifiPlugin {
                 entry.id
             ))?;
 
-        return Ok(());
+        Ok(())
     }
 }

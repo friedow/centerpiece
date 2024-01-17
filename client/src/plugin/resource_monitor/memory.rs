@@ -8,23 +8,23 @@ pub struct MemoryPlugin {
 
 impl Plugin for MemoryPlugin {
     fn id() -> &'static str {
-        return "memory";
+        "memory"
     }
 
     fn priority() -> u32 {
-        return 11;
+        11
     }
 
     fn title() -> &'static str {
-        return "󱓱 Memory";
+        "󱓱 Memory"
     }
 
     fn update_timeout() -> Option<std::time::Duration> {
-        return Some(std::time::Duration::from_secs(2));
+        Some(std::time::Duration::from_secs(2))
     }
 
     fn entries(&self) -> Vec<crate::model::Entry> {
-        return self.entries.clone();
+        self.entries.clone()
     }
 
     fn update_entries(&mut self) -> anyhow::Result<()> {
@@ -48,13 +48,19 @@ impl Plugin for MemoryPlugin {
             command: None,
         });
 
-        return Ok(());
+        Ok(())
     }
 
     fn new() -> Self {
-        return Self {
+        Self {
             sysinfo: sysinfo::System::new_all(),
             entries: vec![],
-        };
+        }
+    }
+}
+
+impl Default for MemoryPlugin {
+    fn default() -> Self {
+        Self::new()
     }
 }

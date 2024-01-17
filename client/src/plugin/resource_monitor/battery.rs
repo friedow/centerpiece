@@ -8,23 +8,23 @@ pub struct BatteryPlugin {
 
 impl Plugin for BatteryPlugin {
     fn id() -> &'static str {
-        return "battery";
+        "battery"
     }
 
     fn priority() -> u32 {
-        return 14;
+        14
     }
 
     fn title() -> &'static str {
-        return "󰁼 Battery";
+        "󰁼 Battery"
     }
 
     fn update_timeout() -> Option<std::time::Duration> {
-        return Some(std::time::Duration::from_secs(2));
+        Some(std::time::Duration::from_secs(2))
     }
 
     fn entries(&self) -> Vec<crate::model::Entry> {
-        return self.entries.clone();
+        self.entries.clone()
     }
 
     fn update_entries(&mut self) -> anyhow::Result<()> {
@@ -65,11 +65,11 @@ impl Plugin for BatteryPlugin {
             });
         }
 
-        return Ok(());
+        Ok(())
     }
 
     fn new() -> Self {
-        return Self { entries: vec![] };
+        Self { entries: vec![] }
     }
 }
 

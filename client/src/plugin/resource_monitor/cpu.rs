@@ -8,23 +8,23 @@ pub struct CpuPlugin {
 
 impl Plugin for CpuPlugin {
     fn id() -> &'static str {
-        return "cpu";
+        "cpu"
     }
 
     fn priority() -> u32 {
-        return 13;
+        13
     }
 
     fn title() -> &'static str {
-        return "󰍛 CPU";
+        "󰍛 CPU"
     }
 
     fn update_timeout() -> Option<std::time::Duration> {
-        return Some(std::time::Duration::from_secs(2));
+        Some(std::time::Duration::from_secs(2))
     }
 
     fn entries(&self) -> Vec<crate::model::Entry> {
-        return self.entries.clone();
+        self.entries.clone()
     }
 
     fn update_entries(&mut self) -> anyhow::Result<()> {
@@ -46,13 +46,19 @@ impl Plugin for CpuPlugin {
             });
         }
 
-        return Ok(());
+        Ok(())
     }
 
     fn new() -> Self {
-        return Self {
+        Self {
             sysinfo: sysinfo::System::new_all(),
             entries: vec![],
-        };
+        }
+    }
+}
+
+impl Default for CpuPlugin {
+    fn default() -> Self {
+        Self::new()
     }
 }

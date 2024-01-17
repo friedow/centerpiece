@@ -7,23 +7,23 @@ pub struct HistoryPlugin {
 
 impl Plugin for HistoryPlugin {
     fn id() -> &'static str {
-        return "brave-history";
+        "brave-history"
     }
 
     fn priority() -> u32 {
-        return 0;
+        0
     }
 
     fn title() -> &'static str {
-        return "󰃃 History";
+        "󰃃 History"
     }
 
     fn entries(&self) -> Vec<crate::model::Entry> {
-        return self.entries.clone();
+        self.entries.clone()
     }
 
     fn new() -> Self {
-        return Self { entries: vec![] };
+        Self { entries: vec![] }
     }
 
     fn update_entries(&mut self) -> anyhow::Result<()> {
@@ -40,7 +40,7 @@ impl Plugin for HistoryPlugin {
             .join(".config/BraveSoftware/Brave-Browser/Default/History");
         let history_cache_file_path = cache_directory_path.join("brave-history.sqlite");
 
-        std::fs::copy(&history_file_path, &history_cache_file_path)
+        std::fs::copy(history_file_path, &history_cache_file_path)
             .context("Error while creating cache directory")?;
 
         let connection = sqlite::open(history_cache_file_path).unwrap();
@@ -58,17 +58,17 @@ impl Plugin for HistoryPlugin {
                 let title = row.read::<&str, _>("title");
                 let url = row.read::<&str, _>("url");
 
-                return crate::model::Entry {
+                crate::model::Entry {
                     id: url.to_string(),
                     title: title.to_string(),
                     action: String::from("open"),
                     meta: String::from("History"),
                     command: None,
-                };
+                }
             })
             .collect();
 
-        return Ok(());
+        Ok(())
     }
 
     fn activate(
@@ -91,6 +91,6 @@ impl Plugin for HistoryPlugin {
                 entry.id
             ))?;
 
-        return Ok(());
+        Ok(())
     }
 }

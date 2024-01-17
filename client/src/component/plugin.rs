@@ -27,7 +27,7 @@ pub fn view(
                     .map(|entry| {
                         let is_active =
                             active_entry_id.is_some() && active_entry_id.unwrap() == &entry.id;
-                        return crate::component::entry::view(entry, is_active);
+                        crate::component::entry::view(entry, is_active)
                     })
                     .collect()
             )
@@ -35,5 +35,5 @@ pub fn view(
         .padding(0.75 * crate::REM),
     );
 
-    return view.into();
+    view.into()
 }

@@ -7,23 +7,23 @@ pub struct BookmarksPlugin {
 
 impl Plugin for BookmarksPlugin {
     fn id() -> &'static str {
-        return "brave-bookmarks";
+        "brave-bookmarks"
     }
 
     fn priority() -> u32 {
-        return 25;
+        25
     }
 
     fn title() -> &'static str {
-        return "󰃃 Bookmarks";
+        "󰃃 Bookmarks"
     }
 
     fn entries(&self) -> Vec<crate::model::Entry> {
-        return self.entries.clone();
+        self.entries.clone()
     }
 
     fn new() -> Self {
-        return Self { entries: vec![] };
+        Self { entries: vec![] }
     }
 
     fn update_entries(&mut self) -> anyhow::Result<()> {
@@ -34,7 +34,7 @@ impl Plugin for BookmarksPlugin {
             .map(|bookmark| bookmark.into())
             .collect();
 
-        return Ok(());
+        Ok(())
     }
 
     fn activate(
@@ -57,6 +57,6 @@ impl Plugin for BookmarksPlugin {
                 entry.id
             ))?;
 
-        return Ok(());
+        Ok(())
     }
 }

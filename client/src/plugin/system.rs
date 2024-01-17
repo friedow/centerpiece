@@ -8,19 +8,19 @@ pub struct SystemPlugin {
 
 impl Plugin for SystemPlugin {
     fn new() -> Self {
-        return Self { entries: vec![] };
+        Self { entries: vec![] }
     }
 
     fn id() -> &'static str {
-        return "system";
+        "system"
     }
 
     fn priority() -> u32 {
-        return 15;
+        15
     }
 
     fn title() -> &'static str {
-        return "󰌢 System";
+        "󰌢 System"
     }
 
     fn update_entries(&mut self) -> anyhow::Result<()> {
@@ -57,11 +57,11 @@ impl Plugin for SystemPlugin {
             },
         ];
 
-        return Ok(());
+        Ok(())
     }
 
     fn entries(&self) -> Vec<crate::model::Entry> {
-        return self.entries.clone();
+        self.entries.clone()
     }
 
     fn activate(
@@ -84,6 +84,6 @@ impl Plugin for SystemPlugin {
                 entry.id
             ))?;
 
-        return Ok(());
+        Ok(())
     }
 }

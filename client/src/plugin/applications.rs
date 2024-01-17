@@ -8,7 +8,7 @@ pub struct ApplicationsPlugin {
 fn read_desktop_entry(path: &std::path::PathBuf) -> anyhow::Result<crate::model::Entry> {
     let pathstr = path.to_str().unwrap_or("");
     let bytes = std::fs::read_to_string(path)?;
-    let desktop_entry = freedesktop_desktop_entry::DesktopEntry::decode(&path, &bytes)?;
+    let desktop_entry = freedesktop_desktop_entry::DesktopEntry::decode(path, &bytes)?;
 
     if !is_visible(&desktop_entry) {
         return Err(anyhow::anyhow!(
@@ -34,7 +34,7 @@ fn read_desktop_entry(path: &std::path::PathBuf) -> anyhow::Result<crate::model:
         ))?
         .split_ascii_whitespace()
         .filter_map(|s| {
-            if s.starts_with("%") {
+            if s.starts_with('%') {
                 None
             } else {
                 Some(String::from(s))
@@ -45,16 +45,16 @@ fn read_desktop_entry(path: &std::path::PathBuf) -> anyhow::Result<crate::model:
     let mut meta = desktop_entry
         .keywords()
         .unwrap_or(std::borrow::Cow::from(""))
-        .replace(";", " ");
+        .replace(';', " ");
     meta.push_str(" Applications Apps");
 
-    return Ok(crate::model::Entry {
+    Ok(crate::model::Entry {
         id: desktop_entry.appid.to_string(),
         title,
         action: String::from("open"),
         meta,
         command: Some(cmd),
-    });
+    })
 }
 
 fn is_visible(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> bool {
@@ -89,28 +89,28 @@ fn is_visible(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> bool {
         }
     }
 
-    return true;
+    true
 }
 
 impl Plugin for ApplicationsPlugin {
     fn new() -> Self {
-        return Self { entries: vec![] };
+        Self { entries: vec![] }
     }
 
     fn id() -> &'static str {
-        return "applications";
+        "applications"
     }
 
     fn priority() -> u32 {
-        return 29;
+        29
     }
 
     fn title() -> &'static str {
-        return "󰀻 Apps";
+        "󰀻 Apps"
     }
 
     fn entries(&self) -> Vec<crate::model::Entry> {
-        return self.entries.clone();
+        self.entries.clone()
     }
 
     fn update_entries(&mut self) -> anyhow::Result<()> {
@@ -125,11 +125,11 @@ impl Plugin for ApplicationsPlugin {
                     log::warn!(target: "applications", "Skipping desktop entry: '{:?}'.", error);
                     return None;
                 }
-                return desktop_entry_result.ok();
+                desktop_entry_result.ok()
             })
             .collect();
 
-        return Ok(());
+        Ok(())
     }
 
     fn activate(
@@ -152,6 +152,6 @@ impl Plugin for ApplicationsPlugin {
                 entry.id
             ))?;
 
-        return Ok(());
+        Ok(())
     }
 }

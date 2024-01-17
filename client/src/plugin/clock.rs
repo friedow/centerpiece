@@ -6,23 +6,23 @@ pub struct ClockPlugin {
 
 impl Plugin for ClockPlugin {
     fn new() -> Self {
-        return Self { entries: vec![] };
+        Self { entries: vec![] }
     }
 
     fn id() -> &'static str {
-        return "clock";
+        "clock"
     }
 
     fn priority() -> u32 {
-        return 10;
+        10
     }
 
     fn title() -> &'static str {
-        return "󰅐 Clock";
+        "󰅐 Clock"
     }
 
     fn update_timeout() -> Option<std::time::Duration> {
-        return Some(std::time::Duration::from_secs(1));
+        Some(std::time::Duration::from_secs(1))
     }
 
     fn update_entries(&mut self) -> anyhow::Result<()> {
@@ -46,10 +46,10 @@ impl Plugin for ClockPlugin {
             },
         ];
 
-        return Ok(());
+        Ok(())
     }
 
     fn entries(&self) -> Vec<crate::model::Entry> {
-        return self.entries.clone();
+        self.entries.clone()
     }
 }

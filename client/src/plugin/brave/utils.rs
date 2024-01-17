@@ -11,12 +11,12 @@ struct BookmarksRoot {
     other: Bookmark,
     synced: Bookmark,
 }
-impl Into<Bookmark> for BookmarksRoot {
-    fn into(self) -> Bookmark {
-        return Bookmark::Folder(FolderBookark {
+impl From<BookmarksRoot> for Bookmark {
+    fn from(val: BookmarksRoot) -> Self {
+        Bookmark::Folder(FolderBookark {
             name: String::from("roots"),
-            children: vec![self.bookmark_bar, self.other, self.synced],
-        });
+            children: vec![val.bookmark_bar, val.other, val.synced],
+        })
     }
 }
 
@@ -40,15 +40,15 @@ pub struct UrlBookmark {
     url: String,
 }
 
-impl Into<crate::model::Entry> for &UrlBookmark {
-    fn into(self) -> crate::model::Entry {
-        return crate::model::Entry {
-            id: self.url.clone(),
-            title: self.name.clone(),
+impl From<&UrlBookmark> for crate::model::Entry {
+    fn from(val: &UrlBookmark) -> Self {
+        crate::model::Entry {
+            id: val.url.clone(),
+            title: val.name.clone(),
             action: String::from("open"),
             meta: String::from("Bookmarks"),
             command: None,
-        };
+        }
     }
 }
 
@@ -66,11 +66,11 @@ impl Bookmark {
                         return find_bookmarks_option;
                     }
                 }
-                return None;
+                None
             }
 
-            Bookmark::Url(_bookmark) => return None,
-        };
+            Bookmark::Url(_bookmark) => None,
+        }
     }
 
     pub fn get_bookmarks_recursive(&self, exclude_folders: &Vec<String>) -> Vec<&UrlBookmark> {
@@ -86,8 +86,8 @@ impl Bookmark {
                     .collect();
             }
 
-            Bookmark::Url(url_bookmark) => return vec![url_bookmark],
-        };
+            Bookmark::Url(url_bookmark) => vec![url_bookmark],
+        }
     }
 }
 
@@ -104,5 +104,5 @@ pub fn read_bookmarks_file() -> anyhow::Result<Bookmark> {
     let bookmarks_file_content: BookmarksFile =
         serde_json::from_reader(reader).context("Error while reading brave bookmarks file.")?;
 
-    return Ok(bookmarks_file_content.roots.into());
+    Ok(bookmarks_file_content.roots.into())
 }

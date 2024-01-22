@@ -9,23 +9,23 @@ pub struct DisksPlugin {
 
 impl Plugin for DisksPlugin {
     fn id() -> &'static str {
-        return "disks";
+        "disks"
     }
 
     fn priority() -> u32 {
-        return 12;
+        12
     }
 
     fn title() -> &'static str {
-        return "󱛟 Disks";
+        "󱛟 Disks"
     }
 
     fn update_timeout() -> Option<std::time::Duration> {
-        return Some(std::time::Duration::from_secs(2));
+        Some(std::time::Duration::from_secs(2))
     }
 
     fn entries(&self) -> Vec<crate::model::Entry> {
-        return self.entries.clone();
+        self.entries.clone()
     }
 
     fn update_entries(&mut self) -> anyhow::Result<()> {
@@ -58,13 +58,19 @@ impl Plugin for DisksPlugin {
             });
         }
 
-        return Ok(());
+        Ok(())
     }
 
     fn new() -> Self {
-        return Self {
+        Self {
             sysinfo: sysinfo::System::new_all(),
             entries: vec![],
-        };
+        }
+    }
+}
+
+impl Default for DisksPlugin {
+    fn default() -> Self {
+        Self::new()
     }
 }

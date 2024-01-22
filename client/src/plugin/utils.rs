@@ -3,7 +3,7 @@ use iced::futures::StreamExt;
 
 pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>(
 ) -> iced::Subscription<crate::Message> {
-    return iced::subscription::channel(
+    iced::subscription::channel(
         std::any::TypeId::of::<PluginType>(),
         100,
         |plugin_channel_out| async move {
@@ -23,7 +23,7 @@ pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>(
                 unreachable!();
             }
         },
-    );
+    )
 }
 
 #[async_trait::async_trait]
@@ -32,7 +32,7 @@ pub trait Plugin {
     fn priority() -> u32;
     fn title() -> &'static str;
     fn update_timeout() -> Option<std::time::Duration> {
-        return None;
+        None
     }
 
     fn new() -> Self;
@@ -40,20 +40,20 @@ pub trait Plugin {
     fn entries(&self) -> Vec<crate::model::Entry>;
 
     fn update_entries(&mut self) -> anyhow::Result<()> {
-        return Ok(());
+        Ok(())
     }
 
     fn plugin(
         &self,
         app_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::model::PluginRequest>,
     ) -> crate::model::Plugin {
-        return crate::model::Plugin {
+        crate::model::Plugin {
             id: String::from(Self::id()),
             priority: Self::priority(),
             title: String::from(Self::title()),
             app_channel_out: app_channel_out.clone(),
             entries: self.entries(),
-        };
+        }
     }
 
     async fn main(
@@ -86,7 +86,7 @@ pub trait Plugin {
             .try_send(crate::Message::RegisterPlugin(self.plugin(app_channel_out)))
             .context("Failed to send message to register plugin.")?;
 
-        return Ok(());
+        Ok(())
     }
 
     async fn update(
@@ -139,7 +139,7 @@ pub trait Plugin {
                 query
             ))?;
 
-        return Ok(());
+        Ok(())
     }
 
     fn activate(
@@ -147,7 +147,7 @@ pub trait Plugin {
         _entry: crate::model::Entry,
         _plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
-        return Ok(());
+        Ok(())
     }
 }
 
@@ -158,13 +158,13 @@ pub fn search(entries: Vec<crate::model::Entry>, query: &String) -> Vec<crate::m
         return sorted_entries;
     }
 
-    return entries
+    entries
         .into_iter()
         .filter(|entry| {
             let keywords = format!("{} {}", entry.title, entry.meta).to_lowercase();
-            return keywords.contains(&query.to_lowercase());
+            keywords.contains(&query.to_lowercase())
         })
-        .collect::<Vec<crate::model::Entry>>();
+        .collect::<Vec<crate::model::Entry>>()
 }
 
 // TODO: this function should return a result and propagate errors
@@ -204,6 +204,5 @@ where
         );
         panic!();
     }
-    let git_repository_paths = git_repository_paths_result.unwrap();
-    git_repository_paths
+    git_repository_paths_result.unwrap()
 }

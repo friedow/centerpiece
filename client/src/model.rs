@@ -20,7 +20,7 @@ impl Eq for Entry {}
 
 impl PartialEq for Entry {
     fn eq(&self, other: &Self) -> bool {
-        return self.id == other.id;
+        self.id == other.id
     }
 }
 

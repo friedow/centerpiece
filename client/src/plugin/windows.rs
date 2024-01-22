@@ -12,7 +12,7 @@ impl WindowsPlugin {
             return node
                 .nodes
                 .into_iter()
-                .flat_map(|n| Self::get_window_nodes(n))
+                .flat_map(Self::get_window_nodes)
                 .collect();
         }
 
@@ -20,23 +20,23 @@ impl WindowsPlugin {
             return vec![node];
         }
 
-        return vec![];
+        vec![]
     }
 }
 
 impl Plugin for WindowsPlugin {
     fn id() -> &'static str {
-        return "windows";
+        "windows"
     }
     fn priority() -> u32 {
-        return 30;
+        30
     }
     fn title() -> &'static str {
-        return "󰖯 Windows";
+        "󰖯 Windows"
     }
 
     fn entries(&self) -> Vec<crate::model::Entry> {
-        return self.entries.clone();
+        self.entries.clone()
     }
 
     fn new() -> Self {
@@ -65,17 +65,17 @@ impl Plugin for WindowsPlugin {
                     .app_id
                     .unwrap_or(String::from("-- window app_id missing --"));
                 let title = if !name.is_empty() { name } else { app_id };
-                return crate::model::Entry {
+                crate::model::Entry {
                     id: node.id.to_string(),
                     title,
                     action: String::from("focus"),
                     meta: String::from(Self::id()),
                     command: None,
-                };
+                }
             })
             .collect();
 
-        return Self { sway, entries };
+        Self { sway, entries }
     }
 
     fn activate(
@@ -97,6 +97,6 @@ impl Plugin for WindowsPlugin {
                 entry.id
             ))?;
 
-        return Ok(());
+        Ok(())
     }
 }

@@ -7,25 +7,27 @@ pub struct GitRepositoriesPlugin {
 
 impl Plugin for GitRepositoriesPlugin {
     fn id() -> &'static str {
-        return "git-repositories";
+        "git-repositories"
     }
 
     fn priority() -> u32 {
-        return 28;
+        28
     }
 
     fn title() -> &'static str {
-        return "󰘬 Git Repositories";
+        "󰘬 Git Repositories"
     }
 
     fn entries(&self) -> Vec<crate::model::Entry> {
-        return self.entries.clone();
+        self.entries.clone()
     }
 
     fn new() -> Self {
-        return Self { entries: vec![] };
+        Self { entries: vec![] }
     }
 
+    // This lint seems to be a false positive
+    #[allow(clippy::unnecessary_filter_map)]
     fn update_entries(&mut self) -> anyhow::Result<()> {
         self.entries.clear();
 
@@ -39,17 +41,17 @@ impl Plugin for GitRepositoriesPlugin {
             .filter_map(|git_repository_path| {
                 let git_repository_display_name = git_repository_path.replacen(&home, "~", 1);
 
-                return Some(crate::model::Entry {
+                Some(crate::model::Entry {
                     id: git_repository_path,
                     title: git_repository_display_name,
                     action: String::from("focus"),
                     meta: String::from("windows"),
                     command: None,
-                });
+                })
             })
             .collect();
 
-        return Ok(());
+        Ok(())
     }
 
     fn activate(
@@ -91,6 +93,6 @@ impl Plugin for GitRepositoriesPlugin {
                 entry.id
             ))?;
 
-        return Ok(());
+        Ok(())
     }
 }

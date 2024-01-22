@@ -14,7 +14,7 @@ fn main() {
             if name == ".git" {
                 return true;
             }
-            return !name.starts_with(".");
+            !name.starts_with('.')
         })
         .build()
         .collect();
@@ -30,7 +30,7 @@ fn main() {
                     git_directory_path
                 );
             }
-            return git_repository_path_option;
+            git_repository_path_option
         })
         .collect();
 

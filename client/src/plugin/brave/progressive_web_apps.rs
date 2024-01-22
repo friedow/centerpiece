@@ -7,23 +7,23 @@ pub struct ProgressiveWebAppsPlugin {
 
 impl Plugin for ProgressiveWebAppsPlugin {
     fn id() -> &'static str {
-        return "brave-progressive-web-apps";
+        "brave-progressive-web-apps"
     }
 
     fn priority() -> u32 {
-        return 28;
+        28
     }
 
     fn title() -> &'static str {
-        return "󰀻 Progressive Web Apps";
+        "󰀻 Progressive Web Apps"
     }
 
     fn entries(&self) -> Vec<crate::model::Entry> {
-        return self.entries.clone();
+        self.entries.clone()
     }
 
     fn new() -> Self {
-        return Self { entries: vec![] };
+        Self { entries: vec![] }
     }
 
     fn update_entries(&mut self) -> anyhow::Result<()> {
@@ -43,7 +43,7 @@ impl Plugin for ProgressiveWebAppsPlugin {
             .map(|bookmark| bookmark.into())
             .collect();
 
-        return Ok(());
+        Ok(())
     }
 
     fn activate(
@@ -66,6 +66,6 @@ impl Plugin for ProgressiveWebAppsPlugin {
                 entry.id
             ))?;
 
-        return Ok(());
+        Ok(())
     }
 }

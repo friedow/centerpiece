@@ -42,7 +42,7 @@ impl WifiPlugin {
             Err(_) => String::new(),
         };
 
-        // dedup access points by name and sort by signal strengh
+        // dedup access points by name and sort by signal strength
         access_points.sort_by_key(|access_point| access_point.strength().ok().unwrap());
         access_points.reverse();
         access_points.sort_by_key(|access_point| access_point.ssid().ok().unwrap());

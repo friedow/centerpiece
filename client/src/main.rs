@@ -1,10 +1,13 @@
+use clap::Parser;
 use iced::Application;
 
+mod cli;
 mod component;
 mod model;
 mod plugin;
 
 pub fn main() -> iced::Result {
+    let _args = crate::cli::CliArgs::parse();
     simple_logger::init_with_level(log::Level::Info).unwrap();
     Centerpiece::run(Centerpiece::settings())
 }

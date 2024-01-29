@@ -66,10 +66,15 @@
           cargoClippyExtraArgs = "--all-targets --all-features";
         }
       );
+      GIT_DATE = "${builtins.substring 0 4 self.lastModifiedDate}-${
+          builtins.substring 4 2 self.lastModifiedDate
+        }-${builtins.substring 6 2 self.lastModifiedDate}";
+      GIT_REV = self.shortRev or "Not committed yet.";
     in
     {
       devShells.${system}.default = pkgs.mkShell {
-        inherit nativeBuildInputs buildInputs;
+        inherit nativeBuildInputs buildInputs
+        GIT_DATE GIT_REV;
         packages = devInputs;
         LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
           pkgs.wayland
@@ -87,6 +92,8 @@
               nativeBuildInputs
               buildInputs
               pname
+              GIT_REV
+              GIT_DATE
             ;
             postInstall = ''
               wrapProgram "$out/bin/${pname}" \

@@ -39,7 +39,7 @@ sysinfo = "0.29.11"
 battery = "0.7.8"
 
 # brave history
-sqlite = "0.32.0"
+sqlite = "0.33.0"
 
 # wifi
 networkmanager = "0.4.1"

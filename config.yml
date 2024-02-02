@@ -1,0 +1,17 @@
+plugin:
+  git_repositories:
+    editor_command:
+      - alacritty
+      - --command
+      - nvim
+      - $GIT_DIRECTORY
+    git_ui_command:
+      - alacritty
+      - --command
+      - lazygit
+      - --path
+      - $GIT_DIRECTORY
+    terminal_command:
+      - alacritty
+      - --working-directory
+      - $GIT_DIRECTORY

@@ -1,28 +1,13 @@
 use clap::Parser;
 use iced::Application;
-use std::collections::HashMap;
 
 mod cli;
 mod component;
 mod model;
 mod plugin;
+mod settings;
 
 pub fn main() -> iced::Result {
-    let settings = config::Config::builder()
-        .add_source(config::File::with_name(
-            "/home/christian/.config/centerpiece/config",
-        ))
-        .build()
-        .unwrap();
-
-    // Print out our settings (as a HashMap)
-    println!(
-        "{:?}",
-        settings
-            .try_deserialize::<HashMap<String, String>>()
-            .unwrap()
-    );
-
     let _args = crate::cli::CliArgs::parse();
     simple_logger::init_with_level(log::Level::Info).unwrap();
     Centerpiece::run(Centerpiece::settings())

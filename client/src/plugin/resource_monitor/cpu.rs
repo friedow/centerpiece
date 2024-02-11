@@ -1,5 +1,4 @@
 use crate::plugin::utils::Plugin;
-use sysinfo::{CpuExt, SystemExt};
 
 pub struct CpuPlugin {
     sysinfo: sysinfo::System,

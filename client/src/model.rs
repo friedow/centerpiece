@@ -7,7 +7,7 @@ pub struct Plugin {
     pub app_channel_out: iced::futures::channel::mpsc::Sender<PluginRequest>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Ord, PartialOrd)]
 pub struct Entry {
     pub id: String,
     pub title: String,

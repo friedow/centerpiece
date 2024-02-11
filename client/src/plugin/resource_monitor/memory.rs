@@ -1,5 +1,4 @@
 use crate::plugin::utils::Plugin;
-use sysinfo::SystemExt;
 
 pub struct MemoryPlugin {
     sysinfo: sysinfo::System,

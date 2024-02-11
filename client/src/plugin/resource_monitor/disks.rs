@@ -1,9 +1,8 @@
 use crate::plugin::utils::Plugin;
 use anyhow::Context;
-use sysinfo::{DiskExt, SystemExt};
 
 pub struct DisksPlugin {
-    sysinfo: sysinfo::System,
+    disks: sysinfo::Disks,
     entries: Vec<crate::model::Entry>,
 }
 
@@ -29,10 +28,10 @@ impl Plugin for DisksPlugin {
     }
 
     fn update_entries(&mut self) -> anyhow::Result<()> {
-        self.sysinfo.refresh_all();
+        self.disks.refresh_list();
         self.entries.clear();
 
-        for disk in self.sysinfo.disks() {
+        for disk in &self.disks {
             let mount_point = disk
                 .mount_point()
                 .to_str()
@@ -63,7 +62,7 @@ impl Plugin for DisksPlugin {
 
     fn new() -> Self {
         Self {
-            sysinfo: sysinfo::System::new_all(),
+            disks: sysinfo::Disks::new(),
             entries: vec![],
         }
     }

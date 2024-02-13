@@ -43,7 +43,7 @@ in {
   config = lib.mkMerge [
     (lib.mkIf cfg.enable { home.packages = [ centerpiece ]; })
 
-    (lib.mkIf cfg.config {
+    (lib.mkIf cfg.enable {
       home.file.".config/centerpiece/config.yml" = builtins.toYAML cfg.config;
     })
 

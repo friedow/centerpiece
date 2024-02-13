@@ -129,6 +129,9 @@ impl Plugin for ApplicationsPlugin {
             })
             .collect();
 
+        self.entries.sort();
+        self.entries.dedup();
+
         Ok(())
     }
 

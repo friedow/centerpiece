@@ -8,7 +8,7 @@ in {
     enable = lib.mkEnableOption (lib.mdDoc "Centerpiece");
 
     config.plugin.git_repositories = {
-      editor_command = lib.mkOption {
+      commands = lib.mkOption {
         default = [
           [ "alacritty" "--command" "nvim" "$GIT_DIRECTORY" ]
           [ "alacritty" "--working-directory" "$GIT_DIRECTORY" ]

@@ -68,62 +68,21 @@ impl Plugin for GitRepositoriesPlugin {
         entry: crate::model::Entry,
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
-        let editor_command: Vec<String> = self
-            .settings
-            .plugin
-            .git_repositories
-            .editor_command
-            .clone()
-            .into_iter()
-            .map(|command_part| {
-                if command_part == "$GIT_DIRECTORY" {
-                    entry.id.clone()
-                } else {
-                    command_part
-                }
-            })
-            .collect();
-        std::process::Command::new(&editor_command[0])
-            .args(&editor_command[1..])
-            .spawn()?;
-
-        let git_ui_command: Vec<String> = self
-            .settings
-            .plugin
-            .git_repositories
-            .git_ui_command
-            .clone()
-            .into_iter()
-            .map(|command_part| {
-                if command_part == "$GIT_DIRECTORY" {
-                    entry.id.clone()
-                } else {
-                    command_part
-                }
-            })
-            .collect();
-        std::process::Command::new(&git_ui_command[0])
-            .args(&git_ui_command[1..])
-            .spawn()?;
-
-        let terminal_command: Vec<String> = self
-            .settings
-            .plugin
-            .git_repositories
-            .terminal_command
-            .clone()
-            .into_iter()
-            .map(|command_part| {
-                if command_part == "$GIT_DIRECTORY" {
-                    entry.id.clone()
-                } else {
-                    command_part
-                }
-            })
-            .collect();
-        std::process::Command::new(&terminal_command[0])
-            .args(&terminal_command[1..])
-            .spawn()?;
+        for command in self.settings.plugin.git_repositories.commands.clone() {
+            let parsed_command: Vec<String> = command
+                .into_iter()
+                .map(|command_part| {
+                    if command_part == "$GIT_DIRECTORY" {
+                        entry.id.clone()
+                    } else {
+                        command_part
+                    }
+                })
+                .collect();
+            std::process::Command::new(&parsed_command[0])
+                .args(&parsed_command[1..])
+                .spawn()?;
+        }
 
         plugin_channel_out
             .try_send(crate::Message::Exit)

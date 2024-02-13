@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context};
+use anyhow::Context;
 use iced::futures::StreamExt;
 
 pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>(
@@ -170,14 +170,22 @@ pub fn search(entries: Vec<crate::model::Entry>, query: &String) -> Vec<crate::m
 pub fn config_directory() -> anyhow::Result<String> {
     let home_directory = std::env::var("HOME")?;
     let config_in_home = format!("{home_directory}/.config");
-    let config_directory = std::env::var("XDG_CONFIG_HOME").unwrap_or(config_in_home);
+    Ok(std::env::var("XDG_CONFIG_HOME").unwrap_or(config_in_home))
+}
+
+pub fn centerpiece_config_directory() -> anyhow::Result<String> {
+    let config_directory = config_directory()?;
     Ok(format!("{config_directory}/centerpiece"))
 }
 
 pub fn cache_directory() -> anyhow::Result<String> {
     let home_directory = std::env::var("HOME")?;
     let cache_in_home = format!("{home_directory}/.cache");
-    let cache_directory = std::env::var("XDG_CACHE_HOME").unwrap_or(cache_in_home);
+    Ok(std::env::var("XDG_CACHE_HOME").unwrap_or(cache_in_home))
+}
+
+pub fn centerpiece_cache_directory() -> anyhow::Result<String> {
+    let cache_directory = cache_directory()?;
     Ok(format!("{cache_directory}/centerpiece"))
 }
 
@@ -185,7 +193,7 @@ pub fn read_index_file<T>(file_name: &str) -> anyhow::Result<T>
 where
     T: serde::de::DeserializeOwned,
 {
-    let cache_directory = cache_directory()?;
+    let cache_directory = centerpiece_cache_directory()?;
     let index_file_path = format!("{cache_directory}/{file_name}");
 
     let index_file =

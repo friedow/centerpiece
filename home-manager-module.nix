@@ -9,27 +9,18 @@ in {
 
     config.plugin.git_repositories = {
       editor_command = lib.mkOption {
-        default = [ "alacritty" "--command" "nvim" "$git_directory" ];
-        type = lib.types.listOf lib.types.str;
+        default = [
+          [ "alacritty" "--command" "nvim" "$GIT_DIRECTORY" ]
+          [ "alacritty" "--working-directory" "$GIT_DIRECTORY" ]
+        ];
+        type = lib.types.listOf lib.types.listOf lib.types.str;
         description = lib.mdDoc
-          "The command to launch your editor. Use the $GIT_DIRECTORY variable to pass in the selected directory.";
-        example = [ "code" "--new-window" "$GIT_DIRECTORY" ];
-      };
-      git_ui_command = lib.mkOption {
-        default =
-          [ "alacritty" "--command" "lazygit" "--path" "$GIT_DIRECTORY" ];
-        type = lib.types.listOf lib.types.str;
-        description = lib.mdDoc
-          "The command to launch your git ui. Use the $GIT_DIRECTORY variable to pass in the selected directory.";
-        example =
-          [ "alacritty" "--command" "lazygit" "--path" "$GIT_DIRECTORY" ];
-      };
-      terminal_command = lib.mkOption {
-        default = [ "alacritty" "--working-directory" "$git_directory" ];
-        type = lib.types.listOf lib.types.str;
-        description = lib.mdDoc
-          "The command to launch your terminal. Use the $GIT_DIRECTORY variable to pass in the selected directory.";
-        example = [ "alacritty" "--working-directory" "$git_directory" ];
+          "The commands to launch when an entry is selected. Use the $GIT_DIRECTORY variable to pass in the selected directory.";
+        example = [
+          [ "code" "--new-window" "$GIT_DIRECTORY" ]
+          [ "alacritty" "--command" "lazygit" "--path" "$GIT_DIRECTORY" ]
+          [ "alacritty" "--working-directory" "$GIT_DIRECTORY" ]
+        ];
       };
     };
 

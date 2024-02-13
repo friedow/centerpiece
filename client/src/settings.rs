@@ -4,9 +4,7 @@ use serde_derive::Deserialize;
 #[derive(Debug, Deserialize)]
 #[allow(unused)]
 pub struct GitRepositoriesSettings {
-    pub editor_command: Vec<String>,
-    pub git_ui_command: Vec<String>,
-    pub terminal_command: Vec<String>,
+    pub commands: Vec<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -23,9 +21,10 @@ pub struct Settings {
 
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
-        let config_directory = crate::plugin::utils::config_directory().map_err(|_| {
-            config::ConfigError::Message("Unable to find config directory.".to_string())
-        })?;
+        let config_directory =
+            crate::plugin::utils::centerpiece_config_directory().map_err(|_| {
+                config::ConfigError::Message("Unable to find config directory.".to_string())
+            })?;
         let config_file = format!("{config_directory}/config");
 
         Config::builder()

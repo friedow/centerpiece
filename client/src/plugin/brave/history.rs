@@ -33,14 +33,13 @@ impl Plugin for HistoryPlugin {
         let history_file_path =
             format!("{config_directory}/BraveSoftware/Brave-Browser/Default/History");
 
-        let cache_directory = crate::plugin::utils::cache_directory()?;
+        let cache_directory = crate::plugin::utils::centerpiece_cache_directory()?;
         let history_cache_file_path = format!("{cache_directory}/brave-history.sqlite");
 
         std::fs::copy(history_file_path, &history_cache_file_path)
             .context("Error while creating cache directory")?;
 
         let connection = sqlite::open(history_cache_file_path).unwrap();
-
         let query = "SELECT title, url FROM urls ORDER BY visit_count DESC, last_visit_time DESC";
         connection.execute(query).unwrap();
         let url_rows = connection

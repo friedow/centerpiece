@@ -1,17 +1,6 @@
 plugin:
   git_repositories:
-    editor_command:
-      - alacritty
-      - --command
-      - nvim
-      - $GIT_DIRECTORY
-    git_ui_command:
-      - alacritty
-      - --command
-      - lazygit
-      - --path
-      - $GIT_DIRECTORY
-    terminal_command:
-      - alacritty
-      - --working-directory
-      - $GIT_DIRECTORY
+    commands:
+      - ["alacritty", "--command", "nvim", "$GIT_DIRECTORY"]
+      - ["alacritty", "--command", "lazygit", "--path", "$GIT_DIRECTORY"]
+      - ["alacritty", "--working-directory", "$GIT_DIRECTORY"]

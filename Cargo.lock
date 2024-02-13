@@ -1780,6 +1780,7 @@ checksum = "029d73f573d8e8d63e6d5020011d3255b28c3ba85d6cf870a07184ed23de9284"
 name = "index-git-repositories"
 version = "0.8.0"
 dependencies = [
+ "anyhow",
  "log",
  "rust_search",
  "serde_json",

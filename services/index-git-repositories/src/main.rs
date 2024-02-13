@@ -37,19 +37,25 @@ fn main() {
     write_index_file(git_repository_paths);
 }
 
+pub fn cache_directory() -> anyhow::Result<String> {
+    let home_directory = std::env::var("HOME")?;
+    let cache_in_home = format!("{home_directory}/.cache");
+    let cache_directory = std::env::var("XDG_CACHE_HOME").unwrap_or(cache_in_home);
+    Ok(format!("{cache_directory}/centerpiece"))
+}
+
 fn write_index_file(git_repository_paths: Vec<&str>) {
-    let home_directory_result = std::env::var("HOME");
-    if let Err(error) = home_directory_result {
+    let cache_directory_result = cache_directory();
+    if let Err(error) = cache_directory_result {
         log::error!(
-            error = log::as_error!(error);
-            "Could read HOME environment variable",
+            error = log::error!("{:?}", error);
+            "Could not determine cache directory.",
         );
         panic!();
     }
-    let home_directory = home_directory_result.unwrap();
+    let centerpice_cache_directory = cache_directory_result.unwrap();
 
-    let cache_directory_path = std::path::Path::new(&home_directory).join(".cache/centerpiece");
-    if let Err(error) = std::fs::create_dir_all(&cache_directory_path) {
+    if let Err(error) = std::fs::create_dir_all(&centerpice_cache_directory) {
         log::error!(
             error = log::as_error!(error);
             "Error while creating cache directory",
@@ -57,7 +63,8 @@ fn write_index_file(git_repository_paths: Vec<&str>) {
         panic!();
     }
 
-    let index_file_path = cache_directory_path.join("git-repositories-index.json");
+    let index_file_path =
+        std::path::Path::new(&centerpice_cache_directory).join("git-repositories-index.json");
 
     let index_file_result = std::fs::File::create(index_file_path);
     if let Err(error) = index_file_result {

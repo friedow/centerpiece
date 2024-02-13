@@ -1,13 +1,14 @@
-use crate::plugin::utils::Plugin;
+use crate::{plugin::utils::Plugin, settings::Settings};
 use anyhow::Context;
 
 pub struct GitRepositoriesPlugin {
     entries: Vec<crate::model::Entry>,
+    settings: Settings,
 }
 
 impl Plugin for GitRepositoriesPlugin {
     fn id() -> &'static str {
-        "git-repositories"
+        "git_repositories"
     }
 
     fn priority() -> u32 {
@@ -23,7 +24,15 @@ impl Plugin for GitRepositoriesPlugin {
     }
 
     fn new() -> Self {
-        Self { entries: vec![] }
+        let settings_result = Settings::new();
+        if let Err(error) = settings_result {
+            log::error!(target: Self::id(), "{:?}", error);
+            panic!();
+        }
+        Self {
+            entries: vec![],
+            settings: settings_result.unwrap(),
+        }
     }
 
     // This lint seems to be a false positive
@@ -32,7 +41,7 @@ impl Plugin for GitRepositoriesPlugin {
         self.entries.clear();
 
         let git_repository_paths: Vec<String> =
-            crate::plugin::utils::read_index_file("git-repositories-index.json");
+            crate::plugin::utils::read_index_file("git-repositories-index.json")?;
 
         let home = std::env::var("HOME").unwrap_or(String::from(""));
 
@@ -59,32 +68,21 @@ impl Plugin for GitRepositoriesPlugin {
         entry: crate::model::Entry,
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
-        std::process::Command::new("alacritty")
-            .arg("--working-directory")
-            .arg(&entry.id)
-            .spawn()
-            .context(format!(
-                "Failed to launch terminal while activating entry with id '{}'.",
-                entry.id
-            ))?;
-
-        std::process::Command::new("sublime_text")
-            .arg("--new-window")
-            .arg(&entry.id)
-            .spawn()
-            .context(format!(
-                "Failed to launch editor while activating entry with id '{}'.",
-                entry.id
-            ))?;
-
-        std::process::Command::new("sublime_merge")
-            .arg("--new-window")
-            .arg(&entry.id)
-            .spawn()
-            .context(format!(
-                "Failed to launch git ui while activating entry with id '{}'.",
-                entry.id
-            ))?;
+        for command in self.settings.plugin.git_repositories.commands.clone() {
+            let parsed_command: Vec<String> = command
+                .into_iter()
+                .map(|command_part| {
+                    if command_part == "$GIT_DIRECTORY" {
+                        entry.id.clone()
+                    } else {
+                        command_part
+                    }
+                })
+                .collect();
+            std::process::Command::new(&parsed_command[0])
+                .args(&parsed_command[1..])
+                .spawn()?;
+        }
 
         plugin_channel_out
             .try_send(crate::Message::Exit)

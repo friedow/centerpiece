@@ -167,33 +167,37 @@ pub fn search(entries: Vec<crate::model::Entry>, query: &String) -> Vec<crate::m
         .collect::<Vec<crate::model::Entry>>()
 }
 
-// TODO: this function should return a result and propagate errors
-pub fn read_index_file<T>(file_name: &str) -> T
+pub fn config_directory() -> anyhow::Result<String> {
+    let home_directory = std::env::var("HOME")?;
+    let config_in_home = format!("{home_directory}/.config");
+    Ok(std::env::var("XDG_CONFIG_HOME").unwrap_or(config_in_home))
+}
+
+pub fn centerpiece_config_directory() -> anyhow::Result<String> {
+    let config_directory = config_directory()?;
+    Ok(format!("{config_directory}/centerpiece"))
+}
+
+pub fn cache_directory() -> anyhow::Result<String> {
+    let home_directory = std::env::var("HOME")?;
+    let cache_in_home = format!("{home_directory}/.cache");
+    Ok(std::env::var("XDG_CACHE_HOME").unwrap_or(cache_in_home))
+}
+
+pub fn centerpiece_cache_directory() -> anyhow::Result<String> {
+    let cache_directory = cache_directory()?;
+    Ok(format!("{cache_directory}/centerpiece"))
+}
+
+pub fn read_index_file<T>(file_name: &str) -> anyhow::Result<T>
 where
     T: serde::de::DeserializeOwned,
 {
-    let home_directory_result = std::env::var("HOME");
-    if let Err(error) = home_directory_result {
-        log::error!(
-            error = log::as_error!(error);
-            "Could not read HOME environment variable",
-        );
-        panic!();
-    }
-    let home_directory = home_directory_result.unwrap();
+    let cache_directory = centerpiece_cache_directory()?;
+    let index_file_path = format!("{cache_directory}/{file_name}");
 
-    let index_file_path = std::path::Path::new(&home_directory)
-        .join(".cache/centerpiece")
-        .join(file_name);
-    let index_file_result = std::fs::File::open(index_file_path);
-    if let Err(error) = index_file_result {
-        log::error!(
-            error = log::as_error!(error);
-            "Error while opening index file",
-        );
-        panic!();
-    }
-    let index_file = index_file_result.unwrap();
+    let index_file =
+        std::fs::File::open(index_file_path).context("Error while opening index file")?;
 
     let reader = std::io::BufReader::new(index_file);
     let git_repository_paths_result: Result<T, _> = serde_json::from_reader(reader);
@@ -204,5 +208,5 @@ where
         );
         panic!();
     }
-    git_repository_paths_result.unwrap()
+    Ok(git_repository_paths_result.unwrap())
 }

@@ -29,22 +29,17 @@ impl Plugin for HistoryPlugin {
     fn update_entries(&mut self) -> anyhow::Result<()> {
         self.entries.clear();
 
-        let home_directory =
-            std::env::var("HOME").context("Could not read HOME environment variable")?;
+        let config_directory = crate::plugin::utils::config_directory()?;
+        let history_file_path =
+            format!("{config_directory}/BraveSoftware/Brave-Browser/Default/History");
 
-        let cache_directory_path = std::path::Path::new(&home_directory).join(".cache/centerpiece");
-        std::fs::create_dir_all(&cache_directory_path)
-            .context("Error while creating cache directory")?;
-
-        let history_file_path = std::path::Path::new(&home_directory)
-            .join(".config/BraveSoftware/Brave-Browser/Default/History");
-        let history_cache_file_path = cache_directory_path.join("brave-history.sqlite");
+        let cache_directory = crate::plugin::utils::centerpiece_cache_directory()?;
+        let history_cache_file_path = format!("{cache_directory}/brave-history.sqlite");
 
         std::fs::copy(history_file_path, &history_cache_file_path)
             .context("Error while creating cache directory")?;
 
         let connection = sqlite::open(history_cache_file_path).unwrap();
-
         let query = "SELECT title, url FROM urls ORDER BY visit_count DESC, last_visit_time DESC";
         connection.execute(query).unwrap();
         let url_rows = connection

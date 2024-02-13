@@ -5,6 +5,7 @@ mod cli;
 mod component;
 mod model;
 mod plugin;
+mod settings;
 
 pub fn main() -> iced::Result {
     let _args = crate::cli::CliArgs::parse();

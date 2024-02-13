@@ -44,7 +44,8 @@ in {
     (lib.mkIf cfg.enable { home.packages = [ centerpiece ]; })
 
     (lib.mkIf cfg.enable {
-      home.file.".config/centerpiece/config.yml" = builtins.toYAML cfg.config;
+      home.file.".config/centerpiece/config.yml" =
+        lib.generators.toYAML cfg.config;
     })
 
     (lib.mkIf cfg.services.index-git-repositories.enable {

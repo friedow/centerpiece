@@ -111,6 +111,7 @@
               homepage = "https://github.com/friedow/centerpiece";
               platforms = platforms.linux;
               license = licenses.mit;
+              mainProgram = pname;
               maintainers = [ "friedow" ];
             };
           }

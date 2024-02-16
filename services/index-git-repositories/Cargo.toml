@@ -5,7 +5,12 @@ edition = "2021"
 
 [dependencies]
 log = { version = "0.4.20", features = ["kv_unstable_serde"] }
-simple_logger = { version = "4.3.3", features = ["colors", "threads", "timestamps", "stderr"] }
+simple_logger = { version = "4.3.3", features = [
+  "colors",
+  "threads",
+  "timestamps",
+  "stderr",
+] }
 
 serde_json = "1.0.113"
 rust_search = "2.0.0"

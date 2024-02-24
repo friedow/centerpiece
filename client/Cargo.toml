@@ -52,4 +52,3 @@ sqlite = "0.33.0"
 # wifi
 networkmanager = "0.4.1"
 dbus = "0.9.7"
-

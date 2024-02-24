@@ -7,7 +7,7 @@ pub struct HistoryPlugin {
 
 impl Plugin for HistoryPlugin {
     fn id() -> &'static str {
-        "brave-history"
+        "brave_history"
     }
 
     fn priority() -> u32 {

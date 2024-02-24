@@ -28,6 +28,7 @@ struct Centerpiece {
     query: String,
     active_entry_index: usize,
     plugins: Vec<model::Plugin>,
+    settings: settings::Settings,
 }
 
 pub const SCROLLABLE_ID: &str = "scrollable";
@@ -52,6 +53,7 @@ impl Application for Centerpiece {
                 query: String::from(""),
                 active_entry_index: 0,
                 plugins: vec![],
+                settings: settings::Settings::new(),
             },
             iced::Command::perform(async {}, move |()| Message::Loaded),
         )
@@ -108,8 +110,8 @@ impl Application for Centerpiece {
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-        iced::subscription::Subscription::batch(vec![
-            iced::subscription::events_with(|event, _status| match event {
+        let mut subscriptions = vec![iced::subscription::events_with(
+            |event, _status| match event {
                 iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
                     modifiers: _,
                     key_code: _,
@@ -122,24 +124,86 @@ impl Application for Centerpiece {
                     Some(Message::Event(event))
                 }
                 _ => None,
-            }),
-            crate::plugin::utils::spawn::<crate::plugin::windows::WindowsPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::applications::ApplicationsPlugin>(),
-            crate::plugin::utils::spawn::<
+            },
+        )];
+
+        if self.settings.plugin.applications.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::applications::ApplicationsPlugin,
+            >());
+        }
+
+        if self.settings.plugin.brave_bookmarks.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::brave::bookmarks::BookmarksPlugin,
+            >());
+        }
+
+        if self.settings.plugin.brave_progressive_web_apps.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
                 crate::plugin::brave::progressive_web_apps::ProgressiveWebAppsPlugin,
-            >(),
-            crate::plugin::utils::spawn::<crate::plugin::git_repositories::GitRepositoriesPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::brave::bookmarks::BookmarksPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::system::SystemPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::wifi::WifiPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::resource_monitor::battery::BatteryPlugin>(
-            ),
-            crate::plugin::utils::spawn::<crate::plugin::resource_monitor::cpu::CpuPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::resource_monitor::memory::MemoryPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::resource_monitor::disks::DisksPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::clock::ClockPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::brave::history::HistoryPlugin>(),
-        ])
+            >());
+        }
+
+        if self.settings.plugin.brave_history.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::brave::history::HistoryPlugin,
+            >());
+        }
+
+        if self.settings.plugin.clock.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::clock::ClockPlugin,
+            >());
+        }
+
+        if self.settings.plugin.git_repositories.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::git_repositories::GitRepositoriesPlugin,
+            >());
+        }
+
+        if self.settings.plugin.resource_monitor_battery.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::resource_monitor::battery::BatteryPlugin,
+            >());
+        }
+
+        if self.settings.plugin.resource_monitor_cpu.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::resource_monitor::cpu::CpuPlugin,
+            >());
+        }
+
+        if self.settings.plugin.resource_monitor_disks.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::resource_monitor::disks::DisksPlugin,
+            >());
+        }
+
+        if self.settings.plugin.resource_monitor_memory.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::resource_monitor::memory::MemoryPlugin,
+            >());
+        }
+
+        if self.settings.plugin.system.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::system::SystemPlugin,
+            >());
+        }
+
+        if self.settings.plugin.wifi.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<crate::plugin::wifi::WifiPlugin>());
+        }
+
+        if self.settings.plugin.windows.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::windows::WindowsPlugin,
+            >());
+        }
+
+        iced::subscription::Subscription::batch(subscriptions)
     }
 
     fn view(&self) -> iced::Element<Message> {

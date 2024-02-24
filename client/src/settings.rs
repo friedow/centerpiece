@@ -1,13 +1,70 @@
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-pub struct GitRepositoriesSettings {
+pub struct ApplicationsPluginSettings {
+    pub enable: bool,
+}
+
+impl Default for ApplicationsPluginSettings {
+    fn default() -> Self {
+        Self { enable: true }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct BraveBookmarksPluginSettings {
+    pub enable: bool,
+}
+
+impl Default for BraveBookmarksPluginSettings {
+    fn default() -> Self {
+        Self { enable: true }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct BraveHistoryPluginSettings {
+    pub enable: bool,
+}
+
+impl Default for BraveHistoryPluginSettings {
+    fn default() -> Self {
+        Self { enable: true }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct BraveProgressiveWebAppsSettings {
+    pub enable: bool,
+}
+
+impl Default for BraveProgressiveWebAppsSettings {
+    fn default() -> Self {
+        Self { enable: true }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ClockPluginSettings {
+    pub enable: bool,
+}
+
+impl Default for ClockPluginSettings {
+    fn default() -> Self {
+        Self { enable: true }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GitRepositoriesPluginSettings {
+    pub enable: bool,
     pub commands: Vec<Vec<String>>,
 }
 
-impl Default for GitRepositoriesSettings {
+impl Default for GitRepositoriesPluginSettings {
     fn default() -> Self {
         Self {
+            enable: true,
             commands: vec![
                 vec![
                     "alacritty".into(),
@@ -25,10 +82,98 @@ impl Default for GitRepositoriesSettings {
     }
 }
 
+#[derive(Debug, Deserialize)]
+pub struct ResourceMonitorBatteryPluginSettings {
+    pub enable: bool,
+}
+
+impl Default for ResourceMonitorBatteryPluginSettings {
+    fn default() -> Self {
+        Self { enable: true }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ResourceMonitorCpuPluginSettings {
+    pub enable: bool,
+}
+
+impl Default for ResourceMonitorCpuPluginSettings {
+    fn default() -> Self {
+        Self { enable: true }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ResourceMonitorDisksSettings {
+    pub enable: bool,
+}
+
+impl Default for ResourceMonitorDisksSettings {
+    fn default() -> Self {
+        Self { enable: true }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ResourceMonitorMemoryPluginSettings {
+    pub enable: bool,
+}
+
+impl Default for ResourceMonitorMemoryPluginSettings {
+    fn default() -> Self {
+        Self { enable: true }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SystemPluginSettings {
+    pub enable: bool,
+}
+
+impl Default for SystemPluginSettings {
+    fn default() -> Self {
+        Self { enable: true }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct WifiPluginSettings {
+    pub enable: bool,
+}
+
+impl Default for WifiPluginSettings {
+    fn default() -> Self {
+        Self { enable: true }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct WindowsPluginSettings {
+    pub enable: bool,
+}
+
+impl Default for WindowsPluginSettings {
+    fn default() -> Self {
+        Self { enable: true }
+    }
+}
+
 #[derive(Debug, Default, Deserialize)]
 pub struct PluginSettings {
-    #[serde(default)]
-    pub git_repositories: GitRepositoriesSettings,
+    pub applications: ApplicationsPluginSettings,
+    pub brave_bookmarks: BraveBookmarksPluginSettings,
+    pub brave_history: BraveHistoryPluginSettings,
+    pub brave_progressive_web_apps: BraveProgressiveWebAppsSettings,
+    pub clock: ClockPluginSettings,
+    pub git_repositories: GitRepositoriesPluginSettings,
+    pub resource_monitor_battery: ResourceMonitorBatteryPluginSettings,
+    pub resource_monitor_cpu: ResourceMonitorCpuPluginSettings,
+    pub resource_monitor_disks: ResourceMonitorDisksSettings,
+    pub resource_monitor_memory: ResourceMonitorMemoryPluginSettings,
+    pub system: SystemPluginSettings,
+    pub wifi: WifiPluginSettings,
+    pub windows: WindowsPluginSettings,
 }
 
 #[derive(Debug, Default, Deserialize)]

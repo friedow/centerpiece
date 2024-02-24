@@ -7,7 +7,7 @@ pub struct MemoryPlugin {
 
 impl Plugin for MemoryPlugin {
     fn id() -> &'static str {
-        "memory"
+        "resource_monitor_memory"
     }
 
     fn priority() -> u32 {

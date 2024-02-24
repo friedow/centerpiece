@@ -1,36 +1,64 @@
-use config::{Config, ConfigError};
-use serde_derive::Deserialize;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-#[allow(unused)]
 pub struct GitRepositoriesSettings {
     pub commands: Vec<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(unused)]
 pub struct PluginSettings {
     pub git_repositories: GitRepositoriesSettings,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(unused)]
 pub struct Settings {
     pub plugin: PluginSettings,
 }
 
-impl Settings {
-    pub fn new() -> Result<Self, ConfigError> {
-        let config_directory =
-            crate::plugin::utils::centerpiece_config_directory().map_err(|_| {
-                config::ConfigError::Message("Unable to find config directory.".to_string())
-            })?;
-        let config_file = format!("{config_directory}/config");
+impl Default for Settings {
+    fn default() -> Self {
+        pub const DEFAULT_CONFIG: &[u8] =
+            include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/../", "config.yml"));
 
-        Config::builder()
-            .add_source(config::File::new("config", config::FileFormat::Yaml))
-            .add_source(config::File::new(&config_file, config::FileFormat::Yaml).required(false))
-            .build()?
-            .try_deserialize()
+        let config_result = serde_yaml::from_slice(&DEFAULT_CONFIG);
+        if let Err(error) = config_result {
+            log::error!(
+            error = log::error!("{:?}", error);
+            "Config file does not match settings struct.",
+            );
+            panic!();
+        }
+        config_result.unwrap()
+    }
+}
+
+impl Settings {
+    pub fn new() -> Self {
+        let config_directory_result = crate::plugin::utils::centerpiece_config_directory();
+        if let Err(error) = config_directory_result {
+            log::error!(
+            error = log::error!("{:?}", error);
+            "Unable to find config directory.",
+            );
+            panic!();
+        }
+        let config_directory = config_directory_result.unwrap();
+        let config_file_path = format!("{config_directory}/config.yml");
+
+        let config_file_result = std::fs::File::open(config_file_path);
+        if let Err(_) = config_file_result {
+            log::info!("No custom config file found, falling back to default.");
+            return Self::default();
+        }
+        let config_file = config_file_result.unwrap();
+        let config_result = serde_yaml::from_reader(config_file);
+        if let Err(error) = config_result {
+            log::error!(
+            error = log::error!("{:?}", error);
+            "Config file does not match settings struct.",
+            );
+            panic!();
+        }
+        config_result.unwrap()
     }
 }

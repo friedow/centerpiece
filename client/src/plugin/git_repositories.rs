@@ -24,14 +24,9 @@ impl Plugin for GitRepositoriesPlugin {
     }
 
     fn new() -> Self {
-        let settings_result = Settings::new();
-        if let Err(error) = settings_result {
-            log::error!(target: Self::id(), "{:?}", error);
-            panic!();
-        }
         Self {
             entries: vec![],
-            settings: settings_result.unwrap(),
+            settings: Settings::new(),
         }
     }
 

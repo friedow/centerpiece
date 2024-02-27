@@ -13,7 +13,7 @@ in {
           [ "alacritty" "--command" "nvim" "$GIT_DIRECTORY" ]
           [ "alacritty" "--working-directory" "$GIT_DIRECTORY" ]
         ];
-        type = lib.types.listOf lib.types.listOf lib.types.str;
+        type = lib.types.listOf (lib.types.listOf lib.types.str);
         description = lib.mdDoc
           "The commands to launch when an entry is selected. Use the $GIT_DIRECTORY variable to pass in the selected directory.";
         example = [
@@ -43,8 +43,9 @@ in {
   config = lib.mkMerge [
     (lib.mkIf cfg.enable { home.packages = [ centerpiece ]; })
 
-    (lib.mkIf cfg.config {
-      home.file.".config/centerpiece/config.yml" = builtins.toYAML cfg.config;
+    (lib.mkIf cfg.enable {
+      home.file.".config/centerpiece/config.yml".text =
+        lib.generators.toYAML { } cfg.config;
     })
 
     (lib.mkIf cfg.services.index-git-repositories.enable {

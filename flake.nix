@@ -34,9 +34,11 @@
       pname = "centerpiece";
 
       craneLib = crane.lib.${system};
-      assetFilter = path: _type: builtins.match ".*ttf$" path != null;
+      fontFilter = path: _type: builtins.match ".*ttf$" path != null;
+      configFilter = path: _type: builtins.match ".*config.yml$" path != null;
       assetOrCargo = path: type:
-        (assetFilter path type) || (craneLib.filterCargoSources path type);
+        (configFilter path type) || (fontFilter path type)
+        || (craneLib.filterCargoSources path type);
       commonArgs = {
         src = pkgs.lib.cleanSourceWith {
           src = craneLib.path ./.;

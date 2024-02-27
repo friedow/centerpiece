@@ -1,7 +1,12 @@
 use serde::Deserialize;
 
+fn default_true() -> bool {
+    true
+}
+
 #[derive(Debug, Deserialize)]
 pub struct ApplicationsPluginSettings {
+    #[serde(default = "default_true")]
     pub enable: bool,
 }
 
@@ -13,6 +18,7 @@ impl Default for ApplicationsPluginSettings {
 
 #[derive(Debug, Deserialize)]
 pub struct BraveBookmarksPluginSettings {
+    #[serde(default = "default_true")]
     pub enable: bool,
 }
 
@@ -24,6 +30,7 @@ impl Default for BraveBookmarksPluginSettings {
 
 #[derive(Debug, Deserialize)]
 pub struct BraveHistoryPluginSettings {
+    #[serde(default = "default_true")]
     pub enable: bool,
 }
 
@@ -35,6 +42,7 @@ impl Default for BraveHistoryPluginSettings {
 
 #[derive(Debug, Deserialize)]
 pub struct BraveProgressiveWebAppsSettings {
+    #[serde(default = "default_true")]
     pub enable: bool,
 }
 
@@ -46,6 +54,7 @@ impl Default for BraveProgressiveWebAppsSettings {
 
 #[derive(Debug, Deserialize)]
 pub struct ClockPluginSettings {
+    #[serde(default = "default_true")]
     pub enable: bool,
 }
 
@@ -57,33 +66,40 @@ impl Default for ClockPluginSettings {
 
 #[derive(Debug, Deserialize)]
 pub struct GitRepositoriesPluginSettings {
+    #[serde(default = "default_true")]
     pub enable: bool,
+    #[serde(default = "default_commands")]
     pub commands: Vec<Vec<String>>,
+}
+
+fn default_commands() -> Vec<Vec<String>> {
+    vec![
+        vec![
+            "alacritty".into(),
+            "--command".into(),
+            "nvim".into(),
+            "$GIT_DIRECTORY".into(),
+        ],
+        vec![
+            "alacritty".into(),
+            "--working-directory".into(),
+            "$GIT_DIRECTORY".into(),
+        ],
+    ]
 }
 
 impl Default for GitRepositoriesPluginSettings {
     fn default() -> Self {
         Self {
             enable: true,
-            commands: vec![
-                vec![
-                    "alacritty".into(),
-                    "--command".into(),
-                    "nvim".into(),
-                    "$GIT_DIRECTORY".into(),
-                ],
-                vec![
-                    "alacritty".into(),
-                    "--working-directory".into(),
-                    "$GIT_DIRECTORY".into(),
-                ],
-            ],
+            commands: default_commands(),
         }
     }
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ResourceMonitorBatteryPluginSettings {
+    #[serde(default = "default_true")]
     pub enable: bool,
 }
 
@@ -95,6 +111,7 @@ impl Default for ResourceMonitorBatteryPluginSettings {
 
 #[derive(Debug, Deserialize)]
 pub struct ResourceMonitorCpuPluginSettings {
+    #[serde(default = "default_true")]
     pub enable: bool,
 }
 
@@ -106,6 +123,7 @@ impl Default for ResourceMonitorCpuPluginSettings {
 
 #[derive(Debug, Deserialize)]
 pub struct ResourceMonitorDisksSettings {
+    #[serde(default = "default_true")]
     pub enable: bool,
 }
 
@@ -117,6 +135,7 @@ impl Default for ResourceMonitorDisksSettings {
 
 #[derive(Debug, Deserialize)]
 pub struct ResourceMonitorMemoryPluginSettings {
+    #[serde(default = "default_true")]
     pub enable: bool,
 }
 
@@ -128,6 +147,7 @@ impl Default for ResourceMonitorMemoryPluginSettings {
 
 #[derive(Debug, Deserialize)]
 pub struct SystemPluginSettings {
+    #[serde(default = "default_true")]
     pub enable: bool,
 }
 
@@ -139,6 +159,7 @@ impl Default for SystemPluginSettings {
 
 #[derive(Debug, Deserialize)]
 pub struct WifiPluginSettings {
+    #[serde(default = "default_true")]
     pub enable: bool,
 }
 
@@ -150,6 +171,7 @@ impl Default for WifiPluginSettings {
 
 #[derive(Debug, Deserialize)]
 pub struct WindowsPluginSettings {
+    #[serde(default = "default_true")]
     pub enable: bool,
 }
 
@@ -161,18 +183,31 @@ impl Default for WindowsPluginSettings {
 
 #[derive(Debug, Default, Deserialize)]
 pub struct PluginSettings {
+    #[serde(default)]
     pub applications: ApplicationsPluginSettings,
+    #[serde(default)]
     pub brave_bookmarks: BraveBookmarksPluginSettings,
+    #[serde(default)]
     pub brave_history: BraveHistoryPluginSettings,
+    #[serde(default)]
     pub brave_progressive_web_apps: BraveProgressiveWebAppsSettings,
+    #[serde(default)]
     pub clock: ClockPluginSettings,
+    #[serde(default)]
     pub git_repositories: GitRepositoriesPluginSettings,
+    #[serde(default)]
     pub resource_monitor_battery: ResourceMonitorBatteryPluginSettings,
+    #[serde(default)]
     pub resource_monitor_cpu: ResourceMonitorCpuPluginSettings,
+    #[serde(default)]
     pub resource_monitor_disks: ResourceMonitorDisksSettings,
+    #[serde(default)]
     pub resource_monitor_memory: ResourceMonitorMemoryPluginSettings,
+    #[serde(default)]
     pub system: SystemPluginSettings,
+    #[serde(default)]
     pub wifi: WifiPluginSettings,
+    #[serde(default)]
     pub windows: WindowsPluginSettings,
 }
 

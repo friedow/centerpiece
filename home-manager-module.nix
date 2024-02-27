@@ -7,20 +7,123 @@ in {
   options.programs.centerpiece = {
     enable = lib.mkEnableOption (lib.mdDoc "Centerpiece");
 
-    config.plugin.git_repositories = {
-      commands = lib.mkOption {
-        default = [
-          [ "alacritty" "--command" "nvim" "$GIT_DIRECTORY" ]
-          [ "alacritty" "--working-directory" "$GIT_DIRECTORY" ]
-        ];
-        type = lib.types.listOf (lib.types.listOf lib.types.str);
-        description = lib.mdDoc
-          "The commands to launch when an entry is selected. Use the $GIT_DIRECTORY variable to pass in the selected directory.";
-        example = [
-          [ "code" "--new-window" "$GIT_DIRECTORY" ]
-          [ "alacritty" "--command" "lazygit" "--path" "$GIT_DIRECTORY" ]
-          [ "alacritty" "--working-directory" "$GIT_DIRECTORY" ]
-        ];
+    config.plugin = {
+      applications = {
+        enable = lib.mkOption {
+          default = true;
+          type = lib.types.bool;
+          description = lib.mdDoc "Enable / disable the plugin.";
+        };
+      };
+
+      brave_bookmarks = {
+        enable = lib.mkOption {
+          default = true;
+          type = lib.types.bool;
+          description = lib.mdDoc "Enable / disable the plugin.";
+        };
+      };
+
+      brave_history = {
+        enable = lib.mkOption {
+          default = true;
+          type = lib.types.bool;
+          description = lib.mdDoc "Enable / disable the plugin.";
+        };
+      };
+
+      brave_progressive_web_apps = {
+        enable = lib.mkOption {
+          default = true;
+          type = lib.types.bool;
+          description = lib.mdDoc "Enable / disable the plugin.";
+        };
+      };
+
+      clock = {
+        enable = lib.mkOption {
+          default = true;
+          type = lib.types.bool;
+          description = lib.mdDoc "Enable / disable the plugin.";
+        };
+      };
+
+      git_repositories = {
+        enable = lib.mkOption {
+          default = true;
+          type = lib.types.bool;
+          description = lib.mdDoc "Enable / disable the plugin.";
+        };
+        commands = lib.mkOption {
+          default = [
+            [ "alacritty" "--command" "nvim" "$GIT_DIRECTORY" ]
+            [ "alacritty" "--working-directory" "$GIT_DIRECTORY" ]
+          ];
+          type = lib.types.listOf (lib.types.listOf lib.types.str);
+          description = lib.mdDoc
+            "The commands to launch when an entry is selected. Use the $GIT_DIRECTORY variable to pass in the selected directory.";
+          example = [
+            [ "code" "--new-window" "$GIT_DIRECTORY" ]
+            [ "alacritty" "--command" "lazygit" "--path" "$GIT_DIRECTORY" ]
+            [ "alacritty" "--working-directory" "$GIT_DIRECTORY" ]
+          ];
+        };
+      };
+
+      resource_monitor_battery = {
+        enable = lib.mkOption {
+          default = true;
+          type = lib.types.bool;
+          description = lib.mdDoc "Enable / disable the plugin.";
+        };
+      };
+
+      resource_monitor_cpu = {
+        enable = lib.mkOption {
+          default = true;
+          type = lib.types.bool;
+          description = lib.mdDoc "Enable / disable the plugin.";
+        };
+      };
+
+      resource_monitor_disks = {
+        enable = lib.mkOption {
+          default = true;
+          type = lib.types.bool;
+          description = lib.mdDoc "Enable / disable the plugin.";
+        };
+      };
+
+      resource_monitor_memory = {
+        enable = lib.mkOption {
+          default = true;
+          type = lib.types.bool;
+          description = lib.mdDoc "Enable / disable the plugin.";
+        };
+      };
+
+      system = {
+        enable = lib.mkOption {
+          default = true;
+          type = lib.types.bool;
+          description = lib.mdDoc "Enable / disable the plugin.";
+        };
+      };
+
+      wifi = {
+        enable = lib.mkOption {
+          default = true;
+          type = lib.types.bool;
+          description = lib.mdDoc "Enable / disable the plugin.";
+        };
+      };
+
+      windows = {
+        enable = lib.mkOption {
+          default = true;
+          type = lib.types.bool;
+          description = lib.mdDoc "Enable / disable the plugin.";
+        };
       };
     };
 

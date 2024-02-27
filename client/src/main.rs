@@ -71,11 +71,19 @@ impl Application for Centerpiece {
                 iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
                     key_code: iced::keyboard::KeyCode::Up,
                     ..
+                })
+                | iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
+                    key_code: iced::keyboard::KeyCode::K,
+                    modifiers: iced::keyboard::Modifiers::CTRL,
                 }) => self.select_previous_entry(),
 
                 iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
                     key_code: iced::keyboard::KeyCode::Down,
                     ..
+                })
+                | iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
+                    key_code: iced::keyboard::KeyCode::J,
+                    modifiers: iced::keyboard::Modifiers::CTRL,
                 }) => self.select_next_entry(),
 
                 iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {

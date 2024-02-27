@@ -5,31 +5,36 @@ pub struct GitRepositoriesSettings {
     pub commands: Vec<Vec<String>>,
 }
 
-#[derive(Debug, Deserialize)]
+impl Default for GitRepositoriesSettings {
+    fn default() -> Self {
+        Self {
+            commands: vec![
+                vec![
+                    "alacritty".into(),
+                    "--command".into(),
+                    "nvim".into(),
+                    "$GIT_DIRECTORY".into(),
+                ],
+                vec![
+                    "alacritty".into(),
+                    "--working-directory".into(),
+                    "$GIT_DIRECTORY".into(),
+                ],
+            ],
+        }
+    }
+}
+
+#[derive(Debug, Default, Deserialize)]
 pub struct PluginSettings {
+    #[serde(default)]
     pub git_repositories: GitRepositoriesSettings,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub struct Settings {
+    #[serde(default)]
     pub plugin: PluginSettings,
-}
-
-impl Default for Settings {
-    fn default() -> Self {
-        pub const DEFAULT_CONFIG: &[u8] =
-            include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/../", "config.yml"));
-
-        let config_result = serde_yaml::from_slice(&DEFAULT_CONFIG);
-        if let Err(error) = config_result {
-            log::error!(
-            error = log::error!("{:?}", error);
-            "Config file does not match settings struct.",
-            );
-            panic!();
-        }
-        config_result.unwrap()
-    }
 }
 
 impl Settings {
@@ -46,7 +51,7 @@ impl Settings {
         let config_file_path = format!("{config_directory}/config.yml");
 
         let config_file_result = std::fs::File::open(config_file_path);
-        if let Err(_) = config_file_result {
+        if config_file_result.is_err() {
             log::info!("No custom config file found, falling back to default.");
             return Self::default();
         }

@@ -79,6 +79,16 @@ impl Application for Centerpiece {
                 }) => self.select_next_entry(),
 
                 iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
+                    key_code: iced::keyboard::KeyCode::N,
+                    modifiers: iced::keyboard::Modifiers::CTRL,
+                }) => self.select_next_plugin(),
+
+                iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
+                    key_code: iced::keyboard::KeyCode::P,
+                    modifiers: iced::keyboard::Modifiers::CTRL,
+                }) => self.select_previous_plugin(),
+
+                iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
                     key_code: iced::keyboard::KeyCode::Enter,
                     ..
                 }) => self
@@ -292,6 +302,45 @@ impl Centerpiece {
             iced::widget::scrollable::Id::new(SCROLLABLE_ID),
             iced::widget::scrollable::RelativeOffset { x: 0.0, y: offset },
         )
+    }
+
+    fn select_next_plugin(&mut self) -> iced::Command<Message> {
+        let accumulated_entries = self
+            .plugins
+            .iter()
+            .map(|plugin| plugin.entries.len())
+            .scan(0, |acc, len| {
+                let prev = *acc;
+                *acc += len;
+                Some(prev)
+            })
+            .find(|&total| total > self.active_entry_index)
+            .unwrap_or(self.active_entry_index);
+
+        self.active_entry_index = accumulated_entries;
+        self.scroll_to_selected_entry()
+    }
+
+    fn select_previous_plugin(&mut self) -> iced::Command<Message> {
+        if self.plugins.is_empty() || self.active_entry_index == 0 {
+            return self.select_first_entry();
+        }
+
+        let accumulated_entries = self
+            .plugins
+            .iter()
+            .map(|plugin| plugin.entries.len())
+            .scan(0, |acc, len| {
+                let prev = *acc;
+                *acc += len;
+                Some(prev)
+            })
+            .take_while(|&total| total < self.active_entry_index)
+            .last()
+            .unwrap_or(0);
+
+        self.active_entry_index = accumulated_entries;
+        self.scroll_to_selected_entry()
     }
 
     fn register_plugin(&mut self, plugin: crate::model::Plugin) -> iced::Command<Message> {

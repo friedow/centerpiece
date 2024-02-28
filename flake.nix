@@ -11,7 +11,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, crane, treefmt-nix, ... }:
+  outputs = { self, nixpkgs, crane, treefmt-nix, home-manager, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
@@ -104,6 +104,31 @@
         shell = self.outputs.devShells.${system}.default;
         treefmt = treefmt.check self;
         inherit cargoClippy;
+        hmModule = (nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          modules = [
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.users.alice = {
+                imports = [ self.outputs.hmModules."x86_64-linux".default ];
+                programs.centerpiece = {
+                  enable = true;
+                  config.plugin.git_repositories.commands = [ [ "alacritty" ] ];
+                  services.index-git-repositories = {
+                    enable = true;
+                    interval = "3hours";
+                  };
+                };
+                home.stateVersion = "23.11";
+              };
+              users.users.alice = {
+                isNormalUser = true;
+                uid = 1000;
+                home = "/home/alice";
+              };
+            }
+          ];
+        }).config.system.build.vm;
       };
       hmModules.${system}.default = import ./home-manager-module.nix {
         centerpiece = self.outputs.packages.${system}.default;

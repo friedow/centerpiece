@@ -57,7 +57,7 @@
       GIT_REV = self.shortRev or "Not committed yet.";
       treefmt = (treefmt-nix.lib.evalModule pkgs ./formatter.nix).config.build;
     in {
-      devShells.${system}.default = pkgs.mkShell {
+      devShells.${system}.default = pkgs.mkShellNoCC {
         inherit nativeBuildInputs buildInputs GIT_DATE GIT_REV;
         packages = devInputs ++ [ treefmt.wrapper ];
         LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [

@@ -31,11 +31,14 @@ impl iced::widget::text_input::StyleSheet for Style {
     type Style = iced::Theme;
 
     fn active(&self, _style: &Self::Style) -> iced::widget::text_input::Appearance {
+        use iced::color;
         iced::widget::text_input::Appearance {
             background: iced::Background::Color(iced::Color::TRANSPARENT),
-            border_radius: iced::BorderRadius::from(0.),
-            border_width: 0.,
-            border_color: iced::Color::TRANSPARENT,
+            border: iced::Border {
+                radius: iced::border::Radius::from(0.),
+                width: 0.,
+                color: iced::Color::TRANSPARENT,
+            },
             icon_color: iced::color!(0xf3f3f3, 1.),
         }
     }
@@ -49,18 +52,22 @@ impl iced::widget::text_input::StyleSheet for Style {
     }
 
     fn placeholder_color(&self, _style: &Self::Style) -> iced::Color {
+        use iced::color;
         iced::color!(0xf3f3f3, 1.)
     }
 
     fn value_color(&self, _style: &Self::Style) -> iced::Color {
+        use iced::color;
         iced::color!(0xffffff, 1.)
     }
 
     fn disabled_color(&self, _style: &Self::Style) -> iced::Color {
+        use iced::color;
         iced::color!(0xfafafa, 1.)
     }
 
     fn selection_color(&self, _style: &Self::Style) -> iced::Color {
+        use iced::color;
         iced::color!(0x1b1b1b, 1.)
     }
 }

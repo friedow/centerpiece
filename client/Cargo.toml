@@ -21,7 +21,7 @@ simple_logger = { version = "4.3.3", features = [
 serde = { version = "1.0.196", features = ["derive"] }
 
 # settings
-serde_yaml = "0.9.31"
+serde_yaml = "0.9.32"
 
 # application window
 iced = { version = "0.10.0", features = ["svg"] }

@@ -7,7 +7,7 @@ pub struct CpuPlugin {
 
 impl Plugin for CpuPlugin {
     fn id() -> &'static str {
-        "cpu"
+        "resource_monitor_cpu"
     }
 
     fn priority() -> u32 {

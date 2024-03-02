@@ -7,7 +7,7 @@ pub struct ProgressiveWebAppsPlugin {
 
 impl Plugin for ProgressiveWebAppsPlugin {
     fn id() -> &'static str {
-        "brave-progressive-web-apps"
+        "brave_progressive_web_apps"
     }
 
     fn priority() -> u32 {

@@ -8,7 +8,7 @@ pub struct BatteryPlugin {
 
 impl Plugin for BatteryPlugin {
     fn id() -> &'static str {
-        "battery"
+        "resource_monitor_battery"
     }
 
     fn priority() -> u32 {

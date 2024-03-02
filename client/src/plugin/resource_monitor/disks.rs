@@ -8,7 +8,7 @@ pub struct DisksPlugin {
 
 impl Plugin for DisksPlugin {
     fn id() -> &'static str {
-        "disks"
+        "resource_monitor_disks"
     }
 
     fn priority() -> u32 {

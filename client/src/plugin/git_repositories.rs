@@ -1,9 +1,9 @@
-use crate::{plugin::utils::Plugin, settings::Settings};
+use crate::plugin::utils::Plugin;
 use anyhow::Context;
 
 pub struct GitRepositoriesPlugin {
     entries: Vec<crate::model::Entry>,
-    settings: Settings,
+    settings: crate::settings::Settings,
 }
 
 impl Plugin for GitRepositoriesPlugin {
@@ -26,7 +26,7 @@ impl Plugin for GitRepositoriesPlugin {
     fn new() -> Self {
         Self {
             entries: vec![],
-            settings: Settings::new(),
+            settings: crate::settings::Settings::new(),
         }
     }
 

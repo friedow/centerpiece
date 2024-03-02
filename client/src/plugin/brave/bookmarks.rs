@@ -7,7 +7,7 @@ pub struct BookmarksPlugin {
 
 impl Plugin for BookmarksPlugin {
     fn id() -> &'static str {
-        "brave-bookmarks"
+        "brave_bookmarks"
     }
 
     fn priority() -> u32 {

@@ -56,32 +56,28 @@
         }-${builtins.substring 6 2 self.lastModifiedDate}";
       GIT_REV = self.shortRev or "Not committed yet.";
       treefmt = (treefmt-nix.lib.evalModule pkgs ./formatter.nix).config.build;
+      libPath = pkgs.lib.makeLibraryPath [
+        pkgs.wayland
+        pkgs.libxkbcommon
+        pkgs.vulkan-loader
+        pkgs.libGL
+      ];
+
     in {
       devShells.${system}.default = pkgs.mkShellNoCC {
         inherit nativeBuildInputs buildInputs GIT_DATE GIT_REV;
         packages = devInputs ++ [ treefmt.wrapper ];
-        LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
-          pkgs.wayland
-          pkgs.libxkbcommon
-          pkgs.vulkan-loader
-          pkgs.libGL
-        ];
+        LD_LIBRARY_PATH = libPath;
       };
       packages.${system} = {
         default = craneLib.buildPackage (commonArgs // {
           inherit cargoArtifacts nativeBuildInputs buildInputs pname GIT_REV
             GIT_DATE;
-          postInstall = ''
-            wrapProgram "$out/bin/${pname}" \
-              --prefix LD_LIBRARY_PATH : ${
-                pkgs.lib.makeLibraryPath [
-                  pkgs.wayland
-                  pkgs.libxkbcommon
-                  pkgs.vulkan-loader
-                  pkgs.libGL
-                ]
-              }
+          postFixup = pkgs.lib.optional pkgs.stdenv.isLinux ''
+            rpath=$(patchelf --print-rpath $out/bin/${pname})
+            patchelf --set-rpath "$rpath:${libPath}" $out/bin/${pname}
           '';
+
           meta = with pkgs.lib; {
             description = "Your trusty omnibox search.";
             homepage = "https://github.com/friedow/centerpiece";

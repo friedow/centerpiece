@@ -60,8 +60,11 @@ in {
             [ "alacritty" "--working-directory" "$GIT_DIRECTORY" ]
           ];
           type = lib.types.listOf (lib.types.listOf lib.types.str);
-          description = lib.mdDoc
-            "The commands to launch when an entry is selected. Use the $GIT_DIRECTORY variable to pass in the selected directory.";
+          description = lib.mdDoc ''
+            The commands to launch when an entry is selected.
+            Use the $GIT_DIRECTORY variable to pass in the selected directory.
+            Use the $GIT_DIRECTORY_NAME variable to pass in the selected directory name.
+          '';
           example = [
             [ "code" "--new-window" "$GIT_DIRECTORY" ]
             [ "alacritty" "--command" "lazygit" "--path" "$GIT_DIRECTORY" ]

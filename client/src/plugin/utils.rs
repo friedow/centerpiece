@@ -173,6 +173,11 @@ pub fn config_directory() -> anyhow::Result<String> {
     Ok(std::env::var("XDG_CONFIG_HOME").unwrap_or(config_in_home))
 }
 
+pub fn centerpiece_default_config_path() -> anyhow::Result<String> {
+    let config_directory = crate::plugin::utils::centerpiece_config_directory()?;
+    Ok(format!("{config_directory}/config.yml"))
+}
+
 pub fn centerpiece_config_directory() -> anyhow::Result<String> {
     let config_directory = config_directory()?;
     Ok(format!("{config_directory}/centerpiece"))

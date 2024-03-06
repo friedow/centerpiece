@@ -200,6 +200,10 @@ plugin:
 
 You can configure centerpiece through yaml or nix.
 
+You can specify alternative configuration locations through:
+- the `--config` flag
+- the `CENTERPIECE_CONFIGURATION_FILE` environment variable
+ 
 ## Using yml
 
 1. Create a `config.yml` file in `~/.config/centerpiece/config.yml`.

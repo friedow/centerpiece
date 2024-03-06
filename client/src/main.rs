@@ -8,9 +8,9 @@ mod plugin;
 mod settings;
 
 pub fn main() -> iced::Result {
-    let _args = crate::cli::CliArgs::parse();
+    let args = crate::cli::CliArgs::parse();
     simple_logger::init_with_level(log::Level::Info).unwrap();
-    Centerpiece::run(Centerpiece::settings())
+    Centerpiece::run(Centerpiece::settings(args))
 }
 
 #[derive(Debug, Clone)]
@@ -38,9 +38,9 @@ impl Application for Centerpiece {
     type Message = Message;
     type Executor = iced::executor::Default;
     type Theme = iced::Theme;
-    type Flags = ();
+    type Flags = crate::cli::CliArgs;
 
-    fn new(_flags: ()) -> (Self, iced::Command<Message>) {
+    fn new(flags: crate::cli::CliArgs) -> (Self, iced::Command<Message>) {
         let _ = iced::font::load(
             include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
         );
@@ -48,12 +48,17 @@ impl Application for Centerpiece {
             include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Light.ttf").as_slice(),
         );
 
+        let settings = crate::settings::Settings::try_from(flags).unwrap_or_else(|_| {
+            eprintln!("There is an issue with the settings, please check the configuration file.");
+            std::process::exit(0);
+        });
+
         (
             Self {
                 query: String::from(""),
                 active_entry_index: 0,
                 plugins: vec![],
-                settings: settings::Settings::new(),
+                settings,
             },
             iced::Command::perform(async {}, move |()| Message::Loaded),
         )
@@ -262,7 +267,7 @@ impl Application for Centerpiece {
 }
 
 impl Centerpiece {
-    fn settings() -> iced::Settings<()> {
+    fn settings(flags: crate::cli::CliArgs) -> iced::Settings<crate::cli::CliArgs> {
         let default_text_size = REM;
 
         let default_font = iced::Font {
@@ -293,6 +298,7 @@ impl Centerpiece {
             window,
             default_font,
             default_text_size,
+            flags,
             ..Default::default()
         }
     }

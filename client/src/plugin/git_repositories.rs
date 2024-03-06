@@ -66,12 +66,16 @@ impl Plugin for GitRepositoriesPlugin {
         for command in self.settings.plugin.git_repositories.commands.clone() {
             let parsed_command: Vec<String> = command
                 .into_iter()
-                .map(|command_part| {
-                    if command_part == "$GIT_DIRECTORY" {
-                        entry.id.clone()
-                    } else {
-                        command_part
-                    }
+                .map(|command_part| match command_part.as_ref() {
+                    "$GIT_DIRECTORY" => entry.id.clone(),
+                    "$GIT_DIRECTORY_NAME" => std::path::Path::new(&entry.id)
+                        .file_name()
+                        // We match on a git directory
+                        .unwrap()
+                        .to_str()
+                        .unwrap()
+                        .into(),
+                    _ => command_part,
                 })
                 .collect();
             std::process::Command::new(&parsed_command[0])

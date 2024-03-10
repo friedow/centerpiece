@@ -44,7 +44,7 @@ nix run github:friedow/centerpiece
    };
    ```
 
-1.
+1. See the [configuration section](#configure-it) for more nix config options.
 
 ## Plugins
 
@@ -193,6 +193,117 @@ plugin:
   clock:
     enable: true
 ```
+
+# Configure
+
+You can configure centerpiece through yaml or nix.
+
+## Using yml
+
+1. Create a `config.yml` file in `~/.config/centerpiece/config.yml`.
+1. Use the following config keys to configure centerpiece. These are all config keys including their respective defaults.
+
+   ```yml
+   plugin:
+     applications:
+       enable: true
+     brave_bookmarks:
+       enable: true
+     brave_history:
+       enable: true
+     brave_progressive_web_apps:
+       enable: true
+     clock:
+       enable: true
+     git_repositories:
+       enable: true
+       commands:
+         - ["alacritty", "--command", "nvim", "$GIT_DIRECTORY"]
+         - ["alacritty", "--working-directory", "$GIT_DIRECTORY"]
+     resource_monitor_battery:
+       enable: true
+     resource_monitor_cpu:
+       enable: true
+     resource_monitor_disks:
+       enable: true
+     resource_monitor_memory:
+       enable: true
+     system:
+       enable: true
+     wifi:
+       enable: true
+     windows:
+       enable: true
+   ```
+
+## Using nix
+
+1. Install the home-manager module as documented in the ['Use it!' section](#use-it).
+1. Use the following config keys to configure centerpiece. These are all config keys including thier respective defaults.
+
+   ```nix
+   { inputs, ... }: {
+       home-manager.users.<USER> = {
+           imports = [ inputs.centerpiece.hmModules."x86_64-linux".default ];
+
+           programs.centerpiece = {
+               enable = true;
+               config = {
+                   plugin = {
+                       applications = {
+                           enable = true;
+                       };
+                       brave_bookmarks = {
+                           enable = true;
+                       };
+                       brave_history = {
+                           enable = true;
+                       };
+                       brave_progressive_web_apps = {
+                           enable = true;
+                       };
+                       clock = {
+                           enable = true;
+                       };
+                       git_repositories = {
+                           enable = true;
+                           commands = [
+                               ["alacritty" "--command" "nvim" "$GIT_DIRECTORY"]
+                               ["alacritty" "--working-directory" "$GIT_DIRECTORY"]
+                           ];
+                       };
+                       resource_monitor_battery = {
+                           enable = true;
+                       };
+                       resource_monitor_cpu = {
+                           enable = true;
+                       };
+                       resource_monitor_disks = {
+                           enable = true;
+                       };
+                       resource_monitor_memory = {
+                           enable = true;
+                       };
+                       system = {
+                           enable = true;
+                       };
+                       wifi = {
+                           enable = true;
+                       };
+                       windows = {
+                           enable = true;
+                       };
+                   };
+               };
+
+               # enables a systemd service to index git-repositories
+               services.index-git-repositories.enable = true;
+           };
+       };
+   };
+   ```
+
+# Contribute
 
 ## Repository Structure
 

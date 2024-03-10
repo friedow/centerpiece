@@ -1,5 +1,5 @@
 <p align="center">
-    <img width="500" alt="banner showing centerpiece" src="./screenshots/banner.webp">
+    <img width="100%" alt="banner showing centerpiece" src="./screenshots/banner.webp">
 </p>
 
 # Centerpiece

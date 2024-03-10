@@ -44,7 +44,7 @@ nix run github:friedow/centerpiece
    };
    ```
 
-1. See the [configuration section](#configure-it) for more nix config options.
+1. See the ['Configure' section](#configure) for more nix config options.
 
 ## Plugins
 
@@ -238,7 +238,7 @@ You can configure centerpiece through yaml or nix.
 
 ## Using nix
 
-1. Install the home-manager module as documented in the ['Use it!' section](#use-it).
+1. Install the home-manager module as documented in the ['Run it!' section](#run-it).
 1. Use the following config keys to configure centerpiece. These are all config keys including thier respective defaults.
 
    ```nix

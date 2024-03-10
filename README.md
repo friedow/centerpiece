@@ -1,21 +1,198 @@
+<p align="center">
+    <img width="500" alt="banner showing centerpiece" src="./screenshots/banner.webp">
+</p>
+
 # Centerpiece
 
-_Your trusty omnibox search._
-This project is currently in a very early state and tailored to my needs and daily workflows.
+_A blazing fast, extendable launcher for linux._
 
-![Screenshot of the applications in its default state.](./screenshots/search-view.png)
+centerpiece is designed with these values in mind:
 
-## Features
+- ⚡ blazing fast performance
+- ⚫ minimalistic UI
+- 🔌 extendable through plugins
 
-- switch between windows in [sway](https://swaywm.org/)
-- open applications
-- open [brave browser](https://brave.com/) in app-mode for special bookmarks
-- open local git repositories in a terminal, an editor and a git gui
-- open [brave browser](https://brave.com/) bookmarks in a new tab
-- run commands to lock, sleep, restart or shutdown the system
-- display information about cpu, gpu, ram and disks
-- display battery state
-- display date and time
+## Run it!
+
+Centerpiece is not packed in any major package manager yet. However you can easily run it through nix.
+
+**Try it using nix run**
+
+```
+nix run github:friedow/centerpiece
+```
+
+**Use it with home-manager**
+
+1. Add this repository to your `flake.nix` inputs
+
+   ```nix
+   {
+       inputs.centerpiece.url = "github:friedow/centerpiece";
+   }
+   ```
+
+1. Register the home-manager module and enable centerpiece
+
+   ```nix
+   { inputs, ... }: {
+       home-manager.users.<USER> = {
+           imports = [ inputs.centerpiece.hmModules."x86_64-linux".default ];
+
+           programs.centerpiece.enable = true;
+       };
+   };
+   ```
+
+1.
+
+## Plugins
+
+### Window Switcher
+
+_Search for open windows and switch between them._
+
+Currently, only [Sway](https://swaywm.org/) is supported as a window manger.
+This plugin depends on the sway ipc socket to be available.
+
+**Related config keys**
+
+```yml
+# ~/.config/centerpiece/config.yml
+plugin:
+  windows:
+    enable: true
+```
+
+### Application Launcher
+
+_Search for installed applications and launch them._
+
+This plugin searches for `.desktop` files.
+It follows the XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html).
+Thus, it searches in directories specified in the `XDG_DATA_DIRS` and `XDG_DATA_HOME` environment variables.
+
+**Related config keys**
+
+```yml
+# ~/.config/centerpiece/config.yml
+plugin:
+  applications:
+    enable: true
+```
+
+### Browser Integration
+
+_Open bookmarks and browser history in new tabs._
+
+This plugin currently only integrates with [Brave](https://brave.com/).
+
+In addition to bookmarks and history there is also a plugin to open special bookmarks in app mode.
+This will launch a brave instance without address and tab bar.
+To use this plugin put bookmarks into a Bookmark folder called 'Progressive Web Apps' at the top of your bookmarks collection.
+
+**Related config keys**
+
+```yml
+# ~/.config/centerpiece/config.yml
+plugin:
+  brave_bookmarks:
+    enable: true
+  brave_history:
+    enable: true
+  brave_progressive_web_apps:
+    enable: true
+```
+
+### Git Repositories
+
+_List git repositories in your home directory and open a terminal and an editor in them._
+
+Selecting a git repository will execute the configured commands.
+Defaults to opening a terminal and a code editor in the selected directory.
+
+Searching for git repositories in the whole home directory is resource heavy.
+To avoid delays in the plugin launch time this plugin comes with a systemd service which will create an index file.
+This index file is located at `~/.cache/centerpiece/git-repositories-index.json` and necessary for the plugin to work.
+
+**Related config keys**
+
+```yml
+# ~/.config/centerpiece/config.yml
+plugin:
+  git_repositories:
+    enable: true
+    commands:
+      - ["alacritty", "--command", "nvim", "$GIT_DIRECTORY"]
+      - ["alacritty", "--working-directory", "$GIT_DIRECTORY"]
+```
+
+### System Commands
+
+_Lock, sleep, restart or shutdown your system._
+
+The following commands are executed when the respective actions are selected.
+
+```
+lock: lock
+sleep: systemctl suspend
+restart: reboot
+shutdown: poweroff
+```
+
+**Related config keys**
+
+```yml
+# ~/.config/centerpiece/config.yml
+plugin:
+  system:
+    enable: true
+```
+
+### WiFi
+
+_List nearby wifi networks and connect to them._
+
+**Related config keys**
+
+```yml
+# ~/.config/centerpiece/config.yml
+plugin:
+  wifi:
+    enable: true
+```
+
+### Resource Monitor
+
+_Display current cpu, ram, disk usage and battery state._
+
+**Related config keys**
+
+```yml
+# ~/.config/centerpiece/config.yml
+plugin
+  resource_monitor_battery:
+    enable: true
+  resource_monitor_cpu:
+    enable: true
+  resource_monitor_disks:
+    enable: true
+  resource_monitor_memory:
+    enable: true
+```
+
+### Clock
+
+_Display current date and time._
+
+**Related config keys**
+
+```yml
+# ~/.config/centerpiece/config.yml
+plugin:
+  clock:
+    enable: true
+```
 
 ## Repository Structure
 

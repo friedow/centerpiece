@@ -299,7 +299,10 @@ You can configure centerpiece through yaml or nix.
                };
 
                # enables a systemd service to index git-repositories
-               services.index-git-repositories.enable = true;
+               services.index-git-repositories = {
+                    enable = true;
+                    interval = "5min";
+                };
            };
        };
    }

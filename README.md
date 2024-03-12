@@ -41,12 +41,14 @@ nix run github:friedow/centerpiece
 
            programs.centerpiece.enable = true;
        };
-   };
+   }
    ```
 
 1. See the ['Configure' section](#configure) for more nix config options.
 
 ## Plugins
+
+All plugins are enabled by default. Disable the ones you don't need ;).
 
 ### Window Switcher
 
@@ -300,7 +302,7 @@ You can configure centerpiece through yaml or nix.
                services.index-git-repositories.enable = true;
            };
        };
-   };
+   }
    ```
 
 # Contribute

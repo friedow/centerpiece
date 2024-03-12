@@ -131,7 +131,12 @@ in {
     };
 
     services.index-git-repositories = {
-      enable = lib.mkEnableOption (lib.mdDoc "enable timer");
+      enable = lib.mkOption {
+        default = true;
+        type = lib.types.bool;
+        description =
+          lib.mdDoc "Enable / disable the git repositories indexer service.";
+      };
       interval = lib.mkOption {
         default = "5min";
         type = lib.types.str;

@@ -64,7 +64,7 @@
       ];
 
     in {
-      devShells.${system}.default = pkgs.mkShellNoCC {
+      devShells.${system}.default = pkgs.mkShell {
         inherit nativeBuildInputs buildInputs GIT_DATE GIT_REV;
         packages = devInputs ++ [ treefmt.wrapper ];
         LD_LIBRARY_PATH = libPath;

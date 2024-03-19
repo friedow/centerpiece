@@ -12,6 +12,10 @@ centerpiece is designed with these values in mind:
 - ⚫ minimalistic UI
 - 🔌 extendable through plugins
 
+<video autoplay width="100%">
+  <source src="./screenshots/demo.webm" type="video/webm" />
+</video>
+
 ## Run it!
 
 Centerpiece is not packed in any major package manager yet. However you can easily run it through nix.

@@ -1,7 +1,7 @@
 pub fn view(entry: &crate::model::Entry, active: bool) -> iced::Element<'static, crate::Message> {
     return iced::widget::container(
         iced::widget::row![
-            iced::widget::text(&entry.title)
+            iced::widget::text(clipped_title(entry.title.clone()))
                 .size(1. * crate::REM)
                 .width(iced::Length::Fill),
             iced::widget::text(if active { &entry.action } else { "" }).size(1. * crate::REM)
@@ -10,6 +10,20 @@ pub fn view(entry: &crate::model::Entry, active: bool) -> iced::Element<'static,
     )
     .style(style(active))
     .into();
+}
+
+fn clipped_title(title: String) -> String {
+    if title.char_indices().count() <= 57 {
+        return title;
+    }
+
+    let mut clipped_title: String = title
+        .char_indices()
+        .filter_map(|(_, character)| Some(character))
+        .take(57)
+        .collect();
+    clipped_title.push_str("...");
+    clipped_title
 }
 
 fn style(active: bool) -> iced::theme::Container {

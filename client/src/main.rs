@@ -368,11 +368,36 @@ impl Centerpiece {
     }
 
     fn scroll_to_selected_entry(&self) -> iced::Command<Message> {
-        let total_entries = self.entries().len() as f32;
-        let offset = (1.0 / (total_entries - 1.0)) * self.active_entry_index as f32;
-        iced::widget::scrollable::snap_to(
+        let plugin_index = match self.active_entry_id() {
+            Some(active_entry_id) => self
+                .plugins
+                .iter()
+                .position(|plugin| {
+                    plugin
+                        .entries
+                        .iter()
+                        .find(|entry| entry.id.eq(active_entry_id))
+                        .is_some()
+                })
+                .unwrap_or(0) as f32,
+            None => 0.0,
+        };
+        let entry_index = self.active_entry_index as f32;
+
+        // 1.0 REM line height +
+        // 2x0.5 REM padding +
+        // 0.3 REM for good luck :D
+        let entry_height = 2.3 * crate::REM;
+        // 0.75 REM line height +
+        // 2x0.5 REM padding +
+        // 2x0.75 REM padding  +
+        // 0.32 REM for good luck :D
+        let plugin_header_height = 3.57 * crate::REM;
+
+        let offset = (plugin_index * plugin_header_height) + (entry_index * entry_height);
+        iced::widget::scrollable::scroll_to(
             iced::widget::scrollable::Id::new(SCROLLABLE_ID),
-            iced::widget::scrollable::RelativeOffset { x: 0.0, y: offset },
+            iced::widget::scrollable::AbsoluteOffset { x: 0.0, y: offset },
         )
     }
 

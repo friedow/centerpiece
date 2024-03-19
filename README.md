@@ -12,7 +12,9 @@ centerpiece is designed with these values in mind:
 - ⚫ minimalistic UI
 - 🔌 extendable through plugins
 
-<img alt="demo showing centerpiece in action" src="./screenshots/demo.gif" width="75%">
+## Demo
+
+<img alt="demo showing centerpiece in action" src="./screenshots/demo.gif" width="100%">
 
 ## Run it!
 

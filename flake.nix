@@ -2,7 +2,7 @@
   description = "Your trusty omnibox search.";
 
   nixConfig = {
-    extra-substituters = [ "https://friedow.cachix.org/" ];
+    extra-substituters = [ "https://friedow.cachix.org" ];
     extra-trusted-public-keys =
       [ "friedow.cachix.org-1:JDEaYMqNgGu+bVPOca7Zu4Cp8QDMkvQpArKuwPKa29A=" ];
   };

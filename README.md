@@ -12,6 +12,8 @@ centerpiece is designed with these values in mind:
 - ⚫ minimalistic UI
 - 🔌 extendable through plugins
 
+[!(demo gif)](./screenshots/demo.mp4)
+
 <video autoplay width="100%">
   <source src="./screenshots/demo.webm" type="video/webm" />
 </video>
@@ -205,9 +207,10 @@ plugin:
 You can configure centerpiece through yaml or nix.
 
 You can specify alternative configuration locations through:
+
 - the `--config` flag
 - the `CENTERPIECE_CONFIGURATION_FILE` environment variable
- 
+
 ## Using yml
 
 1. Create a `config.yml` file in `~/.config/centerpiece/config.yml`.

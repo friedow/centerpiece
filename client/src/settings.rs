@@ -247,3 +247,34 @@ impl Settings {
         config_result.unwrap()
     }
 }
+
+impl std::convert::TryFrom<crate::cli::CliArgs> for Settings {
+    type Error = anyhow::Error;
+
+    fn try_from(args: crate::cli::CliArgs) -> Result<Self, Self::Error> {
+        let maybe_config_file_path = args.config;
+        let config_file_path = maybe_config_file_path.unwrap_or_else(|| {
+            crate::plugin::utils::centerpiece_default_config_path().unwrap_or_else(|error| {
+                log::error!(
+                    error = log::error!("{:?}", error);
+                    "Unable to find default config file.",
+                );
+                panic!();
+            })
+        });
+        let config_file_result = std::fs::File::open(config_file_path);
+        if config_file_result.is_err() {
+            log::info!("No custom config file found, falling back to default.");
+            return Ok(Self::default());
+        }
+        let config_file = config_file_result?;
+        let config_result = serde_yaml::from_reader(config_file);
+        if let Err(ref error) = config_result {
+            log::error!(
+            error = log::error!("{:?}", error);
+            "Config file does not match settings struct.",
+            );
+        }
+        Ok(config_result?)
+    }
+}

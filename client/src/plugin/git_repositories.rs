@@ -49,7 +49,7 @@ impl Plugin for GitRepositoriesPlugin {
                     id: git_repository_path,
                     title: git_repository_display_name,
                     action: String::from("focus"),
-                    meta: String::from("windows"),
+                    meta: String::from("Git Repositories"),
                     command: None,
                 })
             })

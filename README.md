@@ -54,19 +54,16 @@ nix run github:friedow/centerpiece
 
 All plugins are enabled by default. Disable the ones you don't need ;).
 
-### Window Switcher
+### Sway Window Switcher
 
-_Search for open windows and switch between them._
-
-Currently, only [Sway](https://swaywm.org/) is supported as a window manger.
-This plugin depends on the sway ipc socket to be available.
+_Search for open sway windows and switch between them._
 
 **Related config keys**
 
 ```yml
 # ~/.config/centerpiece/config.yml
 plugin:
-  windows:
+  sway_windows:
     enable: true
 ```
 
@@ -205,6 +202,7 @@ plugin:
 You can configure centerpiece through yaml or nix.
 
 You can specify alternative configuration locations through:
+
 - the `--config` flag
 - the `CENTERPIECE_CONFIGURATION_FILE` environment variable
 
@@ -242,7 +240,7 @@ You can specify alternative configuration locations through:
        enable: true
      wifi:
        enable: true
-     windows:
+     sway_windows:
        enable: true
    ```
 
@@ -300,7 +298,7 @@ You can specify alternative configuration locations through:
                        wifi = {
                            enable = true;
                        };
-                       windows = {
+                       sway_windows = {
                            enable = true;
                        };
                    };

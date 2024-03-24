@@ -39,7 +39,7 @@ chrono = "0.4.33"
 # applications plugin
 freedesktop-desktop-entry = "0.5.0"
 
-# windows plugin
+# sway_windows plugin
 swayipc = "3.0.1"
 
 # system monitor plugin

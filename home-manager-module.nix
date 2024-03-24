@@ -105,6 +105,14 @@ in {
         };
       };
 
+      sway_windows = {
+        enable = lib.mkOption {
+          default = true;
+          type = lib.types.bool;
+          description = lib.mdDoc "Enable / disable the plugin.";
+        };
+      };
+
       system = {
         enable = lib.mkOption {
           default = true;
@@ -114,14 +122,6 @@ in {
       };
 
       wifi = {
-        enable = lib.mkOption {
-          default = true;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable the plugin.";
-        };
-      };
-
-      windows = {
         enable = lib.mkOption {
           default = true;
           type = lib.types.bool;

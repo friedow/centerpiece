@@ -3,7 +3,7 @@ pub mod brave;
 pub mod clock;
 pub mod git_repositories;
 pub mod resource_monitor;
+pub mod sway_windows;
 pub mod system;
 pub mod utils;
 pub mod wifi;
-pub mod windows;

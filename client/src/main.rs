@@ -220,9 +220,9 @@ impl Application for Centerpiece {
             subscriptions.push(crate::plugin::utils::spawn::<crate::plugin::wifi::WifiPlugin>());
         }
 
-        if self.settings.plugin.windows.enable {
+        if self.settings.plugin.sway_windows.enable {
             subscriptions.push(crate::plugin::utils::spawn::<
-                crate::plugin::windows::WindowsPlugin,
+                crate::plugin::sway_windows::SwayWindowsPlugin,
             >());
         }
 

@@ -170,12 +170,12 @@ impl Default for WifiPluginSettings {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct WindowsPluginSettings {
+pub struct SwayWindowsPluginSettings {
     #[serde(default = "default_true")]
     pub enable: bool,
 }
 
-impl Default for WindowsPluginSettings {
+impl Default for SwayWindowsPluginSettings {
     fn default() -> Self {
         Self { enable: true }
     }
@@ -204,11 +204,11 @@ pub struct PluginSettings {
     #[serde(default)]
     pub resource_monitor_memory: ResourceMonitorMemoryPluginSettings,
     #[serde(default)]
+    pub sway_windows: SwayWindowsPluginSettings,
+    #[serde(default)]
     pub system: SystemPluginSettings,
     #[serde(default)]
     pub wifi: WifiPluginSettings,
-    #[serde(default)]
-    pub windows: WindowsPluginSettings,
 }
 
 #[derive(Debug, Default, Deserialize)]

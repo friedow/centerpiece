@@ -1,12 +1,12 @@
 use crate::plugin::utils::Plugin;
 use anyhow::Context;
 
-pub struct WindowsPlugin {
+pub struct SwayWindowsPlugin {
     sway: swayipc::Connection,
     entries: Vec<crate::model::Entry>,
 }
 
-impl WindowsPlugin {
+impl SwayWindowsPlugin {
     fn get_window_nodes(node: swayipc::Node) -> Vec<swayipc::Node> {
         if !node.nodes.is_empty() {
             return node
@@ -24,9 +24,9 @@ impl WindowsPlugin {
     }
 }
 
-impl Plugin for WindowsPlugin {
+impl Plugin for SwayWindowsPlugin {
     fn id() -> &'static str {
-        "windows"
+        "sway-windows"
     }
     fn priority() -> u32 {
         30
@@ -69,7 +69,7 @@ impl Plugin for WindowsPlugin {
                     id: node.id.to_string(),
                     title,
                     action: String::from("focus"),
-                    meta: String::from(Self::id()),
+                    meta: String::from("Sway Windows"),
                     command: None,
                 }
             })

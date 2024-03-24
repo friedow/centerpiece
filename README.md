@@ -12,6 +12,10 @@ centerpiece is designed with these values in mind:
 - ⚫ minimalistic UI
 - 🔌 extendable through plugins
 
+## Demo
+
+<img alt="demo showing centerpiece in action" src="./screenshots/demo.gif" width="100%">
+
 ## Run it!
 
 Centerpiece is not packed in any major package manager yet. However you can easily run it through nix.
@@ -203,7 +207,7 @@ You can configure centerpiece through yaml or nix.
 You can specify alternative configuration locations through:
 - the `--config` flag
 - the `CENTERPIECE_CONFIGURATION_FILE` environment variable
- 
+
 ## Using yml
 
 1. Create a `config.yml` file in `~/.config/centerpiece/config.yml`.

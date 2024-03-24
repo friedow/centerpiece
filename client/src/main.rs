@@ -41,13 +41,6 @@ impl Application for Centerpiece {
     type Flags = crate::cli::CliArgs;
 
     fn new(flags: crate::cli::CliArgs) -> (Self, iced::Command<Message>) {
-        let _ = iced::font::load(
-            include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
-        );
-        let _ = iced::font::load(
-            include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Light.ttf").as_slice(),
-        );
-
         let settings = crate::settings::Settings::try_from(flags).unwrap_or_else(|_| {
             eprintln!("There is an issue with the settings, please check the configuration file.");
             std::process::exit(0);
@@ -60,7 +53,17 @@ impl Application for Centerpiece {
                 plugins: vec![],
                 settings,
             },
-            iced::Command::perform(async {}, move |()| Message::Loaded),
+            iced::Command::batch(vec![
+                iced::font::load(
+                    include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
+                )
+                .map(|font_loading_result| Message::FontLoaded(font_loading_result)),
+                iced::font::load(
+                    include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Light.ttf").as_slice(),
+                )
+                .map(|font_loading_result| Message::FontLoaded(font_loading_result)),
+                iced::Command::perform(async {}, move |()| Message::Loaded),
+            ]),
         )
     }
 

@@ -75,7 +75,7 @@ plugin:
 _Search for installed applications and launch them._
 
 This plugin searches for `.desktop` files.
-It follows the XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html).
+It follows the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html).
 Thus, it searches in directories specified in the `XDG_DATA_DIRS` and `XDG_DATA_HOME` environment variables.
 
 **Related config keys**
@@ -205,7 +205,6 @@ plugin:
 You can configure centerpiece through yaml or nix.
 
 You can specify alternative configuration locations through:
-
 - the `--config` flag
 - the `CENTERPIECE_CONFIGURATION_FILE` environment variable
 

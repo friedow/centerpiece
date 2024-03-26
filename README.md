@@ -122,6 +122,8 @@ It exports the following environment variables:
 - `$GIT_DIRECTORY`: The path to the git directory.
 - `$GIT_DIRECTORY_NAME`:  The name of the git directory.
 
+If `zoxide` integration is enabled, the plugin will sort your projects based on their respective `zoxide` scores.
+
 **Related config keys**
 
 ```yml
@@ -129,6 +131,7 @@ It exports the following environment variables:
 plugin:
   git_repositories:
     enable: true
+    zoxide: true
     commands:
       - ["alacritty", "--command", "nvim", "$GIT_DIRECTORY"]
       - ["alacritty", "--working-directory", "$GIT_DIRECTORY" "--class" "$GIT_DIRECTORY_NAME"]

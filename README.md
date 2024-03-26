@@ -118,6 +118,10 @@ Searching for git repositories in the whole home directory is resource heavy.
 To avoid delays in the plugin launch time this plugin comes with a systemd service which will create an index file.
 This index file is located at `~/.cache/centerpiece/git-repositories-index.json` and necessary for the plugin to work.
 
+It exports the following environment variables:
+- `$GIT_DIRECTORY`: The path to the git directory.
+- `$GIT_DIRECTORY_NAME`:  The name of the git directory.
+
 **Related config keys**
 
 ```yml
@@ -127,7 +131,7 @@ plugin:
     enable: true
     commands:
       - ["alacritty", "--command", "nvim", "$GIT_DIRECTORY"]
-      - ["alacritty", "--working-directory", "$GIT_DIRECTORY"]
+      - ["alacritty", "--working-directory", "$GIT_DIRECTORY" "--class" "$GIT_DIRECTORY_NAME"]
 ```
 
 ### System Commands

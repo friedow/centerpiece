@@ -4,7 +4,7 @@
 
 # Centerpiece
 
-_A blazing fast, extendable launcher for linux._
+_A blazing fast, extendable launcher for wayland._
 
 centerpiece is designed with these values in mind:
 

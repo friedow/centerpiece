@@ -19,7 +19,7 @@ fn clipped_title(title: String) -> String {
 
     let mut clipped_title: String = title
         .char_indices()
-        .filter_map(|(_, character)| Some(character))
+        .map(|(_, character)| character)
         .take(57)
         .collect();
     clipped_title.push_str("...");

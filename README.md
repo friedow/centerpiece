@@ -251,7 +251,7 @@ You can specify alternative configuration locations through:
 ## Using nix
 
 1. Install the home-manager module as documented in the ['Run it!' section](#run-it).
-1. Use the following config keys to configure centerpiece. These are all config keys including thier respective defaults.
+1. Use the following config keys to configure centerpiece. These are all config keys including their respective defaults.
 
    ```nix
    { inputs, ... }: {

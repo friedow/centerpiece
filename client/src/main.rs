@@ -57,11 +57,11 @@ impl Application for Centerpiece {
                 iced::font::load(
                     include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
                 )
-                .map(|font_loading_result| Message::FontLoaded(font_loading_result)),
+                .map(Message::FontLoaded),
                 iced::font::load(
                     include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Light.ttf").as_slice(),
                 )
-                .map(|font_loading_result| Message::FontLoaded(font_loading_result)),
+                .map(Message::FontLoaded),
                 iced::Command::perform(async {}, move |()| Message::Loaded),
             ]),
         )
@@ -385,8 +385,7 @@ impl Centerpiece {
                     plugin
                         .entries
                         .iter()
-                        .find(|entry| entry.id.eq(active_entry_id))
-                        .is_some()
+                        .any(|entry| entry.id.eq(active_entry_id))
                 })
                 .unwrap_or(0) as f32,
             None => 0.0,

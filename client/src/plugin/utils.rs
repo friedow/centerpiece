@@ -124,7 +124,7 @@ pub trait Plugin {
 
     fn search(
         &mut self,
-        query: &String,
+        query: &str,
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
         let filtered_entries = crate::plugin::utils::search(self.entries(), query);
@@ -151,7 +151,7 @@ pub trait Plugin {
     }
 }
 
-pub fn search(entries: Vec<crate::model::Entry>, query: &String) -> Vec<crate::model::Entry> {
+pub fn search(entries: Vec<crate::model::Entry>, query: &str) -> Vec<crate::model::Entry> {
     if query.is_empty() {
         let mut sorted_entries = entries.clone();
         sorted_entries.sort_by_key(|entry| entry.title.clone());

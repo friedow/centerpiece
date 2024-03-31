@@ -58,6 +58,25 @@ fn read_desktop_entry(path: &std::path::PathBuf) -> anyhow::Result<crate::model:
 }
 
 fn is_visible(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> bool {
+    if desktop_entry.type_() != Some("Application") {
+        return false;
+    }
+
+    if desktop_entry.desktop_entry("Hidden") == Some("true") {
+        return false;
+    }
+
+    if desktop_entry.no_display() {
+        return false;
+    }
+
+    // filter entries where Exec == false
+    if let Some(exec) = desktop_entry.exec() {
+        if exec.to_ascii_lowercase() == "false" {
+            return false;
+        }
+    }
+
     let desktop = std::env::var("XDG_CURRENT_DESKTOP").unwrap_or(String::from("sway"));
     // filter entries where NotShowIn == current desktop
     if let Some(not_show_in) = desktop_entry.desktop_entry("NotShowIn") {
@@ -72,19 +91,7 @@ fn is_visible(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> bool {
     if let Some(only_show_in) = desktop_entry.only_show_in() {
         let only_show_in_desktops = only_show_in.to_ascii_lowercase();
 
-        if !only_show_in_desktops.split(';').any(|d| d == desktop) {
-            return false;
-        }
-    }
-
-    // filter entries where NoDisplay != true
-    if desktop_entry.no_display() {
-        return false;
-    }
-
-    // filter entries where Exec == false
-    if let Some(exec) = desktop_entry.exec() {
-        if exec.to_ascii_lowercase() == "false" {
+        if !only_show_in_desktops.split(';').all(|d| d != desktop) {
             return false;
         }
     }

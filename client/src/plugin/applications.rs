@@ -5,33 +5,34 @@ pub struct ApplicationsPlugin {
     entries: Vec<crate::model::Entry>,
 }
 
-fn read_desktop_entry(path: &std::path::PathBuf) -> anyhow::Result<crate::model::Entry> {
-    let pathstr = path.to_str().unwrap_or("");
-    let bytes = std::fs::read_to_string(path)?;
-    let desktop_entry = freedesktop_desktop_entry::DesktopEntry::decode(path, &bytes)?;
+fn read_desktop_entry(
+    path: &std::path::PathBuf,
+    terminal_command: Option<String>,
+) -> Option<crate::model::Entry> {
+    let bytes_result = std::fs::read_to_string(path);
+    if let Err(reading_error) = bytes_result {
+        log::warn!(target: "applications", "Desktop entry at path '{:?}' will be hidden because reading it failed: {}", path, reading_error);
+        return None;
+    }
+    let bytes = bytes_result.unwrap();
+
+    let desktop_entry_result = freedesktop_desktop_entry::DesktopEntry::decode(path, &bytes);
+    if let Err(parsing_error) = desktop_entry_result {
+        log::warn!(target: "applications", "Desktop entry at path '{:?}' will be hidden because parsing it failed: {}", path, parsing_error);
+        return None;
+    }
+    let desktop_entry = desktop_entry_result.unwrap();
 
     if !is_visible(&desktop_entry) {
-        return Err(anyhow::anyhow!(
-            "Desktop entry at path '{}' is hidden.",
-            pathstr
-        ));
+        log::info!(target: "applications", "Desktop entry at path '{:?}' will be hidden because of its properties.", path);
+        return None;
     }
 
     let locale = std::env::var("LANG").unwrap_or(String::from("en_US"));
-    let title = desktop_entry
-        .name(Some(&locale))
-        .context(format!(
-            "Desktop entry at path '{}' is missing the 'name' field.",
-            pathstr
-        ))?
-        .to_string();
+    let title = desktop_entry.name(Some(&locale))?.to_string();
 
-    let cmd = desktop_entry
-        .exec()
-        .context(format!(
-            "Desktop entry at path '{}' is missing the 'exec' field.",
-            pathstr
-        ))?
+    let mut cmd: Vec<String> = desktop_entry
+        .exec()?
         .split_ascii_whitespace()
         .filter_map(|s| {
             if s.starts_with('%') {
@@ -42,13 +43,23 @@ fn read_desktop_entry(path: &std::path::PathBuf) -> anyhow::Result<crate::model:
         })
         .collect();
 
+    if desktop_entry.terminal() {
+        if terminal_command.is_none() {
+            log::warn!(target: "applications", "Desktop entry with name '{}' will be hidden because no terminal emulator was found to launch it with.", title);
+            return None;
+        }
+
+        cmd.insert(0, terminal_command.unwrap());
+        cmd.insert(1, "-e".into());
+    }
+
     let mut meta = desktop_entry
         .keywords()
         .unwrap_or(std::borrow::Cow::from(""))
         .replace(';', " ");
     meta.push_str(" Applications Apps");
 
-    Ok(crate::model::Entry {
+    Some(crate::model::Entry {
         id: desktop_entry.appid.to_string(),
         title,
         action: String::from("open"),
@@ -99,6 +110,25 @@ fn is_visible(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> bool {
     true
 }
 
+fn terminal_command(path: &std::path::PathBuf) -> Option<String> {
+    let bytes = std::fs::read_to_string(path).ok()?;
+    let desktop_entry = freedesktop_desktop_entry::DesktopEntry::decode(path, &bytes).ok()?;
+
+    if desktop_entry
+        .categories()?
+        .split(";")
+        .any(|category| category == "TerminalEmulator")
+    {
+        let terminal_cmd: Option<&str> = desktop_entry.exec()?.split_ascii_whitespace().nth(0);
+
+        return match terminal_cmd {
+            Some(cmd) => Some(String::from(cmd)),
+            None => None,
+        };
+    }
+    None
+}
+
 impl Plugin for ApplicationsPlugin {
     fn new() -> Self {
         Self { entries: vec![] }
@@ -123,17 +153,18 @@ impl Plugin for ApplicationsPlugin {
     fn update_entries(&mut self) -> anyhow::Result<()> {
         self.entries.clear();
 
-        let paths =
-            freedesktop_desktop_entry::Iter::new(freedesktop_desktop_entry::default_paths());
+        let paths: Vec<std::path::PathBuf> =
+            freedesktop_desktop_entry::Iter::new(freedesktop_desktop_entry::default_paths())
+                .collect();
+
+        let terminal_command = paths
+            .iter()
+            .filter_map(|path| terminal_command(path))
+            .nth(0);
+
         self.entries = paths
-            .filter_map(|path| {
-                let desktop_entry_result = read_desktop_entry(&path);
-                if let Err(error) = desktop_entry_result {
-                    log::warn!(target: "applications", "Skipping desktop entry: '{:?}'.", error);
-                    return None;
-                }
-                desktop_entry_result.ok()
-            })
+            .iter()
+            .filter_map(|path| read_desktop_entry(path, terminal_command.clone()))
             .collect();
 
         self.entries.sort();

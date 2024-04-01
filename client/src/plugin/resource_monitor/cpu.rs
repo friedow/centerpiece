@@ -28,22 +28,36 @@ impl Plugin for CpuPlugin {
 
     fn update_entries(&mut self) -> anyhow::Result<()> {
         self.sysinfo.refresh_cpu();
-
         self.entries.clear();
+
+        let mut core_usages: String = format!(
+            "{}% – {} Cores:",
+            self.sysinfo.global_cpu_info().cpu_usage() as i32,
+            self.sysinfo.cpus().len()
+        );
+
         for cpu_core in self.sysinfo.cpus() {
-            self.entries.push(crate::model::Entry {
-                id: cpu_core.name().to_string(),
-                title: format!(
-                    "{}: {}% {}MHz",
-                    cpu_core.name(),
-                    cpu_core.cpu_usage() as i32,
-                    cpu_core.frequency()
-                ),
-                action: String::from(""),
-                meta: String::from("Resource Monitor CPU"),
-                command: None,
-            });
+            let core_usage = match cpu_core.cpu_usage() as i32 {
+                0..=12 => " ▁",
+                13..=25 => " ▂",
+                26..=37 => " ▃",
+                38..=50 => " ▄",
+                51..=62 => " ▅",
+                63..=75 => " ▆",
+                76..=87 => " ▇",
+                _ => " █",
+            };
+
+            core_usages.push_str(core_usage);
         }
+
+        self.entries.push(crate::model::Entry {
+            id: "cpu".into(),
+            title: core_usages,
+            action: String::from(""),
+            meta: String::from("Resource Monitor CPU"),
+            command: None,
+        });
 
         Ok(())
     }

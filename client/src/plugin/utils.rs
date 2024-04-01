@@ -39,6 +39,8 @@ pub trait Plugin {
 
     fn entries(&self) -> Vec<crate::model::Entry>;
 
+    fn set_entries(&mut self, entries: Vec<crate::model::Entry>);
+
     fn update_entries(&mut self) -> anyhow::Result<()> {
         Ok(())
     }
@@ -122,12 +124,26 @@ pub trait Plugin {
         return Ok(());
     }
 
+    fn sort(&self, entries: &mut Vec<crate::model::Entry>) {
+        entries.sort_by_key(|entry| entry.title.clone());
+    }
+
     fn search(
         &mut self,
         query: &str,
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
-        let filtered_entries = crate::plugin::utils::search(self.entries(), query);
+        let mut entries = self.entries();
+        if query.is_empty() {
+            self.sort(&mut entries);
+        }
+        let filtered_entries = entries
+            .into_iter()
+            .filter(|entry| {
+                let keywords = format!("{} {}", entry.title, entry.meta).to_lowercase();
+                keywords.contains(&query.to_lowercase())
+            })
+            .collect::<Vec<crate::model::Entry>>();
 
         plugin_channel_out
             .try_send(crate::Message::UpdateEntries(
@@ -149,22 +165,6 @@ pub trait Plugin {
     ) -> anyhow::Result<()> {
         Ok(())
     }
-}
-
-pub fn search(entries: Vec<crate::model::Entry>, query: &str) -> Vec<crate::model::Entry> {
-    if query.is_empty() {
-        let mut sorted_entries = entries.clone();
-        sorted_entries.sort_by_key(|entry| entry.title.clone());
-        return sorted_entries;
-    }
-
-    entries
-        .into_iter()
-        .filter(|entry| {
-            let keywords = format!("{} {}", entry.title, entry.meta).to_lowercase();
-            keywords.contains(&query.to_lowercase())
-        })
-        .collect::<Vec<crate::model::Entry>>()
 }
 
 pub fn config_directory() -> anyhow::Result<String> {

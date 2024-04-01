@@ -22,6 +22,10 @@ impl Plugin for HistoryPlugin {
         self.entries.clone()
     }
 
+    fn set_entries(&mut self, entries: Vec<crate::model::Entry>) {
+        self.entries = entries;
+    }
+
     fn new() -> Self {
         Self { entries: vec![] }
     }

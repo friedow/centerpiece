@@ -128,6 +128,28 @@ fn terminal_command(path: &std::path::PathBuf) -> Option<String> {
     None
 }
 
+fn path_name(path: &std::path::PathBuf) -> String {
+    let bytes_result = std::fs::read_to_string(path);
+    if bytes_result.is_err() {
+        return "".into();
+    }
+    let bytes = bytes_result.unwrap();
+
+    let desktop_entry_result = freedesktop_desktop_entry::DesktopEntry::decode(path, &bytes);
+    if desktop_entry_result.is_err() {
+        return "".into();
+    }
+    let desktop_entry = desktop_entry_result.unwrap();
+
+    let locale = std::env::var("LANG").unwrap_or(String::from("en_US"));
+    let name_option = desktop_entry.name(Some(&locale));
+    if name_option.is_none() {
+        return "".into();
+    }
+
+    name_option.unwrap().to_string()
+}
+
 impl Plugin for ApplicationsPlugin {
     fn new() -> Self {
         Self { entries: vec![] }
@@ -156,9 +178,12 @@ impl Plugin for ApplicationsPlugin {
     fn update_entries(&mut self) -> anyhow::Result<()> {
         self.entries.clear();
 
-        let paths: Vec<std::path::PathBuf> =
+        let mut paths: Vec<std::path::PathBuf> =
             freedesktop_desktop_entry::Iter::new(freedesktop_desktop_entry::default_paths())
                 .collect();
+
+        paths.sort_by_key(path_name);
+        paths.dedup_by_key(|path| path_name(path));
 
         let terminal_command = paths.iter().filter_map(terminal_command).nth(0);
 

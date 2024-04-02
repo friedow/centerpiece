@@ -381,6 +381,7 @@ impl Centerpiece {
             Some(active_entry_id) => self
                 .plugins
                 .iter()
+                .filter(|plugin| plugin.entries.len() > 0)
                 .position(|plugin| {
                     plugin
                         .entries

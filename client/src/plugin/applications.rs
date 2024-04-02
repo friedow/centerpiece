@@ -24,7 +24,7 @@ fn read_desktop_entry(
     let desktop_entry = desktop_entry_result.unwrap();
 
     if !is_visible(&desktop_entry) {
-        log::info!(target: "applications", "Desktop entry at path '{:?}' will be hidden because of its properties.", path);
+        log::debug!(target: "applications", "Desktop entry at path '{:?}' will be hidden because of its properties.", path);
         return None;
     }
 
@@ -119,12 +119,11 @@ fn terminal_command(path: &std::path::PathBuf) -> Option<String> {
         .split(";")
         .any(|category| category == "TerminalEmulator")
     {
-        let terminal_cmd: Option<&str> = desktop_entry.exec()?.split_ascii_whitespace().nth(0);
-
-        return match terminal_cmd {
-            Some(cmd) => Some(String::from(cmd)),
-            None => None,
-        };
+        return desktop_entry
+            .exec()?
+            .split_ascii_whitespace()
+            .nth(0)
+            .map(String::from);
     }
     None
 }
@@ -157,10 +156,7 @@ impl Plugin for ApplicationsPlugin {
             freedesktop_desktop_entry::Iter::new(freedesktop_desktop_entry::default_paths())
                 .collect();
 
-        let terminal_command = paths
-            .iter()
-            .filter_map(|path| terminal_command(path))
-            .nth(0);
+        let terminal_command = paths.iter().filter_map(terminal_command).nth(0);
 
         self.entries = paths
             .iter()

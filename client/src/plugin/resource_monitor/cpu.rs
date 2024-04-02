@@ -26,6 +26,10 @@ impl Plugin for CpuPlugin {
         self.entries.clone()
     }
 
+    fn set_entries(&mut self, entries: Vec<crate::model::Entry>) {
+        self.entries = entries;
+    }
+
     fn update_entries(&mut self) -> anyhow::Result<()> {
         self.sysinfo.refresh_cpu();
         self.entries.clear();

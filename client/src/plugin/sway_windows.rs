@@ -39,6 +39,10 @@ impl Plugin for SwayWindowsPlugin {
         self.entries.clone()
     }
 
+    fn set_entries(&mut self, entries: Vec<crate::model::Entry>) {
+        self.entries = entries;
+    }
+
     fn new() -> Self {
         let connection_result =
             swayipc::Connection::new().context("Failed to establish sway ipc connection.");

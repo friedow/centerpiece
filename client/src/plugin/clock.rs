@@ -52,4 +52,8 @@ impl Plugin for ClockPlugin {
     fn entries(&self) -> Vec<crate::model::Entry> {
         self.entries.clone()
     }
+
+    fn set_entries(&mut self, entries: Vec<crate::model::Entry>) {
+        self.entries = entries;
+    }
 }

@@ -7,3 +7,4 @@ pub mod sway_windows;
 pub mod system;
 pub mod utils;
 pub mod wifi;
+pub mod mpd;

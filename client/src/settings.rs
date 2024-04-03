@@ -184,6 +184,18 @@ impl Default for SwayWindowsPluginSettings {
     }
 }
 
+#[derive(Debug, Deserialize)]
+pub struct MpdPluginSettings {
+    #[serde(default = "default_true")]
+    pub enable: bool,
+}
+
+impl Default for MpdPluginSettings {
+    fn default() -> Self {
+        Self { enable: true }
+    }
+}
+
 #[derive(Debug, Default, Deserialize)]
 pub struct PluginSettings {
     #[serde(default)]
@@ -212,6 +224,8 @@ pub struct PluginSettings {
     pub system: SystemPluginSettings,
     #[serde(default)]
     pub wifi: WifiPluginSettings,
+    #[serde(default)]
+    pub mpd: MpdPluginSettings,
 }
 
 #[derive(Debug, Default, Deserialize)]

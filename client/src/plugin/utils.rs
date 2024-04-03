@@ -124,8 +124,10 @@ pub trait Plugin {
         return Ok(());
     }
 
-    fn sort(&self, entries: &mut Vec<crate::model::Entry>) {
+    fn sort(&mut self) {
+        let mut entries = self.entries();
         entries.sort_by_key(|entry| entry.title.clone());
+        self.set_entries(entries)
     }
 
     fn search(
@@ -133,11 +135,11 @@ pub trait Plugin {
         query: &str,
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
-        let mut entries = self.entries();
         if query.is_empty() {
-            self.sort(&mut entries);
+            self.sort();
         }
-        let filtered_entries = entries
+        let filtered_entries = self
+            .entries()
             .into_iter()
             .filter(|entry| {
                 let keywords = format!("{} {}", entry.title, entry.meta).to_lowercase();

@@ -68,6 +68,8 @@ impl Default for ClockPluginSettings {
 pub struct GitRepositoriesPluginSettings {
     #[serde(default = "default_true")]
     pub enable: bool,
+    #[serde(default = "default_true")]
+    pub zoxide: bool,
     #[serde(default = "default_commands")]
     pub commands: Vec<Vec<String>>,
 }
@@ -92,6 +94,7 @@ impl Default for GitRepositoriesPluginSettings {
     fn default() -> Self {
         Self {
             enable: true,
+            zoxide: true,
             commands: default_commands(),
         }
     }

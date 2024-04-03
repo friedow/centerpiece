@@ -54,6 +54,11 @@ in {
           type = lib.types.bool;
           description = lib.mdDoc "Enable / disable the plugin.";
         };
+        zoxide = lib.mkOption {
+          default = true;
+          type = lib.types.bool;
+          description = lib.mdDoc "Enable / disable zoxide integration.";
+        };
         commands = lib.mkOption {
           default = [
             [ "alacritty" "--command" "nvim" "$GIT_DIRECTORY" ]

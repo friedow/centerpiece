@@ -547,6 +547,7 @@ dependencies = [
  "sqlite",
  "swayipc",
  "sysinfo",
+ "xdg",
 ]
 
 [[package]]

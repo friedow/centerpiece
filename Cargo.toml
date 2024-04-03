@@ -6,4 +6,4 @@ default-members = ["client"]
 members = ["client", "services/index-git-repositories"]
 
 [workspace.package]
-version = "0.8.0"
+version = "1.0.0"

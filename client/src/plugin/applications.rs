@@ -150,15 +150,6 @@ fn path_name(path: &std::path::PathBuf) -> String {
     name_option.unwrap().to_string()
 }
 
-fn data_dirs() -> Vec<std::path::PathBuf> {
-    let base_dirs = xdg::BaseDirectories::new().unwrap();
-    let mut data_dirs: Vec<std::path::PathBuf> = vec![];
-    data_dirs.push(base_dirs.get_data_home());
-    data_dirs.append(&mut base_dirs.get_data_dirs());
-
-    data_dirs.iter().map(|d| d.join("applications")).collect()
-}
-
 impl Plugin for ApplicationsPlugin {
     fn new() -> Self {
         Self { entries: vec![] }
@@ -188,7 +179,8 @@ impl Plugin for ApplicationsPlugin {
         self.entries.clear();
 
         let mut paths: Vec<std::path::PathBuf> =
-            freedesktop_desktop_entry::Iter::new(data_dirs()).collect();
+            freedesktop_desktop_entry::Iter::new(freedesktop_desktop_entry::default_paths())
+                .collect();
 
         paths.sort_by_key(path_name);
         paths.dedup_by_key(|path| path_name(path));

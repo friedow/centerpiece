@@ -38,7 +38,6 @@ chrono = "0.4.33"
 
 # applications plugin
 freedesktop-desktop-entry = "0.5.1"
-xdg = "2.5.2"
 
 # sway_windows plugin
 swayipc = "3.0.1"

@@ -9,8 +9,7 @@ fn to_entry(
     desktop_entry: &freedesktop_desktop_entry::DesktopEntry,
     terminal_command: Option<String>,
 ) -> Option<crate::model::Entry> {
-    let locale = std::env::var("LANG").unwrap_or(String::from("en_US"));
-    let title = desktop_entry.name(Some(&locale))?.to_string();
+    let title = name(desktop_entry);
 
     if !is_visible(&desktop_entry) {
         log::debug!(target: "applications", "Desktop entry with name '{}' will be hidden because of its properties.", title);
@@ -113,12 +112,10 @@ fn terminal_command(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> 
 
 fn name(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> String {
     let locale = std::env::var("LANG").unwrap_or(String::from("en_US"));
-    let name_option = desktop_entry.name(Some(&locale));
-    if name_option.is_none() {
-        return "".into();
-    }
-
-    name_option.unwrap().to_string()
+    desktop_entry
+        .name(Some(&locale))
+        .unwrap_or_default()
+        .to_string()
 }
 
 impl Plugin for ApplicationsPlugin {
@@ -149,11 +146,11 @@ impl Plugin for ApplicationsPlugin {
     fn update_entries(&mut self) -> anyhow::Result<()> {
         self.entries.clear();
 
-        let mut paths: Vec<std::path::PathBuf> =
+        let paths: Vec<std::path::PathBuf> =
             freedesktop_desktop_entry::Iter::new(freedesktop_desktop_entry::default_paths())
                 .collect();
 
-        let mut bytes_collection: Vec<(&std::path::PathBuf, String)> = paths
+        let bytes_collection: Vec<(&std::path::PathBuf, String)> = paths
             .iter()
             .filter_map(|path| Some((path, std::fs::read_to_string(path).ok()?)))
             .collect();

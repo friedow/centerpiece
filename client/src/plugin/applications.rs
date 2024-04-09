@@ -5,31 +5,17 @@ pub struct ApplicationsPlugin {
     entries: Vec<crate::model::Entry>,
 }
 
-fn read_desktop_entry(
-    path: &std::path::PathBuf,
+fn to_entry(
+    desktop_entry: &freedesktop_desktop_entry::DesktopEntry,
     terminal_command: Option<String>,
 ) -> Option<crate::model::Entry> {
-    let bytes_result = std::fs::read_to_string(path);
-    if let Err(reading_error) = bytes_result {
-        log::warn!(target: "applications", "Desktop entry at path '{:?}' will be hidden because reading it failed: {}", path, reading_error);
-        return None;
-    }
-    let bytes = bytes_result.unwrap();
-
-    let desktop_entry_result = freedesktop_desktop_entry::DesktopEntry::decode(path, &bytes);
-    if let Err(parsing_error) = desktop_entry_result {
-        log::warn!(target: "applications", "Desktop entry at path '{:?}' will be hidden because parsing it failed: {}", path, parsing_error);
-        return None;
-    }
-    let desktop_entry = desktop_entry_result.unwrap();
-
-    if !is_visible(&desktop_entry) {
-        log::debug!(target: "applications", "Desktop entry at path '{:?}' will be hidden because of its properties.", path);
-        return None;
-    }
-
     let locale = std::env::var("LANG").unwrap_or(String::from("en_US"));
     let title = desktop_entry.name(Some(&locale))?.to_string();
+
+    if !is_visible(&desktop_entry) {
+        log::debug!(target: "applications", "Desktop entry with name '{}' will be hidden because of its properties.", title);
+        return None;
+    }
 
     let mut cmd: Vec<String> = desktop_entry
         .exec()?
@@ -110,37 +96,22 @@ fn is_visible(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> bool {
     true
 }
 
-fn terminal_command(path: &std::path::PathBuf) -> Option<String> {
-    let bytes = std::fs::read_to_string(path).ok()?;
-    let desktop_entry = freedesktop_desktop_entry::DesktopEntry::decode(path, &bytes).ok()?;
-
-    if desktop_entry
+fn terminal_command(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> Option<String> {
+    if !desktop_entry
         .categories()?
         .split(";")
         .any(|category| category == "TerminalEmulator")
     {
-        return desktop_entry
-            .exec()?
-            .split_ascii_whitespace()
-            .nth(0)
-            .map(String::from);
+        return None;
     }
-    None
+    return desktop_entry
+        .exec()?
+        .split_ascii_whitespace()
+        .nth(0)
+        .map(String::from);
 }
 
-fn path_name(path: &std::path::PathBuf) -> String {
-    let bytes_result = std::fs::read_to_string(path);
-    if bytes_result.is_err() {
-        return "".into();
-    }
-    let bytes = bytes_result.unwrap();
-
-    let desktop_entry_result = freedesktop_desktop_entry::DesktopEntry::decode(path, &bytes);
-    if desktop_entry_result.is_err() {
-        return "".into();
-    }
-    let desktop_entry = desktop_entry_result.unwrap();
-
+fn name(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> String {
     let locale = std::env::var("LANG").unwrap_or(String::from("en_US"));
     let name_option = desktop_entry.name(Some(&locale));
     if name_option.is_none() {
@@ -182,14 +153,26 @@ impl Plugin for ApplicationsPlugin {
             freedesktop_desktop_entry::Iter::new(freedesktop_desktop_entry::default_paths())
                 .collect();
 
-        paths.sort_by_key(path_name);
-        paths.dedup_by_key(|path| path_name(path));
-
-        let terminal_command = paths.iter().filter_map(terminal_command).nth(0);
-
-        self.entries = paths
+        let mut bytes_collection: Vec<(&std::path::PathBuf, String)> = paths
             .iter()
-            .filter_map(|path| read_desktop_entry(path, terminal_command.clone()))
+            .filter_map(|path| Some((path, std::fs::read_to_string(path).ok()?)))
+            .collect();
+
+        let mut desktop_entries: Vec<freedesktop_desktop_entry::DesktopEntry> = bytes_collection
+            .iter()
+            .filter_map(|(bytes, path)| {
+                freedesktop_desktop_entry::DesktopEntry::decode(bytes, path).ok()
+            })
+            .collect();
+
+        desktop_entries.sort_by_key(name);
+        desktop_entries.dedup_by_key(|desktop_entry| name(desktop_entry));
+
+        let terminal_command = desktop_entries.iter().find_map(terminal_command);
+
+        self.entries = desktop_entries
+            .iter()
+            .filter_map(|path| to_entry(path, terminal_command.clone()))
             .collect();
 
         self.entries.sort();

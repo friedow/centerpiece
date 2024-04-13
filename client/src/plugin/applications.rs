@@ -172,8 +172,7 @@ impl Plugin for ApplicationsPlugin {
             .filter_map(|path| to_entry(path, terminal_command.clone()))
             .collect();
 
-        self.entries.sort();
-        self.entries.dedup();
+        self.sort();
 
         Ok(())
     }

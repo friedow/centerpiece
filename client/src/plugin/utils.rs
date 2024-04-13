@@ -126,7 +126,7 @@ pub trait Plugin {
 
     fn sort(&mut self) {
         let mut entries = self.entries();
-        entries.sort_by_key(|entry| entry.title.clone());
+        entries.sort_by_key(|entry| entry.title.clone().to_lowercase());
         self.set_entries(entries)
     }
 
@@ -135,9 +135,6 @@ pub trait Plugin {
         query: &str,
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
-        if query.is_empty() {
-            self.sort();
-        }
         let filtered_entries = self
             .entries()
             .into_iter()

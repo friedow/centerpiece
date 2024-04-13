@@ -10,7 +10,9 @@ fn main() {
         .strict()
         .hidden()
         .custom_filter(|dir| {
-            let name = dir.file_name().to_str().unwrap();
+            let Some(name) = dir.file_name().to_str() else {
+                return false;
+            };
             if name == ".git" {
                 return true;
             }

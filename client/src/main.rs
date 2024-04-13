@@ -8,9 +8,9 @@ mod plugin;
 mod settings;
 
 pub fn main() -> iced::Result {
-    let _args = crate::cli::CliArgs::parse();
+    let args = crate::cli::CliArgs::parse();
     simple_logger::init_with_level(log::Level::Info).unwrap();
-    Centerpiece::run(Centerpiece::settings())
+    Centerpiece::run(Centerpiece::settings(args))
 }
 
 #[derive(Debug, Clone)]
@@ -28,6 +28,7 @@ struct Centerpiece {
     query: String,
     active_entry_index: usize,
     plugins: Vec<model::Plugin>,
+    settings: settings::Settings,
 }
 
 pub const SCROLLABLE_ID: &str = "scrollable";
@@ -37,23 +38,32 @@ impl Application for Centerpiece {
     type Message = Message;
     type Executor = iced::executor::Default;
     type Theme = iced::Theme;
-    type Flags = ();
+    type Flags = crate::cli::CliArgs;
 
-    fn new(_flags: ()) -> (Self, iced::Command<Message>) {
-        let _ = iced::font::load(
-            include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
-        );
-        let _ = iced::font::load(
-            include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Light.ttf").as_slice(),
-        );
+    fn new(flags: crate::cli::CliArgs) -> (Self, iced::Command<Message>) {
+        let settings = crate::settings::Settings::try_from(flags).unwrap_or_else(|_| {
+            eprintln!("There is an issue with the settings, please check the configuration file.");
+            std::process::exit(0);
+        });
 
         (
             Self {
                 query: String::from(""),
                 active_entry_index: 0,
                 plugins: vec![],
+                settings,
             },
-            iced::Command::perform(async {}, move |()| Message::Loaded),
+            iced::Command::batch(vec![
+                iced::font::load(
+                    include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
+                )
+                .map(Message::FontLoaded),
+                iced::font::load(
+                    include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Light.ttf").as_slice(),
+                )
+                .map(Message::FontLoaded),
+                iced::Command::perform(async {}, move |()| Message::Loaded),
+            ]),
         )
     }
 
@@ -120,36 +130,100 @@ impl Application for Centerpiece {
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-        iced::subscription::Subscription::batch(vec![
-            iced::event::listen_with(|event, _status| match event {
-                iced::Event::Keyboard(iced::keyboard::Event::KeyPressed { .. }) => {
-                    Some(Message::Event(event))
-                }
-                iced::Event::Keyboard(iced::keyboard::Event::KeyReleased { .. }) => {
-                    Some(Message::Event(event))
-                }
+        let mut subscriptions = vec![iced::subscription::events_with(
+            |event, _status| match event {
+                iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
+                    modifiers: _,
+                    key_code: _,
+                }) => Some(Message::Event(event)),
+                iced::Event::Keyboard(iced::keyboard::Event::KeyReleased {
+                    modifiers: _,
+                    key_code: _,
+                }) => Some(Message::Event(event)),
                 iced::Event::Mouse(iced::mouse::Event::ButtonPressed(_)) => {
                     Some(Message::Event(event))
                 }
                 _ => None,
-            }),
-            crate::plugin::utils::spawn::<crate::plugin::windows::WindowsPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::applications::ApplicationsPlugin>(),
-            crate::plugin::utils::spawn::<
+            },
+        )];
+
+        if self.settings.plugin.applications.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::applications::ApplicationsPlugin,
+            >());
+        }
+
+        if self.settings.plugin.brave_bookmarks.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::brave::bookmarks::BookmarksPlugin,
+            >());
+        }
+
+        if self.settings.plugin.brave_progressive_web_apps.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
                 crate::plugin::brave::progressive_web_apps::ProgressiveWebAppsPlugin,
-            >(),
-            crate::plugin::utils::spawn::<crate::plugin::git_repositories::GitRepositoriesPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::brave::bookmarks::BookmarksPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::system::SystemPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::wifi::WifiPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::resource_monitor::battery::BatteryPlugin>(
-            ),
-            crate::plugin::utils::spawn::<crate::plugin::resource_monitor::cpu::CpuPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::resource_monitor::memory::MemoryPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::resource_monitor::disks::DisksPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::clock::ClockPlugin>(),
-            crate::plugin::utils::spawn::<crate::plugin::brave::history::HistoryPlugin>(),
-        ])
+            >());
+        }
+
+        if self.settings.plugin.brave_history.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::brave::history::HistoryPlugin,
+            >());
+        }
+
+        if self.settings.plugin.clock.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::clock::ClockPlugin,
+            >());
+        }
+
+        if self.settings.plugin.git_repositories.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::git_repositories::GitRepositoriesPlugin,
+            >());
+        }
+
+        if self.settings.plugin.resource_monitor_battery.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::resource_monitor::battery::BatteryPlugin,
+            >());
+        }
+
+        if self.settings.plugin.resource_monitor_cpu.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::resource_monitor::cpu::CpuPlugin,
+            >());
+        }
+
+        if self.settings.plugin.resource_monitor_disks.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::resource_monitor::disks::DisksPlugin,
+            >());
+        }
+
+        if self.settings.plugin.resource_monitor_memory.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::resource_monitor::memory::MemoryPlugin,
+            >());
+        }
+
+        if self.settings.plugin.system.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::system::SystemPlugin,
+            >());
+        }
+
+        if self.settings.plugin.wifi.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<crate::plugin::wifi::WifiPlugin>());
+        }
+
+        if self.settings.plugin.sway_windows.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::sway_windows::SwayWindowsPlugin,
+            >());
+        }
+
+        iced::subscription::Subscription::batch(subscriptions)
     }
 
     fn view(&self) -> iced::Element<Message> {
@@ -190,8 +264,7 @@ impl Application for Centerpiece {
 }
 
 impl Centerpiece {
-    fn settings() -> iced::Settings<()> {
-        let default_text_size = iced::Pixels(REM);
+
 
         let default_font = iced::Font {
             family: iced::font::Family::Name("FiraCode Nerd Font"),
@@ -222,6 +295,7 @@ impl Centerpiece {
             window,
             default_font,
             default_text_size,
+            flags,
             ..Default::default()
         }
     }
@@ -296,11 +370,36 @@ impl Centerpiece {
     }
 
     fn scroll_to_selected_entry(&self) -> iced::Command<Message> {
-        let total_entries = self.entries().len() as f32;
-        let offset = (1.0 / (total_entries - 1.0)) * self.active_entry_index as f32;
-        iced::widget::scrollable::snap_to(
+        let plugin_index = match self.active_entry_id() {
+            Some(active_entry_id) => self
+                .plugins
+                .iter()
+                .filter(|plugin| plugin.entries.len() > 0)
+                .position(|plugin| {
+                    plugin
+                        .entries
+                        .iter()
+                        .any(|entry| entry.id.eq(active_entry_id))
+                })
+                .unwrap_or(0) as f32,
+            None => 0.0,
+        };
+        let entry_index = self.active_entry_index as f32;
+
+        // 1.0 REM line height +
+        // 2x0.5 REM padding +
+        // 0.3 REM for good luck :D
+        let entry_height = 2.3 * crate::REM;
+        // 0.75 REM line height +
+        // 2x0.5 REM padding +
+        // 2x0.75 REM padding  +
+        // 0.32 REM for good luck :D
+        let plugin_header_height = 3.57 * crate::REM;
+
+        let offset = (plugin_index * plugin_header_height) + (entry_index * entry_height);
+        iced::widget::scrollable::scroll_to(
             iced::widget::scrollable::Id::new(SCROLLABLE_ID),
-            iced::widget::scrollable::RelativeOffset { x: 0.0, y: offset },
+            iced::widget::scrollable::AbsoluteOffset { x: 0.0, y: offset },
         )
     }
 

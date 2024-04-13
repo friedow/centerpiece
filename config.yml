@@ -1,5 +1,0 @@
-plugin:
-  git_repositories:
-    commands:
-      - ["alacritty", "--command", "nvim", "$GIT_DIRECTORY"]
-      - ["alacritty", "--working-directory", "$GIT_DIRECTORY"]

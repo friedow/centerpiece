@@ -7,7 +7,7 @@ pub struct ProgressiveWebAppsPlugin {
 
 impl Plugin for ProgressiveWebAppsPlugin {
     fn id() -> &'static str {
-        "brave-progressive-web-apps"
+        "brave_progressive_web_apps"
     }
 
     fn priority() -> u32 {
@@ -20,6 +20,10 @@ impl Plugin for ProgressiveWebAppsPlugin {
 
     fn entries(&self) -> Vec<crate::model::Entry> {
         self.entries.clone()
+    }
+
+    fn set_entries(&mut self, entries: Vec<crate::model::Entry>) {
+        self.entries = entries;
     }
 
     fn new() -> Self {

@@ -7,7 +7,7 @@ pub struct HistoryPlugin {
 
 impl Plugin for HistoryPlugin {
     fn id() -> &'static str {
-        "brave-history"
+        "brave_history"
     }
 
     fn priority() -> u32 {
@@ -20,6 +20,10 @@ impl Plugin for HistoryPlugin {
 
     fn entries(&self) -> Vec<crate::model::Entry> {
         self.entries.clone()
+    }
+
+    fn set_entries(&mut self, entries: Vec<crate::model::Entry>) {
+        self.entries = entries;
     }
 
     fn new() -> Self {

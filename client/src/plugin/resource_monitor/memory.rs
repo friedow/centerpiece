@@ -7,7 +7,7 @@ pub struct MemoryPlugin {
 
 impl Plugin for MemoryPlugin {
     fn id() -> &'static str {
-        "memory"
+        "resource_monitor_memory"
     }
 
     fn priority() -> u32 {
@@ -24,6 +24,10 @@ impl Plugin for MemoryPlugin {
 
     fn entries(&self) -> Vec<crate::model::Entry> {
         self.entries.clone()
+    }
+
+    fn set_entries(&mut self, entries: Vec<crate::model::Entry>) {
+        self.entries = entries;
     }
 
     fn update_entries(&mut self) -> anyhow::Result<()> {

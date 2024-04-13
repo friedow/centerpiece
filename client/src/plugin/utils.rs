@@ -39,6 +39,8 @@ pub trait Plugin {
 
     fn entries(&self) -> Vec<crate::model::Entry>;
 
+    fn set_entries(&mut self, entries: Vec<crate::model::Entry>);
+
     fn update_entries(&mut self) -> anyhow::Result<()> {
         Ok(())
     }
@@ -122,12 +124,28 @@ pub trait Plugin {
         return Ok(());
     }
 
+    fn sort(&mut self) {
+        let mut entries = self.entries();
+        entries.sort_by_key(|entry| entry.title.clone());
+        self.set_entries(entries)
+    }
+
     fn search(
         &mut self,
-        query: &String,
+        query: &str,
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
-        let filtered_entries = crate::plugin::utils::search(self.entries(), query);
+        if query.is_empty() {
+            self.sort();
+        }
+        let filtered_entries = self
+            .entries()
+            .into_iter()
+            .filter(|entry| {
+                let keywords = format!("{} {}", entry.title, entry.meta).to_lowercase();
+                keywords.contains(&query.to_lowercase())
+            })
+            .collect::<Vec<crate::model::Entry>>();
 
         plugin_channel_out
             .try_send(crate::Message::UpdateEntries(
@@ -151,26 +169,15 @@ pub trait Plugin {
     }
 }
 
-pub fn search(entries: Vec<crate::model::Entry>, query: &String) -> Vec<crate::model::Entry> {
-    if query.is_empty() {
-        let mut sorted_entries = entries.clone();
-        sorted_entries.sort_by_key(|entry| entry.title.clone());
-        return sorted_entries;
-    }
-
-    entries
-        .into_iter()
-        .filter(|entry| {
-            let keywords = format!("{} {}", entry.title, entry.meta).to_lowercase();
-            keywords.contains(&query.to_lowercase())
-        })
-        .collect::<Vec<crate::model::Entry>>()
-}
-
 pub fn config_directory() -> anyhow::Result<String> {
     let home_directory = std::env::var("HOME")?;
     let config_in_home = format!("{home_directory}/.config");
     Ok(std::env::var("XDG_CONFIG_HOME").unwrap_or(config_in_home))
+}
+
+pub fn centerpiece_default_config_path() -> anyhow::Result<String> {
+    let config_directory = crate::plugin::utils::centerpiece_config_directory()?;
+    Ok(format!("{config_directory}/config.yml"))
 }
 
 pub fn centerpiece_config_directory() -> anyhow::Result<String> {

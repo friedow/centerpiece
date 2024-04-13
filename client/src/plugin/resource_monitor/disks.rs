@@ -8,7 +8,7 @@ pub struct DisksPlugin {
 
 impl Plugin for DisksPlugin {
     fn id() -> &'static str {
-        "disks"
+        "resource_monitor_disks"
     }
 
     fn priority() -> u32 {
@@ -25,6 +25,10 @@ impl Plugin for DisksPlugin {
 
     fn entries(&self) -> Vec<crate::model::Entry> {
         self.entries.clone()
+    }
+
+    fn set_entries(&mut self, entries: Vec<crate::model::Entry>) {
+        self.entries = entries;
     }
 
     fn update_entries(&mut self) -> anyhow::Result<()> {

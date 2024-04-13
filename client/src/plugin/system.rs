@@ -64,6 +64,10 @@ impl Plugin for SystemPlugin {
         self.entries.clone()
     }
 
+    fn set_entries(&mut self, entries: Vec<crate::model::Entry>) {
+        self.entries = entries;
+    }
+
     fn activate(
         &mut self,
         entry: crate::model::Entry,

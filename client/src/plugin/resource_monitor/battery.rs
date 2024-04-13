@@ -8,7 +8,7 @@ pub struct BatteryPlugin {
 
 impl Plugin for BatteryPlugin {
     fn id() -> &'static str {
-        "battery"
+        "resource_monitor_battery"
     }
 
     fn priority() -> u32 {
@@ -25,6 +25,10 @@ impl Plugin for BatteryPlugin {
 
     fn entries(&self) -> Vec<crate::model::Entry> {
         self.entries.clone()
+    }
+
+    fn set_entries(&mut self, entries: Vec<crate::model::Entry>) {
+        self.entries = entries;
     }
 
     fn update_entries(&mut self) -> anyhow::Result<()> {

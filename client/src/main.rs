@@ -130,22 +130,16 @@ impl Application for Centerpiece {
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-        let mut subscriptions = vec![iced::subscription::events_with(
-            |event, _status| match event {
-                iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
-                    modifiers: _,
-                    key_code: _,
-                }) => Some(Message::Event(event)),
-                iced::Event::Keyboard(iced::keyboard::Event::KeyReleased {
-                    modifiers: _,
-                    key_code: _,
-                }) => Some(Message::Event(event)),
-                iced::Event::Mouse(iced::mouse::Event::ButtonPressed(_)) => {
-                    Some(Message::Event(event))
-                }
-                _ => None,
-            },
-        )];
+        let mut subscriptions = vec![iced::event::listen_with(|event, _status| match event {
+            iced::Event::Keyboard(iced::keyboard::Event::KeyPressed { .. }) => {
+                Some(Message::Event(event))
+            }
+            iced::Event::Keyboard(iced::keyboard::Event::KeyReleased { .. }) => {
+                Some(Message::Event(event))
+            }
+            iced::Event::Mouse(iced::mouse::Event::ButtonPressed(_)) => Some(Message::Event(event)),
+            _ => None,
+        })];
 
         if self.settings.plugin.applications.enable {
             subscriptions.push(crate::plugin::utils::spawn::<
@@ -264,8 +258,8 @@ impl Application for Centerpiece {
 }
 
 impl Centerpiece {
-
-
+    fn settings(flags: crate::cli::CliArgs) -> iced::Settings<crate::cli::CliArgs> {
+        let default_text_size = iced::Pixels(REM);
         let default_font = iced::Font {
             family: iced::font::Family::Name("FiraCode Nerd Font"),
             weight: iced::font::Weight::Normal,

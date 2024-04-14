@@ -38,6 +38,7 @@ impl Plugin for BookmarksPlugin {
             .map(|bookmark| bookmark.into())
             .collect();
 
+        self.sort();
         Ok(())
     }
 

@@ -449,7 +449,10 @@ impl Centerpiece {
         self.scroll_to_selected_entry()
     }
 
-    fn register_plugin(&mut self, plugin: crate::model::Plugin) -> iced::Command<Message> {
+    fn register_plugin(&mut self, mut plugin: crate::model::Plugin) -> iced::Command<Message> {
+        let _ = plugin
+            .app_channel_out
+            .try_send(crate::model::PluginRequest::Search(self.query.clone()));
         self.plugins.push(plugin);
         self.plugins.sort_by(|a, b| b.priority.cmp(&a.priority));
         iced::Command::none()

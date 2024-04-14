@@ -47,6 +47,7 @@ impl Plugin for ProgressiveWebAppsPlugin {
             .map(|bookmark| bookmark.into())
             .collect();
 
+        self.sort();
         Ok(())
     }
 

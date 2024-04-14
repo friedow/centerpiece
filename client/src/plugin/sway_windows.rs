@@ -50,16 +50,26 @@ impl Plugin for SwayWindowsPlugin {
             log::error!(target: Self::id(), "{:?}", error);
             panic!();
         }
-        let mut sway = connection_result.unwrap();
+        let sway = connection_result.unwrap();
 
-        let root_node_result = sway.get_tree().context("Failed to get_tree from sway ipc.");
+        Self {
+            sway,
+            entries: vec![],
+        }
+    }
+
+    fn update_entries(&mut self) -> anyhow::Result<()> {
+        let root_node_result = self
+            .sway
+            .get_tree()
+            .context("Failed to get_tree from sway ipc.");
         if let Err(error) = root_node_result {
             log::error!(target: Self::id(), "{:?}", error);
             panic!();
         }
-        let root_node = root_node_result.unwrap();
+        let sway_root_node = root_node_result.unwrap();
 
-        let entries = Self::get_window_nodes(root_node)
+        let entries: Vec<crate::model::Entry> = Self::get_window_nodes(sway_root_node)
             .into_iter()
             .map(|node| {
                 let name = node
@@ -79,7 +89,10 @@ impl Plugin for SwayWindowsPlugin {
             })
             .collect();
 
-        Self { sway, entries }
+        self.set_entries(entries);
+        self.sort();
+
+        Ok(())
     }
 
     fn activate(

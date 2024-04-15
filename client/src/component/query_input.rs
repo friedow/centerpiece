@@ -9,7 +9,7 @@ pub fn view(query: &str) -> iced::widget::Row<'static, crate::Message> {
             .id(iced::widget::text_input::Id::new(SEARCH_INPUT_ID))
             .on_input(crate::Message::Search)
             .size(1. * crate::REM)
-            .width(2000)
+            .width(crate::WIDTH)
             .style(style())
     ]
     .padding(iced::Padding::from([0.8 * crate::REM, 1.2 * crate::REM]))

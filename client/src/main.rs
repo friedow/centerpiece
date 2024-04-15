@@ -270,7 +270,7 @@ impl Centerpiece {
 
         let window = iced::window::Settings {
             transparent: true,
-            size: iced::Size::new(650.0, 400.0),
+            size: iced::Size::new(WIDTH, HEIGHT),
             decorations: false,
             level: iced::window::Level::AlwaysOnTop,
             resizable: false,
@@ -488,6 +488,8 @@ impl Centerpiece {
 }
 
 pub const REM: f32 = 14.0;
+pub const WIDTH: f32 = 650.0;
+pub const HEIGHT: f32 = 400.0;
 
 struct SandboxStyle {}
 impl iced::application::StyleSheet for SandboxStyle {

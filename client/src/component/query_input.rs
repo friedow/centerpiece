@@ -1,6 +1,9 @@
 pub const SEARCH_INPUT_ID: &str = "search_input";
 
-pub fn view(query: &str, add_horizontal_rule: bool) -> iced::Element<'static, crate::Message> {
+pub fn view(
+    query: &str,
+    add_horizontal_rule: bool,
+) -> iced::widget::Column<'static, crate::Message> {
     let mut view = iced::widget::column![iced::widget::row![
         iced::widget::container(iced::widget::text("󰍉 ").size(1.3 * crate::REM)).padding(
             iced::Padding::from([0.2 * crate::REM, -0.3 * crate::REM, 0., 0.])
@@ -9,13 +12,15 @@ pub fn view(query: &str, add_horizontal_rule: bool) -> iced::Element<'static, cr
             .id(iced::widget::text_input::Id::new(SEARCH_INPUT_ID))
             .on_input(crate::Message::Search)
             .size(1. * crate::REM)
+            .width(2000)
             .style(style())
     ]
     .padding(iced::Padding::from([0.8 * crate::REM, 1.2 * crate::REM])),]
     .padding(iced::Padding::from([0., 0., 1., 0.]));
 
     if add_horizontal_rule {
-        view = view.push(iced::widget::horizontal_rule(1));
+        // TODO: horizontal_rule breaks layout
+        //view = view.push(iced::widget::horizontal_rule(1));
     }
 
     view.into()

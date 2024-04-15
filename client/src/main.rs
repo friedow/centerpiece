@@ -221,10 +221,9 @@ impl Application for Centerpiece {
     }
 
     fn view(&self) -> iced::Element<Message> {
-        let entries = self.entries();
-
         iced::widget::container(iced::widget::column![
-            component::query_input::view(&self.query, !entries.is_empty()),
+            component::query_input::view(&self.query),
+            iced::widget::horizontal_rule(1),
             iced::widget::scrollable(iced::widget::column(
                 self.plugins
                     .iter()

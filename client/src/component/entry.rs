@@ -3,7 +3,8 @@ pub fn view(entry: &crate::model::Entry, active: bool) -> iced::Element<'static,
         iced::widget::row![
             iced::widget::text(clipped_title(entry.title.clone()))
                 .size(1. * crate::REM)
-                .width(iced::Length::Fill),
+                .width(iced::Length::Fill)
+                .shaping(iced::widget::text::Shaping::Advanced),
             iced::widget::text(if active { &entry.action } else { "" }).size(1. * crate::REM)
         ]
         .padding(0.5 * crate::REM),

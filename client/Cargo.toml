@@ -24,7 +24,7 @@ serde = { version = "1.0.197", features = ["derive"] }
 serde_yaml = "0.9.34"
 
 # application window
-iced = { version = "0.12.1", features = ["palette"] }
+iced = { version = "0.10.0", features = ["svg"] }
 
 # plugins
 async-trait = "0.1.76"

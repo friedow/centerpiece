@@ -1,5 +1,5 @@
 pub fn view(entry: &crate::model::Entry, active: bool) -> iced::Element<'static, crate::Message> {
-    iced::widget::container(
+    return iced::widget::container(
         iced::widget::row![
             iced::widget::text(clipped_title(entry.title.clone()))
                 .size(1. * crate::REM)
@@ -9,7 +9,7 @@ pub fn view(entry: &crate::model::Entry, active: bool) -> iced::Element<'static,
         .padding(0.5 * crate::REM),
     )
     .style(style(active))
-    .into()
+    .into();
 }
 
 fn clipped_title(title: String) -> String {
@@ -42,13 +42,10 @@ impl iced::widget::container::StyleSheet for Style {
     fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
         iced::widget::container::Appearance {
             background: None,
+            border_radius: iced::BorderRadius::from(0.1 * crate::REM),
+            border_width: 1.,
+            border_color: iced::Color::WHITE,
             text_color: None,
-            border: iced::Border {
-                radius: iced::border::Radius::from(0.1 * crate::REM),
-                width: 1.,
-                color: iced::Color::WHITE,
-            },
-            shadow: iced::Shadow::default(),
         }
     }
 }

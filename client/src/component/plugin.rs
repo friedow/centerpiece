@@ -16,7 +16,7 @@ pub fn view(
                     family: iced::font::Family::Name("FiraCode Nerd Font"),
                     weight: iced::font::Weight::Light,
                     stretch: iced::font::Stretch::Normal,
-                    style: iced::font::Style::default(),
+                    monospaced: true,
                 })
                 .size(0.75 * crate::REM)]
             .padding(0.5 * crate::REM),
@@ -29,7 +29,7 @@ pub fn view(
                             active_entry_id.is_some() && active_entry_id.unwrap() == &entry.id;
                         crate::component::entry::view(entry, is_active)
                     })
-                    .collect::<Vec<_>>()
+                    .collect()
             )
         ]
         .padding(0.75 * crate::REM),

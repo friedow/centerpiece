@@ -159,6 +159,10 @@ impl Application for Centerpiece {
             >());
         }
 
+        subscriptions.push(crate::plugin::utils::spawn::<
+            crate::plugin::firefox::bookmarks::BookmarksPlugin,
+        >());
+
         if self.settings.plugin.brave_bookmarks.enable {
             subscriptions.push(crate::plugin::utils::spawn::<
                 crate::plugin::brave::bookmarks::BookmarksPlugin,

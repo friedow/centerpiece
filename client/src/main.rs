@@ -241,6 +241,12 @@ impl Application for Centerpiece {
             >());
         }
 
+        if self.settings.plugin.mpd.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::mpd::player::MpdPlayerPlugin,
+            >());
+        }
+
         iced::subscription::Subscription::batch(subscriptions)
     }
 

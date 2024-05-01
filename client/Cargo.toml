@@ -18,7 +18,7 @@ simple_logger = { version = "4.3.3", features = [
   "timestamps",
   "stderr",
 ] }
-serde = { version = "1.0.197", features = ["derive"] }
+serde = { version = "1.0.200", features = ["derive"] }
 
 # settings
 serde_yaml = "0.9.34"

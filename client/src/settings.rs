@@ -4,6 +4,11 @@ fn default_true() -> bool {
     true
 }
 
+fn default_foreground() -> String {
+    "00ff00ff".to_string()
+}
+
+
 #[derive(Debug, Deserialize)]
 pub struct ApplicationsPluginSettings {
     #[serde(default = "default_true")]
@@ -72,6 +77,12 @@ pub struct GitRepositoriesPluginSettings {
     pub zoxide: bool,
     #[serde(default = "default_commands")]
     pub commands: Vec<Vec<String>>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct GlobalSettings {
+    #[serde(default = "default_foreground")]
+    pub foreground: String,
 }
 
 fn default_commands() -> Vec<Vec<String>> {
@@ -218,6 +229,8 @@ pub struct PluginSettings {
 pub struct Settings {
     #[serde(default)]
     pub plugin: PluginSettings,
+    #[serde(default)]
+    pub global: GlobalSettings,
 }
 
 impl Settings {

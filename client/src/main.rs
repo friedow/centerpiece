@@ -1,5 +1,6 @@
 use clap::Parser;
 use iced::Application;
+use iced_hex_color::hex_color;
 
 mod cli;
 mod component;
@@ -513,7 +514,7 @@ impl iced::application::StyleSheet for SandboxStyle {
     fn appearance(&self, _style: &Self::Style) -> iced::application::Appearance {
         iced::application::Appearance {
             background_color: iced::Color::TRANSPARENT,
-            text_color: iced::Color::WHITE,
+            text_color: hex_color!(#78cc23a6), // TODO read from config
         }
     }
 }
@@ -524,7 +525,11 @@ impl iced::widget::container::StyleSheet for ApplicationWrapperStyle {
 
     fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
         iced::widget::container::Appearance {
-            background: Some(iced::Background::Color(iced::Color::BLACK)),
+            background: Some(iced::Background::Color(
+                // iced::Color::BLACK
+                // TODO read from config
+                hex_color!(#000000ff),
+            )),
             border_color: iced::Color::TRANSPARENT,
             border_radius: iced::BorderRadius::from(0.25 * REM),
             border_width: 0.,

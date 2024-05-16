@@ -4,11 +4,6 @@ fn default_true() -> bool {
     true
 }
 
-fn default_foreground() -> String {
-    "00ff00ff".to_string()
-}
-
-
 #[derive(Debug, Deserialize)]
 pub struct ApplicationsPluginSettings {
     #[serde(default = "default_true")]
@@ -79,10 +74,24 @@ pub struct GitRepositoriesPluginSettings {
     pub commands: Vec<Vec<String>>,
 }
 
-#[derive(Debug, Default, Deserialize)]
-pub struct GlobalSettings {
-    #[serde(default = "default_foreground")]
+#[derive(Debug, Deserialize)]
+pub struct ColorSettings {
     pub foreground: String,
+    pub background: String,
+    pub scrollbar_border: String,
+    pub scrollbar_foreground: String,
+}
+
+impl Default for ColorSettings{
+    fn default() -> Self {
+        Self {
+            // TODO better defaults
+            foreground: "#ffffffff".to_string(),
+            background: "#00000000".to_string(),
+            scrollbar_foreground: "#000000ff".to_string(),
+            scrollbar_border: "#000000ff".to_string(),
+        }
+    }
 }
 
 fn default_commands() -> Vec<Vec<String>> {
@@ -230,7 +239,7 @@ pub struct Settings {
     #[serde(default)]
     pub plugin: PluginSettings,
     #[serde(default)]
-    pub global: GlobalSettings,
+    pub color: ColorSettings,
 }
 
 impl Settings {

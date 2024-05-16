@@ -1,6 +1,6 @@
 use clap::Parser;
 use iced::Application;
-use iced_hex_color::hex_color;
+use hex_color::HexColor;
 
 mod cli;
 mod component;
@@ -512,11 +512,23 @@ impl iced::application::StyleSheet for SandboxStyle {
     type Style = iced::Theme;
 
     fn appearance(&self, _style: &Self::Style) -> iced::application::Appearance {
+        let color_settings = crate::settings::Settings::new();
+
         iced::application::Appearance {
             background_color: iced::Color::TRANSPARENT,
-            text_color: hex_color!(#78cc23a6), // TODO read from config
+            text_color: hexcolor(&color_settings.color.foreground)
         }
     }
+}
+
+fn hexcolor(color: &str) -> iced::Color {
+        let hex_col = HexColor::parse(color).unwrap();
+        iced::Color::from_rgba8(
+            hex_col.r,
+            hex_col.g,
+            hex_col.b,
+            // TODO fix this. For some reason i can't pass hex_col.a (u8 vs f32 data types)
+            1.0) 
 }
 
 struct ApplicationWrapperStyle {}
@@ -524,12 +536,9 @@ impl iced::widget::container::StyleSheet for ApplicationWrapperStyle {
     type Style = iced::Theme;
 
     fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
+        let color_settings = crate::settings::Settings::new();
         iced::widget::container::Appearance {
-            background: Some(iced::Background::Color(
-                // iced::Color::BLACK
-                // TODO read from config
-                hex_color!(#000000ff),
-            )),
+            background: Some( iced::Background::Color( hexcolor(&color_settings.color.background))),
             border_color: iced::Color::TRANSPARENT,
             border_radius: iced::BorderRadius::from(0.25 * REM),
             border_width: 0.,
@@ -543,35 +552,33 @@ impl iced::widget::scrollable::StyleSheet for ScrollableStyle {
     type Style = iced::Theme;
 
     fn active(&self, _style: &Self::Style) -> iced::widget::scrollable::Scrollbar {
+        let color_settings = crate::settings::Settings::new();
         iced::widget::scrollable::Scrollbar {
             background: None,
             border_radius: iced::BorderRadius::from(0.),
             border_width: 0.,
             border_color: iced::Color::TRANSPARENT,
             scroller: iced::widget::scrollable::Scroller {
-                color: iced::Color::WHITE,
+                color: hexcolor(&color_settings.color.scrollbar_foreground),
                 border_radius: iced::BorderRadius::from(0.25 * REM),
                 border_width: 4.,
-                border_color: iced::Color::BLACK,
+                border_color: hexcolor(&color_settings.color.scrollbar_border),
             },
         }
     }
 
-    fn hovered(
-        &self,
-        _style: &Self::Style,
-        _is_mouse_over_scrollbar: bool,
-    ) -> iced::widget::scrollable::Scrollbar {
+    fn hovered( &self, _style: &Self::Style, _is_mouse_over_scrollbar: bool,) -> iced::widget::scrollable::Scrollbar {
+        let color_settings = crate::settings::Settings::new();
         iced::widget::scrollable::Scrollbar {
             background: None,
             border_radius: iced::BorderRadius::from(0.),
             border_width: 0.,
             border_color: iced::Color::TRANSPARENT,
             scroller: iced::widget::scrollable::Scroller {
-                color: iced::Color::WHITE,
+                color: hexcolor(&color_settings.color.scrollbar_foreground),
                 border_radius: iced::BorderRadius::from(0.25 * REM),
                 border_width: 4.,
-                border_color: iced::Color::BLACK,
+                border_color: hexcolor(&color_settings.color.scrollbar_border),
             },
         }
     }

@@ -85,9 +85,9 @@ impl Default for ColorSettings{
     fn default() -> Self {
         Self {
             // TODO better defaults
-            text: "#ffffffff".to_string(),
-            background: "#00000000".to_string(),
-            surface: "#000000ff".to_string(),
+            text: "#ffffff33".to_string(),
+            background: "#33333333".to_string(),
+            surface: "#00000033".to_string(),
         }
     }
 }

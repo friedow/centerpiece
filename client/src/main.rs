@@ -532,8 +532,8 @@ fn hexcolor(color: &str) -> iced::Color {
             hex_col.r,
             hex_col.g,
             hex_col.b,
-            // TODO fix this. For some reason i can't pass hex_col.a (u8 vs f32 data types)
-            1.0)
+            hex_col.a as f32,
+            )
 }
 
 struct ApplicationWrapperStyle {}

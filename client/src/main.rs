@@ -522,7 +522,12 @@ impl iced::application::StyleSheet for SandboxStyle {
 }
 
 fn hexcolor(color: &str) -> iced::Color {
-        let hex_col = HexColor::parse(color).unwrap();
+
+        let hex_col = HexColor::parse(color).unwrap_or_else(|_| {
+            eprintln!("Failed to parse color settings: {} is not a valid color code", color);
+            std::process::exit(0);
+        });
+
         iced::Color::from_rgba8(
             hex_col.r,
             hex_col.g,

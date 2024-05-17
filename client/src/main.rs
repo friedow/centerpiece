@@ -516,7 +516,7 @@ impl iced::application::StyleSheet for SandboxStyle {
 
         iced::application::Appearance {
             background_color: iced::Color::TRANSPARENT,
-            text_color: hexcolor(&color_settings.color.foreground)
+            text_color: hexcolor(&color_settings.color.text)
         }
     }
 }
@@ -528,7 +528,7 @@ fn hexcolor(color: &str) -> iced::Color {
             hex_col.g,
             hex_col.b,
             // TODO fix this. For some reason i can't pass hex_col.a (u8 vs f32 data types)
-            1.0) 
+            1.0)
 }
 
 struct ApplicationWrapperStyle {}
@@ -559,10 +559,10 @@ impl iced::widget::scrollable::StyleSheet for ScrollableStyle {
             border_width: 0.,
             border_color: iced::Color::TRANSPARENT,
             scroller: iced::widget::scrollable::Scroller {
-                color: hexcolor(&color_settings.color.scrollbar_foreground),
+                color: hexcolor(&color_settings.color.surface),
                 border_radius: iced::BorderRadius::from(0.25 * REM),
                 border_width: 4.,
-                border_color: hexcolor(&color_settings.color.scrollbar_border),
+                border_color: hexcolor(&color_settings.color.background),
             },
         }
     }
@@ -575,10 +575,10 @@ impl iced::widget::scrollable::StyleSheet for ScrollableStyle {
             border_width: 0.,
             border_color: iced::Color::TRANSPARENT,
             scroller: iced::widget::scrollable::Scroller {
-                color: hexcolor(&color_settings.color.scrollbar_foreground),
+                color: hexcolor(&color_settings.color.surface),
                 border_radius: iced::BorderRadius::from(0.25 * REM),
                 border_width: 4.,
-                border_color: hexcolor(&color_settings.color.scrollbar_border),
+                border_color: hexcolor(&color_settings.color.background),
             },
         }
     }

@@ -76,20 +76,18 @@ pub struct GitRepositoriesPluginSettings {
 
 #[derive(Debug, Deserialize)]
 pub struct ColorSettings {
-    pub foreground: String,
+    pub text: String,
     pub background: String,
-    pub scrollbar_border: String,
-    pub scrollbar_foreground: String,
+    pub surface: String,
 }
 
 impl Default for ColorSettings{
     fn default() -> Self {
         Self {
             // TODO better defaults
-            foreground: "#ffffffff".to_string(),
+            text: "#ffffffff".to_string(),
             background: "#00000000".to_string(),
-            scrollbar_foreground: "#000000ff".to_string(),
-            scrollbar_border: "#000000ff".to_string(),
+            surface: "#000000ff".to_string(),
         }
     }
 }

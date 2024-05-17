@@ -537,9 +537,8 @@ dependencies = [
  "clap",
  "dbus",
  "freedesktop-desktop-entry",
- "hex_color 3.0.0",
+ "hex_color",
  "iced",
- "iced-hex-color",
  "log",
  "networkmanager",
  "serde",
@@ -1469,15 +1468,6 @@ checksum = "d77f7ec81a6d05a3abb01ab6eb7590f6083d08449fe5a1c8b1e620283546ccb7"
 
 [[package]]
 name = "hex_color"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f48f4a77387174b3150765b66fbd04067799372afdb5099848a721578dac1f9"
-dependencies = [
- "rand",
-]
-
-[[package]]
-name = "hex_color"
 version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d37f101bf4c633f7ca2e4b5e136050314503dd198e78e325ea602c327c484ef0"
@@ -1526,18 +1516,6 @@ dependencies = [
  "iced_widget",
  "iced_winit",
  "thiserror",
-]
-
-[[package]]
-name = "iced-hex-color"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1466b32dc9625190da53a95220d0bf8abb95715b436c65a6d778299651eca60"
-dependencies = [
- "hex_color 2.1.0",
- "proc-macro2",
- "quote",
- "syn 2.0.48",
 ]
 
 [[package]]

@@ -81,7 +81,7 @@ pub struct ColorSettings {
     pub surface: String,
 }
 
-impl Default for ColorSettings{
+impl Default for ColorSettings {
     fn default() -> Self {
         Self {
             // TODO better defaults

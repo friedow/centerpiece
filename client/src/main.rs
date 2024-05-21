@@ -1,6 +1,6 @@
 use clap::Parser;
-use iced::Application;
 use hex_color::HexColor;
+use iced::Application;
 
 mod cli;
 mod component;
@@ -516,24 +516,21 @@ impl iced::application::StyleSheet for SandboxStyle {
 
         iced::application::Appearance {
             background_color: iced::Color::TRANSPARENT,
-            text_color: hexcolor(&color_settings.color.text)
+            text_color: hexcolor(&color_settings.color.text),
         }
     }
 }
 
 fn hexcolor(color: &str) -> iced::Color {
+    let hex_col = HexColor::parse(color).unwrap_or_else(|_| {
+        eprintln!(
+            "Failed to parse color settings: {} is not a valid color code",
+            color
+        );
+        std::process::exit(0);
+    });
 
-        let hex_col = HexColor::parse(color).unwrap_or_else(|_| {
-            eprintln!("Failed to parse color settings: {} is not a valid color code", color);
-            std::process::exit(0);
-        });
-
-        iced::Color::from_rgba8(
-            hex_col.r,
-            hex_col.g,
-            hex_col.b,
-            hex_col.a as f32,
-            )
+    iced::Color::from_rgba8(hex_col.r, hex_col.g, hex_col.b, hex_col.a as f32)
 }
 
 struct ApplicationWrapperStyle {}
@@ -543,7 +540,9 @@ impl iced::widget::container::StyleSheet for ApplicationWrapperStyle {
     fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
         let color_settings = crate::settings::Settings::new();
         iced::widget::container::Appearance {
-            background: Some( iced::Background::Color( hexcolor(&color_settings.color.background))),
+            background: Some(iced::Background::Color(hexcolor(
+                &color_settings.color.background,
+            ))),
             border_color: iced::Color::TRANSPARENT,
             border_radius: iced::BorderRadius::from(0.25 * REM),
             border_width: 0.,
@@ -572,7 +571,11 @@ impl iced::widget::scrollable::StyleSheet for ScrollableStyle {
         }
     }
 
-    fn hovered( &self, _style: &Self::Style, _is_mouse_over_scrollbar: bool,) -> iced::widget::scrollable::Scrollbar {
+    fn hovered(
+        &self,
+        _style: &Self::Style,
+        _is_mouse_over_scrollbar: bool,
+    ) -> iced::widget::scrollable::Scrollbar {
         let color_settings = crate::settings::Settings::new();
         iced::widget::scrollable::Scrollbar {
             background: None,

@@ -520,7 +520,6 @@ impl iced::application::StyleSheet for SandboxStyle {
     }
 }
 
-
 struct ApplicationWrapperStyle {}
 impl iced::widget::container::StyleSheet for ApplicationWrapperStyle {
     type Style = iced::Theme;

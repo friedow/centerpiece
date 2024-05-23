@@ -30,7 +30,6 @@ pub struct Style {}
 impl iced::widget::text_input::StyleSheet for Style {
     type Style = iced::Theme;
 
-
     fn active(&self, _style: &Self::Style) -> iced::widget::text_input::Appearance {
         iced::widget::text_input::Appearance {
             background: iced::Background::Color(iced::Color::TRANSPARENT),

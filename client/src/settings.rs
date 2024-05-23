@@ -1,5 +1,5 @@
-use serde::Deserialize;
 use hex_color::HexColor;
+use serde::Deserialize;
 
 pub fn hexcolor(color: &str) -> iced::Color {
     let hex_col = HexColor::parse(color).unwrap_or_else(|_| {
@@ -100,7 +100,6 @@ impl Default for ColorSettings {
             text: "#ffffff".to_string(),
             background: "#000000".to_string(),
             surface: "#ffffff22".to_string(),
-
         }
     }
 }

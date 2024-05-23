@@ -1,4 +1,17 @@
 use serde::Deserialize;
+use hex_color::HexColor;
+
+pub fn hexcolor(color: &str) -> iced::Color {
+    let hex_col = HexColor::parse(color).unwrap_or_else(|_| {
+        eprintln!(
+            "Failed to parse color settings: {} is not a valid color code",
+            color
+        );
+        std::process::exit(0);
+    });
+
+    iced::Color::from_rgba8(hex_col.r, hex_col.g, hex_col.b, (hex_col.a as f32) / 255.0)
+}
 
 fn default_true() -> bool {
     true

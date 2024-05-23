@@ -1,4 +1,3 @@
-use hex_color::HexColor;
 pub const SEARCH_INPUT_ID: &str = "search_input";
 
 pub fn view(query: &str, add_horizontal_rule: bool) -> iced::Element<'static, crate::Message> {
@@ -24,19 +23,6 @@ pub fn view(query: &str, add_horizontal_rule: bool) -> iced::Element<'static, cr
 
 fn style() -> iced::theme::TextInput {
     iced::theme::TextInput::Custom(Box::new(Style {}))
-}
-
-// TODO don't duplicate function
-fn hexcolor(color: &str) -> iced::Color {
-    let hex_col = HexColor::parse(color).unwrap_or_else(|_| {
-        eprintln!(
-            "Failed to parse color settings: {} is not a valid color code",
-            color
-        );
-        std::process::exit(0);
-    });
-
-    iced::Color::from_rgba8(hex_col.r, hex_col.g, hex_col.b, (hex_col.a as f32) / 255.0)
 }
 
 pub struct Style {}
@@ -65,21 +51,21 @@ impl iced::widget::text_input::StyleSheet for Style {
 
     fn placeholder_color(&self, _style: &Self::Style) -> iced::Color {
         let color_settings = crate::settings::Settings::new();
-        hexcolor(&color_settings.color.surface)
+        crate::settings::hexcolor(&color_settings.color.surface)
     }
 
     fn value_color(&self, _style: &Self::Style) -> iced::Color {
         let color_settings = crate::settings::Settings::new();
-        hexcolor(&color_settings.color.text)
+        crate::settings::hexcolor(&color_settings.color.text)
     }
 
     fn disabled_color(&self, _style: &Self::Style) -> iced::Color {
         let color_settings = crate::settings::Settings::new();
-        hexcolor(&color_settings.color.surface)
+        crate::settings::hexcolor(&color_settings.color.surface)
     }
 
     fn selection_color(&self, _style: &Self::Style) -> iced::Color {
         let color_settings = crate::settings::Settings::new();
-        hexcolor(&color_settings.color.surface)
+        crate::settings::hexcolor(&color_settings.color.surface)
     }
 }

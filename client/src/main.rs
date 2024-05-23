@@ -1,5 +1,4 @@
 use clap::Parser;
-use hex_color::HexColor;
 use iced::Application;
 
 mod cli;
@@ -516,23 +515,11 @@ impl iced::application::StyleSheet for SandboxStyle {
 
         iced::application::Appearance {
             background_color: iced::Color::TRANSPARENT,
-            text_color: hexcolor(&color_settings.color.text),
+            text_color: settings::hexcolor(&color_settings.color.text),
         }
     }
 }
 
-// TODO don't duplicate function
-fn hexcolor(color: &str) -> iced::Color {
-    let hex_col = HexColor::parse(color).unwrap_or_else(|_| {
-        eprintln!(
-            "Failed to parse color settings: {} is not a valid color code",
-            color
-        );
-        std::process::exit(0);
-    });
-
-    iced::Color::from_rgba8(hex_col.r, hex_col.g, hex_col.b, (hex_col.a as f32) / 255.0)
-}
 
 struct ApplicationWrapperStyle {}
 impl iced::widget::container::StyleSheet for ApplicationWrapperStyle {
@@ -541,7 +528,7 @@ impl iced::widget::container::StyleSheet for ApplicationWrapperStyle {
     fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
         let color_settings = crate::settings::Settings::new();
         iced::widget::container::Appearance {
-            background: Some(iced::Background::Color(hexcolor(
+            background: Some(iced::Background::Color(settings::hexcolor(
                 &color_settings.color.background,
             ))),
             border_color: iced::Color::TRANSPARENT,
@@ -564,10 +551,10 @@ impl iced::widget::scrollable::StyleSheet for ScrollableStyle {
             border_width: 0.,
             border_color: iced::Color::TRANSPARENT,
             scroller: iced::widget::scrollable::Scroller {
-                color: hexcolor(&color_settings.color.surface),
+                color: settings::hexcolor(&color_settings.color.surface),
                 border_radius: iced::BorderRadius::from(0.25 * REM),
                 border_width: 4.,
-                border_color: hexcolor(&color_settings.color.background),
+                border_color: settings::hexcolor(&color_settings.color.background),
             },
         }
     }
@@ -584,10 +571,10 @@ impl iced::widget::scrollable::StyleSheet for ScrollableStyle {
             border_width: 0.,
             border_color: iced::Color::TRANSPARENT,
             scroller: iced::widget::scrollable::Scroller {
-                color: hexcolor(&color_settings.color.surface),
+                color: settings::hexcolor(&color_settings.color.surface),
                 border_radius: iced::BorderRadius::from(0.25 * REM),
                 border_width: 4.,
-                border_color: hexcolor(&color_settings.color.background),
+                border_color: settings::hexcolor(&color_settings.color.background),
             },
         }
     }

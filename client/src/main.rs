@@ -530,7 +530,7 @@ fn hexcolor(color: &str) -> iced::Color {
         std::process::exit(0);
     });
 
-    iced::Color::from_rgba8(hex_col.r, hex_col.g, hex_col.b, hex_col.a as f32)
+    iced::Color::from_rgba8(hex_col.r, hex_col.g, hex_col.b, (hex_col.a as f32) / 255.0)
 }
 
 struct ApplicationWrapperStyle {}

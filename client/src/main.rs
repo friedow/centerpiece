@@ -521,6 +521,7 @@ impl iced::application::StyleSheet for SandboxStyle {
     }
 }
 
+// TODO don't duplicate function
 fn hexcolor(color: &str) -> iced::Color {
     let hex_col = HexColor::parse(color).unwrap_or_else(|_| {
         eprintln!(

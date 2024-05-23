@@ -84,10 +84,10 @@ pub struct ColorSettings {
 impl Default for ColorSettings {
     fn default() -> Self {
         Self {
-            // TODO better defaults
-            text: "#ffffff33".to_string(),
-            background: "#33333333".to_string(),
-            surface: "#00000033".to_string(),
+            text: "#ffffff".to_string(),
+            background: "#000000".to_string(),
+            surface: "#ffffff22".to_string(),
+
         }
     }
 }

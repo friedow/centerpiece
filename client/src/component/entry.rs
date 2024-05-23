@@ -41,11 +41,13 @@ impl iced::widget::container::StyleSheet for Style {
     type Style = iced::Theme;
 
     fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
+        let color_settings = crate::settings::Settings::new();
+
         iced::widget::container::Appearance {
             background: None,
             border_radius: iced::BorderRadius::from(0.1 * crate::REM),
             border_width: 1.,
-            border_color: iced::Color::WHITE,
+            border_color: crate::settings::hexcolor(&color_settings.color.text),
             text_color: None,
         }
     }

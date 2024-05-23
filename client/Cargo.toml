@@ -26,6 +26,8 @@ serde_yaml = "0.9.34"
 # application window
 iced = { version = "0.10.0", features = ["svg"] }
 
+hex_color = "3"
+
 # plugins
 async-trait = "0.1.76"
 async-std = "1.12.0"

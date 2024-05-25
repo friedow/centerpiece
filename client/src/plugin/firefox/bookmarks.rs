@@ -104,7 +104,13 @@ impl Plugin for BookmarksPlugin {
         println!("{:#?}", profile_path);
 
         let bookmarks_file_path = format!("{profile_path}/places.sqlite");
-        let connection = sqlite::open(bookmarks_file_path)?;
+        let cache_directory = crate::plugin::utils::centerpiece_cache_directory()?;
+        let bookmarks_cache_file_path = format!("{cache_directory}/fireforx-bookmarks.sqlite");
+
+        std::fs::copy(bookmarks_file_path, &bookmarks_cache_file_path)
+            .context("Error while creating cache directory")?;
+
+        let connection = sqlite::open(bookmarks_cache_file_path)?;
         let query = "
             SELECT moz_bookmarks.title, moz_places.url
             FROM 

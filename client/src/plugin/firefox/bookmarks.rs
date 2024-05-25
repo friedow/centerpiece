@@ -101,11 +101,9 @@ impl Plugin for BookmarksPlugin {
         self.entries.clear();
         let profile_path = profile_path()?;
 
-        println!("{:#?}", profile_path);
-
         let bookmarks_file_path = format!("{profile_path}/places.sqlite");
         let cache_directory = crate::plugin::utils::centerpiece_cache_directory()?;
-        let bookmarks_cache_file_path = format!("{cache_directory}/fireforx-bookmarks.sqlite");
+        let bookmarks_cache_file_path = format!("{cache_directory}/firefox-bookmarks.sqlite");
 
         std::fs::copy(bookmarks_file_path, &bookmarks_cache_file_path)
             .context("Error while creating cache directory")?;

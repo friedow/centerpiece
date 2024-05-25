@@ -15,7 +15,7 @@ impl Plugin for HistoryPlugin {
     }
 
     fn title() -> &'static str {
-        "󰃃 History"
+        "󰋚 History"
     }
 
     fn entries(&self) -> Vec<crate::model::Entry> {

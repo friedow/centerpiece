@@ -189,6 +189,12 @@ impl Application for Centerpiece {
             >());
         }
 
+        if self.settings.plugin.firefox_history.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::firefox::history::HistoryPlugin,
+            >());
+        }
+
         if self.settings.plugin.git_repositories.enable {
             subscriptions.push(crate::plugin::utils::spawn::<
                 crate::plugin::git_repositories::GitRepositoriesPlugin,

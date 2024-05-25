@@ -116,6 +116,8 @@ plugin:
 plugin:
   firefox_bookmarks:
     enable: true
+  firefox_history:
+    enable: true
 ```
 
 ### Git Repositories
@@ -244,6 +246,8 @@ You can specify alternative configuration locations through:
        enable: true
      firefox_bookmarks:
        enable: true
+     firefox_history:
+       enable: true
      git_repositories:
        enable: true
        commands:
@@ -295,6 +299,9 @@ You can specify alternative configuration locations through:
                            enable = true;
                        };
                        firefox_bookmarks = {
+                           enable = true;
+                       };
+                       firefox_history = {
                            enable = true;
                        };
                        git_repositories = {

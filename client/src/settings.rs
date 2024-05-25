@@ -77,6 +77,18 @@ impl Default for FirefoxBookmarksPluginSettings {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct FirefoxHistoryPluginSettings {
+    #[serde(default = "default_true")]
+    pub enable: bool,
+}
+
+impl Default for FirefoxHistoryPluginSettings {
+    fn default() -> Self {
+        Self { enable: true }
+    }
+}
+
+#[derive(Debug, Deserialize)]
 pub struct GitRepositoriesPluginSettings {
     #[serde(default = "default_true")]
     pub enable: bool,
@@ -210,6 +222,8 @@ pub struct PluginSettings {
     pub clock: ClockPluginSettings,
     #[serde(default)]
     pub firefox_bookmarks: FirefoxBookmarksPluginSettings,
+    #[serde(default)]
+    pub firefox_history: FirefoxHistoryPluginSettings,
     #[serde(default)]
     pub git_repositories: GitRepositoriesPluginSettings,
     #[serde(default)]

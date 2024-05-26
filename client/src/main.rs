@@ -195,6 +195,10 @@ impl Application for Centerpiece {
             >());
         }
 
+        subscriptions.push(crate::plugin::utils::spawn::<
+            crate::plugin::firefox::tabs::TabsPlugin,
+        >());
+
         if self.settings.plugin.git_repositories.enable {
             subscriptions.push(crate::plugin::utils::spawn::<
                 crate::plugin::git_repositories::GitRepositoriesPlugin,

@@ -55,3 +55,4 @@ dbus = "0.9.7"
 
 # firefox bookmarks
 serde_ini = "0.2.0"
+lz4_flex = "0.11.3"

@@ -29,7 +29,7 @@ impl Plugin for SwayWindowsPlugin {
         "sway-windows"
     }
     fn priority() -> u32 {
-        30
+        31
     }
     fn title() -> &'static str {
         "󰖯 Windows"

@@ -312,6 +312,8 @@ impl Centerpiece {
 
         let settings = crate::settings::Settings::new();
 
+        let settings = crate::settings::Settings::new();
+
         let default_font = iced::Font {
             family: iced::font::Family::Name(&settings.font.default),
             weight: iced::font::Weight::Normal,

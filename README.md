@@ -151,6 +151,21 @@ plugin:
       - ["alacritty", "--working-directory", "$GIT_DIRECTORY" "--class" "$GIT_DIRECTORY_NAME"]
 ```
 
+### Gitmoji
+
+_List gitmojis and copy them._
+
+Note: You need to have [wl-clipboard](https://github.com/bugaevc/wl-clipboard) installed on your system.
+
+**Related config keys**
+
+```yml
+# ~/.config/centerpiece/config.yml
+plugin:
+  gitmoji:
+    enable: false
+```
+
 ### System Commands
 
 _Lock, sleep, restart or shutdown your system._
@@ -253,6 +268,8 @@ You can specify alternative configuration locations through:
        commands:
          - ["alacritty", "--command", "nvim", "$GIT_DIRECTORY"]
          - ["alacritty", "--working-directory", "$GIT_DIRECTORY"]
+     gitmoji:
+       enable: false
      resource_monitor_battery:
        enable: true
      resource_monitor_cpu:
@@ -310,6 +327,9 @@ You can specify alternative configuration locations through:
                                ["alacritty" "--command" "nvim" "$GIT_DIRECTORY"]
                                ["alacritty" "--working-directory" "$GIT_DIRECTORY"]
                            ];
+                       };
+                       gitmoji: {
+                           enable = false;
                        };
                        resource_monitor_battery = {
                            enable = true;

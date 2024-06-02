@@ -17,6 +17,10 @@ fn default_true() -> bool {
     true
 }
 
+fn default_false() -> bool {
+    false
+}
+
 #[derive(Debug, Deserialize)]
 pub struct ApplicationsPluginSettings {
     #[serde(default = "default_true")]
@@ -131,6 +135,18 @@ impl Default for GitRepositoriesPluginSettings {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct GitmojiPluginSettings {
+    #[serde(default = "default_false")]
+    pub enable: bool,
+}
+
+impl Default for GitmojiPluginSettings {
+    fn default() -> Self {
+        Self { enable: false }
+    }
+}
+
+#[derive(Debug, Deserialize)]
 pub struct ResourceMonitorBatteryPluginSettings {
     #[serde(default = "default_true")]
     pub enable: bool,
@@ -228,6 +244,8 @@ pub struct PluginSettings {
     pub clock: ClockPluginSettings,
     #[serde(default)]
     pub git_repositories: GitRepositoriesPluginSettings,
+    #[serde(default)]
+    pub gitmoji: GitmojiPluginSettings,
     #[serde(default)]
     pub resource_monitor_battery: ResourceMonitorBatteryPluginSettings,
     #[serde(default)]

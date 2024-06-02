@@ -189,6 +189,12 @@ impl Application for Centerpiece {
             >());
         }
 
+        if self.settings.plugin.gitmoji.enable {
+            subscriptions.push(crate::plugin::utils::spawn::<
+                crate::plugin::gitmoji::GitmojiPlugin,
+            >());
+        }
+
         if self.settings.plugin.resource_monitor_battery.enable {
             subscriptions.push(crate::plugin::utils::spawn::<
                 crate::plugin::resource_monitor::battery::BatteryPlugin,

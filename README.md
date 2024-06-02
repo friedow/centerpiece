@@ -119,8 +119,9 @@ To avoid delays in the plugin launch time this plugin comes with a systemd servi
 This index file is located at `~/.cache/centerpiece/git-repositories-index.json` and necessary for the plugin to work.
 
 It exports the following environment variables:
+
 - `$GIT_DIRECTORY`: The path to the git directory.
-- `$GIT_DIRECTORY_NAME`:  The name of the git directory.
+- `$GIT_DIRECTORY_NAME`: The name of the git directory.
 
 If `zoxide` integration is enabled, the plugin will sort your projects based on their respective `zoxide` scores.
 
@@ -135,6 +136,21 @@ plugin:
     commands:
       - ["alacritty", "--command", "nvim", "$GIT_DIRECTORY"]
       - ["alacritty", "--working-directory", "$GIT_DIRECTORY" "--class" "$GIT_DIRECTORY_NAME"]
+```
+
+### Gitmoji
+
+_List gitmojis and copy them._
+
+Note: You need to have [wl-clipboard](https://github.com/bugaevc/wl-clipboard) installed on your system.
+
+**Related config keys**
+
+```yml
+# ~/.config/centerpiece/config.yml
+plugin:
+  gitmoji:
+    enable: false
 ```
 
 ### System Commands
@@ -235,6 +251,8 @@ You can specify alternative configuration locations through:
        commands:
          - ["alacritty", "--command", "nvim", "$GIT_DIRECTORY"]
          - ["alacritty", "--working-directory", "$GIT_DIRECTORY"]
+     gitmoji:
+       enable: false
      resource_monitor_battery:
        enable: true
      resource_monitor_cpu:
@@ -286,6 +304,9 @@ You can specify alternative configuration locations through:
                                ["alacritty" "--command" "nvim" "$GIT_DIRECTORY"]
                                ["alacritty" "--working-directory" "$GIT_DIRECTORY"]
                            ];
+                       };
+                       gitmoji: {
+                           enable = false;
                        };
                        resource_monitor_battery = {
                            enable = true;

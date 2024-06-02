@@ -82,6 +82,18 @@ impl Default for ClockPluginSettings {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct FirefoxBookmarksPluginSettings {
+    #[serde(default = "default_true")]
+    pub enable: bool,
+}
+
+impl Default for FirefoxBookmarksPluginSettings {
+    fn default() -> Self {
+        Self { enable: true }
+    }
+}
+
+#[derive(Debug, Deserialize)]
 pub struct GitRepositoriesPluginSettings {
     #[serde(default = "default_true")]
     pub enable: bool,
@@ -242,6 +254,8 @@ pub struct PluginSettings {
     pub brave_progressive_web_apps: BraveProgressiveWebAppsSettings,
     #[serde(default)]
     pub clock: ClockPluginSettings,
+    #[serde(default)]
+    pub firefox_bookmarks: FirefoxBookmarksPluginSettings,
     #[serde(default)]
     pub git_repositories: GitRepositoriesPluginSettings,
     #[serde(default)]

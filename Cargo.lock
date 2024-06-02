@@ -542,6 +542,7 @@ dependencies = [
  "log",
  "networkmanager",
  "serde",
+ "serde_ini",
  "serde_json",
  "serde_yaml",
  "simple_logger",
@@ -2753,6 +2754,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "216080ab382b992234dda86873c18d4c48358f5cfcb70fd693d7f6f2131b628b"
 
 [[package]]
+name = "result"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "194d8e591e405d1eecf28819740abed6d719d1a2db87fc0bcdedee9a26d55560"
+
+[[package]]
 name = "resvg"
 version = "0.35.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2939,6 +2946,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e1d4ddca14104cd60529e8c7f7ba71a2c8acd8f7f5cfcdc2faf97eeb7c3010a4"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "serde_ini"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb236687e2bb073a7521c021949be944641e671b8505a94069ca37b656c81139"
+dependencies = [
+ "result",
+ "serde",
+ "void",
 ]
 
 [[package]]
@@ -3728,6 +3746,12 @@ name = "version_check"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
+
+[[package]]
+name = "void"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a02e4885ed3bc0f2de90ea6dd45ebcbb66dacffe03547fadbb0eeae2770887d"
 
 [[package]]
 name = "waker-fn"

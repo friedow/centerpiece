@@ -1,6 +1,7 @@
 pub mod applications;
 pub mod brave;
 pub mod clock;
+pub mod firefox;
 pub mod git_repositories;
 pub mod gitmoji;
 pub mod resource_monitor;

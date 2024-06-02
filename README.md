@@ -88,7 +88,7 @@ plugin:
 
 _Open bookmarks and browser history in new tabs._
 
-This plugin currently only integrates with [Brave](https://brave.com/).
+### Brave
 
 In addition to bookmarks and history there is also a plugin to open special bookmarks in app mode.
 This will launch a brave instance without address and tab bar.
@@ -104,6 +104,17 @@ plugin:
   brave_history:
     enable: true
   brave_progressive_web_apps:
+    enable: true
+```
+
+### Firefox
+
+**Related config keys**
+
+```yml
+# ~/.config/centerpiece/config.yml
+plugin:
+  firefox_bookmarks:
     enable: true
 ```
 
@@ -246,6 +257,8 @@ You can specify alternative configuration locations through:
        enable: true
      clock:
        enable: true
+     firefox_bookmarks:
+       enable: true
      git_repositories:
        enable: true
        commands:
@@ -296,6 +309,9 @@ You can specify alternative configuration locations through:
                            enable = true;
                        };
                        clock = {
+                           enable = true;
+                       };
+                       firefox_bookmarks = {
                            enable = true;
                        };
                        git_repositories = {

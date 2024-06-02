@@ -24,7 +24,7 @@ jobs:
       with:
         extra_nix_config: |
           access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-    - uses: cachix/cachix-action@v14
+    - uses: cachix/cachix-action@v15
       with:
         name: friedow
         # If you chose API tokens for write access OR if you have a private cache

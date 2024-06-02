@@ -1,4 +1,17 @@
+use hex_color::HexColor;
 use serde::Deserialize;
+
+pub fn hexcolor(color: &str) -> iced::Color {
+    let hex_col = HexColor::parse(color).unwrap_or_else(|_| {
+        eprintln!(
+            "Failed to parse color settings: {} is not a valid color code",
+            color
+        );
+        std::process::exit(0);
+    });
+
+    iced::Color::from_rgba8(hex_col.r, hex_col.g, hex_col.b, (hex_col.a as f32) / 255.0)
+}
 
 fn default_true() -> bool {
     true
@@ -96,6 +109,23 @@ pub struct GitRepositoriesPluginSettings {
     pub zoxide: bool,
     #[serde(default = "default_commands")]
     pub commands: Vec<Vec<String>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ColorSettings {
+    pub text: String,
+    pub background: String,
+    pub surface: String,
+}
+
+impl Default for ColorSettings {
+    fn default() -> Self {
+        Self {
+            text: "#ffffff".to_string(),
+            background: "#000000".to_string(),
+            surface: "#ffffff22".to_string(),
+        }
+    }
 }
 
 fn default_commands() -> Vec<Vec<String>> {
@@ -246,6 +276,8 @@ pub struct PluginSettings {
 pub struct Settings {
     #[serde(default)]
     pub plugin: PluginSettings,
+    #[serde(default)]
+    pub color: ColorSettings,
 }
 
 impl Settings {

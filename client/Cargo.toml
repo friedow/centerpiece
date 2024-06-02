@@ -9,7 +9,7 @@ edition = "2021"
 
 [dependencies]
 # general
-anyhow = { version = "1.0.78", features = ["backtrace"] }
+anyhow = { version = "1.0.82", features = ["backtrace"] }
 clap = { version = "4.5.4", features = ["derive", "env"] }
 log = { version = "0.4.20", features = ["kv_unstable_serde"] }
 simple_logger = { version = "4.3.3", features = [
@@ -18,7 +18,7 @@ simple_logger = { version = "4.3.3", features = [
   "timestamps",
   "stderr",
 ] }
-serde = { version = "1.0.197", features = ["derive"] }
+serde = { version = "1.0.200", features = ["derive"] }
 
 # settings
 serde_yaml = "0.9.34"
@@ -26,15 +26,17 @@ serde_yaml = "0.9.34"
 # application window
 iced = { version = "0.10.0", features = ["svg"] }
 
+hex_color = "3"
+
 # plugins
 async-trait = "0.1.76"
 async-std = "1.12.0"
 
 # reading index files
-serde_json = "1.0.115"
+serde_json = "1.0.116"
 
 # clock plugin
-chrono = "0.4.33"
+chrono = "0.4.38"
 
 # applications plugin
 freedesktop-desktop-entry = "0.5.1"
@@ -47,7 +49,7 @@ sysinfo = "0.30.5"
 battery = "0.7.8"
 
 # brave history
-sqlite = "0.33.0"
+sqlite = "0.36.0"
 
 # wifi
 networkmanager = "0.4.1"

@@ -53,7 +53,7 @@ impl Plugin for SystemPlugin {
                 title: String::from("Sleep"),
                 action: String::from(""),
                 meta: String::from("System Hibernate Suspend"),
-                command: Some(vec![String::from("systemctl suspend")]),
+                command: Some(vec![String::from("systemctl"), String::from("suspend")]),
             },
         ];
 

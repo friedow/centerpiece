@@ -56,6 +56,14 @@ in {
         };
       };
 
+      firefox_history = {
+        enable = lib.mkOption {
+          default = true;
+          type = lib.types.bool;
+          description = lib.mdDoc "Enable / disable the plugin.";
+        };
+      };
+
       git_repositories = {
         enable = lib.mkOption {
           default = true;

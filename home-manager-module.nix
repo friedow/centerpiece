@@ -94,6 +94,14 @@ in {
         };
       };
 
+      gitmoji = {
+        enable = lib.mkOption {
+          default = false;
+          type = lib.types.bool;
+          description = lib.mdDoc "Enable / disable the plugin.";
+        };
+      };
+
       resource_monitor_battery = {
         enable = lib.mkOption {
           default = true;

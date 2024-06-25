@@ -116,10 +116,23 @@ pub struct GitRepositoriesPluginSettings {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct FontSettings {
+    pub default: String,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct ColorSettings {
     pub text: String,
     pub background: String,
     pub surface: String,
+}
+
+impl Default for FontSettings {
+    fn default() -> Self {
+        Self {
+            default: "FiraCode Nerd Font".to_string(),
+        }
+    }
 }
 
 impl Default for ColorSettings {
@@ -296,6 +309,8 @@ pub struct Settings {
     pub plugin: PluginSettings,
     #[serde(default)]
     pub color: ColorSettings,
+    #[serde(default)]
+    pub font: FontSettings,
 }
 
 impl Settings {

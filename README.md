@@ -328,7 +328,7 @@ You can specify alternative configuration locations through:
                                ["alacritty" "--working-directory" "$GIT_DIRECTORY"]
                            ];
                        };
-                       gitmoji: {
+                       gitmoji = {
                            enable = false;
                        };
                        resource_monitor_battery = {

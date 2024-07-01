@@ -10,7 +10,7 @@ edition = "2021"
 [dependencies]
 # general
 anyhow = { version = "1.0.86", features = ["backtrace"] }
-clap = { version = "4.5.4", features = ["derive", "env"] }
+clap = { version = "4.5.8", features = ["derive", "env"] }
 log = { version = "0.4.21", features = ["kv_unstable_serde"] }
 simple_logger = { version = "4.3.3", features = [
   "colors",

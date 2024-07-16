@@ -31,7 +31,6 @@ struct Centerpiece {
     settings: settings::Settings,
 }
 
-pub const SCROLLABLE_ID: &str = "scrollable";
 pub const APP_ID: &str = "centerpiece";
 
 impl Application for Centerpiece {
@@ -255,7 +254,8 @@ impl Application for Centerpiece {
 
         iced::widget::container(iced::widget::column![
             component::query_input::view(&self.query, !entries.is_empty()),
-            iced::widget::scrollable(iced::widget::column(
+            iced::widget::column(
+
                 self.plugins
                     .iter()
                     .filter(|plugin| !plugin.entries.is_empty())
@@ -266,11 +266,7 @@ impl Application for Centerpiece {
                         self.active_entry_id()
                     ))
                     .collect()
-            ))
-            .id(iced::widget::scrollable::Id::new(SCROLLABLE_ID))
-            .style(iced::theme::Scrollable::Custom(Box::new(
-                ScrollableStyle {},
-            ))),
+            )
         ])
         .style(iced::theme::Container::Custom(Box::new(
             ApplicationWrapperStyle {},
@@ -422,10 +418,12 @@ impl Centerpiece {
         let plugin_header_height = 3.57 * crate::REM;
 
         let offset = (plugin_index * plugin_header_height) + (entry_index * entry_height);
-        iced::widget::scrollable::scroll_to(
-            iced::widget::scrollable::Id::new(SCROLLABLE_ID),
-            iced::widget::scrollable::AbsoluteOffset { x: 0.0, y: offset },
-        )
+        // TODO: reimplement this
+        //iced::widget::scrollable::scroll_to(
+        //    iced::widget::scrollable::Id::new(SCROLLABLE_ID),
+        //    iced::widget::scrollable::AbsoluteOffset { x: 0.0, y: offset },
+        //)
+        
     }
 
     fn select_next_plugin(&mut self) -> iced::Command<Message> {
@@ -552,47 +550,6 @@ impl iced::widget::container::StyleSheet for ApplicationWrapperStyle {
             border_radius: iced::BorderRadius::from(0.25 * REM),
             border_width: 0.,
             text_color: None,
-        }
-    }
-}
-
-struct ScrollableStyle {}
-impl iced::widget::scrollable::StyleSheet for ScrollableStyle {
-    type Style = iced::Theme;
-
-    fn active(&self, _style: &Self::Style) -> iced::widget::scrollable::Scrollbar {
-        let color_settings = crate::settings::Settings::new();
-        iced::widget::scrollable::Scrollbar {
-            background: None,
-            border_radius: iced::BorderRadius::from(0.),
-            border_width: 0.,
-            border_color: iced::Color::TRANSPARENT,
-            scroller: iced::widget::scrollable::Scroller {
-                color: settings::hexcolor(&color_settings.color.surface),
-                border_radius: iced::BorderRadius::from(0.25 * REM),
-                border_width: 4.,
-                border_color: settings::hexcolor(&color_settings.color.background),
-            },
-        }
-    }
-
-    fn hovered(
-        &self,
-        _style: &Self::Style,
-        _is_mouse_over_scrollbar: bool,
-    ) -> iced::widget::scrollable::Scrollbar {
-        let color_settings = crate::settings::Settings::new();
-        iced::widget::scrollable::Scrollbar {
-            background: None,
-            border_radius: iced::BorderRadius::from(0.),
-            border_width: 0.,
-            border_color: iced::Color::TRANSPARENT,
-            scroller: iced::widget::scrollable::Scroller {
-                color: settings::hexcolor(&color_settings.color.surface),
-                border_radius: iced::BorderRadius::from(0.25 * REM),
-                border_width: 4.,
-                border_color: settings::hexcolor(&color_settings.color.background),
-            },
         }
     }
 }

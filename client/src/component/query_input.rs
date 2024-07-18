@@ -49,22 +49,22 @@ impl iced::widget::text_input::StyleSheet for Style {
     }
 
     fn placeholder_color(&self, _style: &Self::Style) -> iced::Color {
-        let color_settings = crate::settings::Settings::new();
+        let color_settings = crate::settings::Settings::get_or_init();
         crate::settings::hexcolor(&color_settings.color.surface)
     }
 
     fn value_color(&self, _style: &Self::Style) -> iced::Color {
-        let color_settings = crate::settings::Settings::new();
+        let color_settings = crate::settings::Settings::get_or_init();
         crate::settings::hexcolor(&color_settings.color.text)
     }
 
     fn disabled_color(&self, _style: &Self::Style) -> iced::Color {
-        let color_settings = crate::settings::Settings::new();
+        let color_settings = crate::settings::Settings::get_or_init();
         crate::settings::hexcolor(&color_settings.color.surface)
     }
 
     fn selection_color(&self, _style: &Self::Style) -> iced::Color {
-        let color_settings = crate::settings::Settings::new();
+        let color_settings = crate::settings::Settings::get_or_init();
         crate::settings::hexcolor(&color_settings.color.surface)
     }
 }

@@ -41,7 +41,7 @@ impl iced::widget::container::StyleSheet for Style {
     type Style = iced::Theme;
 
     fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
-        let color_settings = crate::settings::Settings::new();
+        let color_settings = crate::settings::Settings::get_or_init();
 
         iced::widget::container::Appearance {
             background: None,

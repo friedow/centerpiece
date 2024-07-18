@@ -1,9 +1,15 @@
 { index-git-repositories, centerpiece }:
-{ lib, pkgs, config, ... }:
+{
+  lib,
+  pkgs,
+  config,
+  ...
+}:
 let
   cfg = config.programs.centerpiece;
   git-index-name = "index-git-repositories";
-in {
+in
+{
   options.programs.centerpiece = {
     enable = lib.mkEnableOption (lib.mdDoc "Centerpiece");
 
@@ -77,8 +83,17 @@ in {
         };
         commands = lib.mkOption {
           default = [
-            [ "alacritty" "--command" "nvim" "$GIT_DIRECTORY" ]
-            [ "alacritty" "--working-directory" "$GIT_DIRECTORY" ]
+            [
+              "alacritty"
+              "--command"
+              "nvim"
+              "$GIT_DIRECTORY"
+            ]
+            [
+              "alacritty"
+              "--working-directory"
+              "$GIT_DIRECTORY"
+            ]
           ];
           type = lib.types.listOf (lib.types.listOf lib.types.str);
           description = lib.mdDoc ''
@@ -87,9 +102,23 @@ in {
             Use the $GIT_DIRECTORY_NAME variable to pass in the selected directory name.
           '';
           example = [
-            [ "code" "--new-window" "$GIT_DIRECTORY" ]
-            [ "alacritty" "--command" "lazygit" "--path" "$GIT_DIRECTORY" ]
-            [ "alacritty" "--working-directory" "$GIT_DIRECTORY" ]
+            [
+              "code"
+              "--new-window"
+              "$GIT_DIRECTORY"
+            ]
+            [
+              "alacritty"
+              "--command"
+              "lazygit"
+              "--path"
+              "$GIT_DIRECTORY"
+            ]
+            [
+              "alacritty"
+              "--working-directory"
+              "$GIT_DIRECTORY"
+            ]
           ];
         };
       };
@@ -163,8 +192,7 @@ in {
       enable = lib.mkOption {
         default = true;
         type = lib.types.bool;
-        description =
-          lib.mdDoc "Enable / disable the git repositories indexer service.";
+        description = lib.mdDoc "Enable / disable the git repositories indexer service.";
       };
       interval = lib.mkOption {
         default = "5min";
@@ -184,8 +212,7 @@ in {
     (lib.mkIf cfg.enable { home.packages = [ centerpiece ]; })
 
     (lib.mkIf cfg.enable {
-      home.file.".config/centerpiece/config.yml".text =
-        lib.generators.toYAML { } cfg.config;
+      home.file.".config/centerpiece/config.yml".text = lib.generators.toYAML { } cfg.config;
     })
 
     (lib.mkIf cfg.services.index-git-repositories.enable {
@@ -198,18 +225,21 @@ in {
             };
 
             Service = {
-              ExecStart = "${pkgs.writeShellScript
-                "${git-index-name}-service-ExecStart" ''
-                  exec ${lib.getExe index-git-repositories}
-                ''}";
+              ExecStart = "${pkgs.writeShellScript "${git-index-name}-service-ExecStart" ''
+                exec ${lib.getExe index-git-repositories}
+              ''}";
               Type = "oneshot";
             };
           };
         };
         timers = {
           index-git-repositories-timer = {
-            Unit = { Description = "Activate the git repository indexer"; };
-            Install = { WantedBy = [ "timers.target" ]; };
+            Unit = {
+              Description = "Activate the git repository indexer";
+            };
+            Install = {
+              WantedBy = [ "timers.target" ];
+            };
             Timer = {
               OnUnitActiveSec = cfg.services.index-git-repositories.interval;
               OnBootSec = "0min";

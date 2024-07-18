@@ -1,5 +1,6 @@
 use hex_color::HexColor;
 use serde::Deserialize;
+use std::sync::OnceLock;
 
 pub fn hexcolor(color: &str) -> iced::Color {
     let hex_col = HexColor::parse(color).unwrap_or_else(|_| {
@@ -326,6 +327,11 @@ impl Settings {
             panic!();
         }
         config_result.unwrap()
+    }
+
+    pub fn get_or_init() -> &'static Self {
+        static SETTINGS: OnceLock<Settings> = OnceLock::new();
+        SETTINGS.get_or_init(Self::new)
     }
 }
 

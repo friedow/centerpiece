@@ -529,7 +529,7 @@ impl iced::application::StyleSheet for SandboxStyle {
     type Style = iced::Theme;
 
     fn appearance(&self, _style: &Self::Style) -> iced::application::Appearance {
-        let color_settings = crate::settings::Settings::new();
+        let color_settings = crate::settings::Settings::get_or_init();
 
         iced::application::Appearance {
             background_color: iced::Color::TRANSPARENT,
@@ -543,7 +543,7 @@ impl iced::widget::container::StyleSheet for ApplicationWrapperStyle {
     type Style = iced::Theme;
 
     fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
-        let color_settings = crate::settings::Settings::new();
+        let color_settings = crate::settings::Settings::get_or_init();
         iced::widget::container::Appearance {
             background: Some(iced::Background::Color(settings::hexcolor(
                 &color_settings.color.background,
@@ -561,7 +561,7 @@ impl iced::widget::scrollable::StyleSheet for ScrollableStyle {
     type Style = iced::Theme;
 
     fn active(&self, _style: &Self::Style) -> iced::widget::scrollable::Scrollbar {
-        let color_settings = crate::settings::Settings::new();
+        let color_settings = crate::settings::Settings::get_or_init();
         iced::widget::scrollable::Scrollbar {
             background: None,
             border_radius: iced::BorderRadius::from(0.),
@@ -581,7 +581,7 @@ impl iced::widget::scrollable::StyleSheet for ScrollableStyle {
         _style: &Self::Style,
         _is_mouse_over_scrollbar: bool,
     ) -> iced::widget::scrollable::Scrollbar {
-        let color_settings = crate::settings::Settings::new();
+        let color_settings = crate::settings::Settings::get_or_init();
         iced::widget::scrollable::Scrollbar {
             background: None,
             border_radius: iced::BorderRadius::from(0.),

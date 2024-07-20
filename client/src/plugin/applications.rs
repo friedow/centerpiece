@@ -11,7 +11,7 @@ fn to_entry(
 ) -> Option<crate::model::Entry> {
     let title = name(desktop_entry);
 
-    if !is_visible(&desktop_entry) {
+    if !is_visible(desktop_entry) {
         log::debug!(target: "applications", "Desktop entry with name '{}' will be hidden because of its properties.", title);
         return None;
     }
@@ -98,7 +98,7 @@ fn is_visible(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> bool {
 fn terminal_command(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> Option<String> {
     if !desktop_entry
         .categories()?
-        .split(";")
+        .split(';')
         .any(|category| category == "TerminalEmulator")
     {
         return None;

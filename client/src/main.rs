@@ -395,7 +395,7 @@ impl Centerpiece {
 
     fn select_first_entry(&mut self) -> iced::Command<Message> {
         self.active_entry_index = 0;
-        self.scroll_to_selected_entry()
+        iced::Command::none()
     }
 
     fn select_previous_entry(&mut self) -> iced::Command<Message> {
@@ -406,11 +406,11 @@ impl Centerpiece {
 
         if self.active_entry_index == 0 {
             self.active_entry_index = entries.len() - 1;
-            return self.scroll_to_selected_entry();
+            return iced::Command::none();
         }
 
         self.active_entry_index -= 1;
-        self.scroll_to_selected_entry()
+        iced::Command::none()
     }
 
     fn select_next_entry(&mut self) -> iced::Command<Message> {
@@ -420,42 +420,6 @@ impl Centerpiece {
         }
 
         self.active_entry_index += 1;
-        self.scroll_to_selected_entry()
-    }
-
-    fn scroll_to_selected_entry(&self) -> iced::Command<Message> {
-        let plugin_index = match self.active_entry_id() {
-            Some(active_entry_id) => self
-                .plugins
-                .iter()
-                .filter(|plugin| plugin.entries.len() > 0)
-                .position(|plugin| {
-                    plugin
-                        .entries
-                        .iter()
-                        .any(|entry| entry.id.eq(active_entry_id))
-                })
-                .unwrap_or(0) as f32,
-            None => 0.0,
-        };
-        let entry_index = self.active_entry_index as f32;
-
-        // 1.0 REM line height +
-        // 2x0.5 REM padding +
-        // 0.3 REM for good luck :D
-        let entry_height = 2.3 * crate::REM;
-        // 0.75 REM line height +
-        // 2x0.5 REM padding +
-        // 2x0.75 REM padding  +
-        // 0.32 REM for good luck :D
-        let plugin_header_height = 3.57 * crate::REM;
-
-        let offset = (plugin_index * plugin_header_height) + (entry_index * entry_height);
-        // TODO: reimplement this
-        //iced::widget::scrollable::scroll_to(
-        //    iced::widget::scrollable::Id::new(SCROLLABLE_ID),
-        //    iced::widget::scrollable::AbsoluteOffset { x: 0.0, y: offset },
-        //)
         iced::Command::none()
     }
 
@@ -473,7 +437,7 @@ impl Centerpiece {
             .unwrap_or(self.active_entry_index);
 
         self.active_entry_index = accumulated_entries;
-        self.scroll_to_selected_entry()
+        iced::Command::none()
     }
 
     fn select_previous_plugin(&mut self) -> iced::Command<Message> {
@@ -495,7 +459,7 @@ impl Centerpiece {
             .unwrap_or(0);
 
         self.active_entry_index = accumulated_entries;
-        self.scroll_to_selected_entry()
+        iced::Command::none()
     }
 
     fn register_plugin(&mut self, mut plugin: crate::model::Plugin) -> iced::Command<Message> {

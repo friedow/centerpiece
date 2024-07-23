@@ -252,21 +252,54 @@ impl Application for Centerpiece {
     fn view(&self) -> iced::Element<Message> {
         let entries = self.entries();
 
+        let mut lines_added = 0;
+        let mut entries_added = 0;
+        let mut lines = iced::widget::column![];
+        while lines_added < 10 && lines_added < (entries.len() - self.active_entry_index) {
+            let entry_index_to_draw = self.active_entry_index + entries_added;
+            let mut last_plugin_start_index = 0;
+            for plugin in self.plugins.iter() {
+                if last_plugin_start_index == entry_index_to_draw {
+                    if lines_added > 0 {
+                        lines = lines.push(
+                            iced::widget::column![iced::widget::horizontal_rule(1)].padding(
+                                iced::Padding::from([1. * crate::REM, 0., 0.5 * crate::REM, 0.]),
+                            ),
+                        );
+                    }
+
+                    lines = lines.push(component::plugin_header::view(&plugin));
+                    lines_added += 1;
+                }
+
+                last_plugin_start_index += plugin.entries.len();
+            }
+
+            if lines_added == 0 && entries_added == 0 {
+                lines = lines.push(component::entry::view(
+                    entries[entry_index_to_draw - 1],
+                    false,
+                ));
+
+                lines_added += 1;
+            }
+
+            if lines_added >= 10 {
+                break;
+            }
+
+            lines = lines.push(component::entry::view(
+                entries[entry_index_to_draw],
+                entry_index_to_draw == self.active_entry_index,
+            ));
+
+            lines_added += 1;
+            entries_added += 1;
+        }
+
         iced::widget::container(iced::widget::column![
             component::query_input::view(&self.query, !entries.is_empty()),
-            iced::widget::column(
-
-                self.plugins
-                    .iter()
-                    .filter(|plugin| !plugin.entries.is_empty())
-                    .enumerate()
-                    .map(|(index, plugin)| component::plugin::view(
-                        plugin,
-                        index != 0,
-                        self.active_entry_id()
-                    ))
-                    .collect()
-            )
+            lines
         ])
         .style(iced::theme::Container::Custom(Box::new(
             ApplicationWrapperStyle {},
@@ -298,7 +331,7 @@ impl Centerpiece {
 
         let window = iced::window::Settings {
             transparent: true,
-            size: (650, 400),
+            size: (650, 375),
             decorations: false,
             level: iced::window::Level::AlwaysOnTop,
             resizable: false,
@@ -423,7 +456,7 @@ impl Centerpiece {
         //    iced::widget::scrollable::Id::new(SCROLLABLE_ID),
         //    iced::widget::scrollable::AbsoluteOffset { x: 0.0, y: offset },
         //)
-        
+        iced::Command::none()
     }
 
     fn select_next_plugin(&mut self) -> iced::Command<Message> {
@@ -530,7 +563,7 @@ impl iced::application::StyleSheet for SandboxStyle {
         let color_settings = crate::settings::Settings::new();
 
         iced::application::Appearance {
-            background_color: iced::Color::TRANSPARENT,
+            background_color: settings::hexcolor(&color_settings.color.background),
             text_color: settings::hexcolor(&color_settings.color.text),
         }
     }

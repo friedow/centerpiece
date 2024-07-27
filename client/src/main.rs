@@ -273,11 +273,7 @@ impl Application for Centerpiece {
             }
 
             if !divider_added && plugin_to_add.is_some() {
-                lines = lines.push(
-                    iced::widget::column![iced::widget::horizontal_rule(1)].padding(
-                        iced::Padding::from([1. * crate::REM, 0., 0.5 * crate::REM, 0.]),
-                    ),
-                );
+                lines = lines.push(component::divider::view());
                 divider_added = true;
                 continue;
             }
@@ -336,7 +332,7 @@ impl Centerpiece {
 
         let window = iced::window::Settings {
             transparent: true,
-            size: (650, 375),
+            size: (650, 380),
             decorations: false,
             level: iced::window::Level::AlwaysOnTop,
             resizable: false,
@@ -523,6 +519,7 @@ impl Centerpiece {
 }
 
 pub const REM: f32 = 14.0;
+pub const ENTRY_HEIGHT: f32 = 2.25 * crate::REM;
 
 struct SandboxStyle {}
 impl iced::application::StyleSheet for SandboxStyle {

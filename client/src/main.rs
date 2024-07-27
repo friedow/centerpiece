@@ -252,49 +252,54 @@ impl Application for Centerpiece {
     fn view(&self) -> iced::Element<Message> {
         let entries = self.entries();
 
-        let mut lines_added = 0;
-        let mut entries_added = 0;
-        let mut lines = iced::widget::column![];
-        while lines_added < 10 && lines_added < (entries.len() - self.active_entry_index) {
-            let entry_index_to_draw = self.active_entry_index + entries_added;
-            let mut last_plugin_start_index = 0;
-            for plugin in self.plugins.iter() {
-                if last_plugin_start_index == entry_index_to_draw {
-                    if lines_added > 0 {
-                        lines = lines.push(
-                            iced::widget::column![iced::widget::horizontal_rule(1)].padding(
-                                iced::Padding::from([1. * crate::REM, 0., 0.5 * crate::REM, 0.]),
-                            ),
-                        );
-                    }
+        let mut lines =
+            iced::widget::column![].padding(iced::Padding::from([0., 0., 0.75 * crate::REM, 0.]));
+        let mut divider_added = true;
+        let mut header_added = false;
+        let mut next_entry_index_to_add = self.active_entry_index;
 
-                    lines = lines.push(component::plugin_header::view(&plugin));
-                    lines_added += 1;
-                }
-
-                last_plugin_start_index += plugin.entries.len();
-            }
-
-            if lines_added == 0 && entries_added == 0 {
-                lines = lines.push(component::entry::view(
-                    entries[entry_index_to_draw - 1],
-                    false,
-                ));
-
-                lines_added += 1;
-            }
-
-            if lines_added >= 10 {
+        for lines_added in 0..11 {
+            if next_entry_index_to_add >= entries.len() {
                 break;
             }
 
-            lines = lines.push(component::entry::view(
-                entries[entry_index_to_draw],
-                entry_index_to_draw == self.active_entry_index,
-            ));
+            let mut plugin_to_add = None;
+            let mut last_plugin_start_index = 0;
+            for plugin in self.plugins.iter() {
+                if last_plugin_start_index == next_entry_index_to_add {
+                    plugin_to_add = Some(plugin);
+                }
+                last_plugin_start_index += plugin.entries.len();
+            }
 
-            lines_added += 1;
-            entries_added += 1;
+            if !divider_added && plugin_to_add.is_some() {
+                lines = lines.push(
+                    iced::widget::column![iced::widget::horizontal_rule(1)].padding(
+                        iced::Padding::from([1. * crate::REM, 0., 0.5 * crate::REM, 0.]),
+                    ),
+                );
+                divider_added = true;
+                continue;
+            }
+
+            if !header_added && plugin_to_add.is_some() {
+                lines = lines.push(component::plugin_header::view(plugin_to_add.unwrap()));
+                header_added = true;
+                continue;
+            } else if lines_added == 0 {
+                lines = lines.push(component::entry::view(
+                    entries[next_entry_index_to_add - 1],
+                    false,
+                ));
+            }
+
+            lines = lines.push(component::entry::view(
+                entries[next_entry_index_to_add],
+                next_entry_index_to_add == self.active_entry_index,
+            ));
+            divider_added = false;
+            header_added = false;
+            next_entry_index_to_add += 1;
         }
 
         iced::widget::container(iced::widget::column![
@@ -527,7 +532,7 @@ impl iced::application::StyleSheet for SandboxStyle {
         let color_settings = crate::settings::Settings::new();
 
         iced::application::Appearance {
-            background_color: settings::hexcolor(&color_settings.color.background),
+            background_color: iced::Color::TRANSPARENT,
             text_color: settings::hexcolor(&color_settings.color.text),
         }
     }

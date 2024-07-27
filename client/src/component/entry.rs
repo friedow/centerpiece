@@ -12,6 +12,7 @@ pub fn view(entry: &crate::model::Entry, active: bool) -> iced::Element<'static,
         )
         .style(style(active)),
     )
+    .height(2.25 * crate::REM)
     .padding(iced::Padding::from([0., 0.75 * crate::REM]))
     .into();
 }

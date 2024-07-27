@@ -529,7 +529,7 @@ impl iced::application::StyleSheet for SandboxStyle {
     type Style = iced::Theme;
 
     fn appearance(&self, _style: &Self::Style) -> iced::application::Appearance {
-        let color_settings = crate::settings::Settings::new();
+        let color_settings = crate::settings::Settings::get_or_init();
 
         iced::application::Appearance {
             background_color: iced::Color::TRANSPARENT,
@@ -543,7 +543,7 @@ impl iced::widget::container::StyleSheet for ApplicationWrapperStyle {
     type Style = iced::Theme;
 
     fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
-        let color_settings = crate::settings::Settings::new();
+        let color_settings = crate::settings::Settings::get_or_init();
         iced::widget::container::Appearance {
             background: Some(iced::Background::Color(settings::hexcolor(
                 &color_settings.color.background,

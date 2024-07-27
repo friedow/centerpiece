@@ -3,13 +3,12 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     commit-message:
-      prefix: ⬆️ 
+      prefix: "⬆️ "
     schedule:
       interval: "monthly"
-
   - package-ecosystem: "cargo"
     directory: "/"
     commit-message:
-      prefix: ⬆️ 
+      prefix: "⬆️ "
     schedule:
       interval: "monthly"

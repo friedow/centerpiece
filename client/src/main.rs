@@ -31,7 +31,6 @@ struct Centerpiece {
     settings: settings::Settings,
 }
 
-pub const SCROLLABLE_ID: &str = "scrollable";
 pub const APP_ID: &str = "centerpiece";
 
 impl Application for Centerpiece {
@@ -253,24 +252,55 @@ impl Application for Centerpiece {
     fn view(&self) -> iced::Element<Message> {
         let entries = self.entries();
 
+        let mut lines =
+            iced::widget::column![].padding(iced::Padding::from([0., 0., 0.75 * crate::REM, 0.]));
+        let mut divider_added = true;
+        let mut header_added = false;
+        let mut next_entry_index_to_add = self.active_entry_index;
+
+        for lines_added in 0..11 {
+            if next_entry_index_to_add >= entries.len() {
+                break;
+            }
+
+            let mut plugin_to_add = None;
+            let mut last_plugin_start_index = 0;
+            for plugin in self.plugins.iter() {
+                if last_plugin_start_index == next_entry_index_to_add {
+                    plugin_to_add = Some(plugin);
+                }
+                last_plugin_start_index += plugin.entries.len();
+            }
+
+            if !divider_added && plugin_to_add.is_some() {
+                lines = lines.push(component::divider::view());
+                divider_added = true;
+                continue;
+            }
+
+            if !header_added && plugin_to_add.is_some() {
+                lines = lines.push(component::plugin_header::view(plugin_to_add.unwrap()));
+                header_added = true;
+                continue;
+            } else if lines_added == 0 {
+                lines = lines.push(component::entry::view(
+                    entries[next_entry_index_to_add - 1],
+                    false,
+                ));
+            }
+
+            lines = lines.push(component::entry::view(
+                entries[next_entry_index_to_add],
+                next_entry_index_to_add == self.active_entry_index,
+            ));
+            divider_added = false;
+            header_added = false;
+            next_entry_index_to_add += 1;
+        }
+
         iced::widget::container(iced::widget::column![
             component::query_input::view(&self.query, !entries.is_empty()),
-            iced::widget::scrollable(iced::widget::column(
-                self.plugins
-                    .iter()
-                    .filter(|plugin| !plugin.entries.is_empty())
-                    .enumerate()
-                    .map(|(index, plugin)| component::plugin::view(
-                        plugin,
-                        index != 0,
-                        self.active_entry_id()
-                    ))
-                    .collect()
-            ))
-            .id(iced::widget::scrollable::Id::new(SCROLLABLE_ID))
-            .style(iced::theme::Scrollable::Custom(Box::new(
-                ScrollableStyle {},
-            ))),
+            lines
         ])
         .style(iced::theme::Container::Custom(Box::new(
             ApplicationWrapperStyle {},
@@ -302,7 +332,7 @@ impl Centerpiece {
 
         let window = iced::window::Settings {
             transparent: true,
-            size: (650, 400),
+            size: (650, 380),
             decorations: false,
             level: iced::window::Level::AlwaysOnTop,
             resizable: false,
@@ -366,7 +396,7 @@ impl Centerpiece {
 
     fn select_first_entry(&mut self) -> iced::Command<Message> {
         self.active_entry_index = 0;
-        self.scroll_to_selected_entry()
+        iced::Command::none()
     }
 
     fn select_previous_entry(&mut self) -> iced::Command<Message> {
@@ -377,11 +407,11 @@ impl Centerpiece {
 
         if self.active_entry_index == 0 {
             self.active_entry_index = entries.len() - 1;
-            return self.scroll_to_selected_entry();
+            return iced::Command::none();
         }
 
         self.active_entry_index -= 1;
-        self.scroll_to_selected_entry()
+        iced::Command::none()
     }
 
     fn select_next_entry(&mut self) -> iced::Command<Message> {
@@ -391,41 +421,7 @@ impl Centerpiece {
         }
 
         self.active_entry_index += 1;
-        self.scroll_to_selected_entry()
-    }
-
-    fn scroll_to_selected_entry(&self) -> iced::Command<Message> {
-        let plugin_index = match self.active_entry_id() {
-            Some(active_entry_id) => self
-                .plugins
-                .iter()
-                .filter(|plugin| !plugin.entries.is_empty())
-                .position(|plugin| {
-                    plugin
-                        .entries
-                        .iter()
-                        .any(|entry| entry.id.eq(active_entry_id))
-                })
-                .unwrap_or(0) as f32,
-            None => 0.0,
-        };
-        let entry_index = self.active_entry_index as f32;
-
-        // 1.0 REM line height +
-        // 2x0.5 REM padding +
-        // 0.3 REM for good luck :D
-        let entry_height = 2.3 * crate::REM;
-        // 0.75 REM line height +
-        // 2x0.5 REM padding +
-        // 2x0.75 REM padding  +
-        // 0.32 REM for good luck :D
-        let plugin_header_height = 3.57 * crate::REM;
-
-        let offset = (plugin_index * plugin_header_height) + (entry_index * entry_height);
-        iced::widget::scrollable::scroll_to(
-            iced::widget::scrollable::Id::new(SCROLLABLE_ID),
-            iced::widget::scrollable::AbsoluteOffset { x: 0.0, y: offset },
-        )
+        iced::Command::none()
     }
 
     fn select_next_plugin(&mut self) -> iced::Command<Message> {
@@ -442,7 +438,7 @@ impl Centerpiece {
             .unwrap_or(self.active_entry_index);
 
         self.active_entry_index = accumulated_entries;
-        self.scroll_to_selected_entry()
+        iced::Command::none()
     }
 
     fn select_previous_plugin(&mut self) -> iced::Command<Message> {
@@ -464,7 +460,7 @@ impl Centerpiece {
             .unwrap_or(0);
 
         self.active_entry_index = accumulated_entries;
-        self.scroll_to_selected_entry()
+        iced::Command::none()
     }
 
     fn register_plugin(&mut self, mut plugin: crate::model::Plugin) -> iced::Command<Message> {
@@ -523,6 +519,7 @@ impl Centerpiece {
 }
 
 pub const REM: f32 = 14.0;
+pub const ENTRY_HEIGHT: f32 = 2.25 * crate::REM;
 
 struct SandboxStyle {}
 impl iced::application::StyleSheet for SandboxStyle {
@@ -552,47 +549,6 @@ impl iced::widget::container::StyleSheet for ApplicationWrapperStyle {
             border_radius: iced::BorderRadius::from(0.25 * REM),
             border_width: 0.,
             text_color: None,
-        }
-    }
-}
-
-struct ScrollableStyle {}
-impl iced::widget::scrollable::StyleSheet for ScrollableStyle {
-    type Style = iced::Theme;
-
-    fn active(&self, _style: &Self::Style) -> iced::widget::scrollable::Scrollbar {
-        let color_settings = crate::settings::Settings::get_or_init();
-        iced::widget::scrollable::Scrollbar {
-            background: None,
-            border_radius: iced::BorderRadius::from(0.),
-            border_width: 0.,
-            border_color: iced::Color::TRANSPARENT,
-            scroller: iced::widget::scrollable::Scroller {
-                color: settings::hexcolor(&color_settings.color.surface),
-                border_radius: iced::BorderRadius::from(0.25 * REM),
-                border_width: 4.,
-                border_color: settings::hexcolor(&color_settings.color.background),
-            },
-        }
-    }
-
-    fn hovered(
-        &self,
-        _style: &Self::Style,
-        _is_mouse_over_scrollbar: bool,
-    ) -> iced::widget::scrollable::Scrollbar {
-        let color_settings = crate::settings::Settings::get_or_init();
-        iced::widget::scrollable::Scrollbar {
-            background: None,
-            border_radius: iced::BorderRadius::from(0.),
-            border_width: 0.,
-            border_color: iced::Color::TRANSPARENT,
-            scroller: iced::widget::scrollable::Scroller {
-                color: settings::hexcolor(&color_settings.color.surface),
-                border_radius: iced::BorderRadius::from(0.25 * REM),
-                border_width: 4.,
-                border_color: settings::hexcolor(&color_settings.color.background),
-            },
         }
     }
 }

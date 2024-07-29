@@ -12,7 +12,7 @@ pub fn view(entry: &crate::model::Entry, active: bool) -> iced::Element<'static,
         )
         .style(style(active)),
     )
-    // We're fixing the height here to unitfy it
+    // We're fixing the height here to unify it
     // with the height of plugin headers for a smooth
     // scrolling experience
     .height(crate::ENTRY_HEIGHT)

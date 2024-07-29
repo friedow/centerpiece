@@ -6,7 +6,7 @@ pub fn view() -> iced::Element<'static, crate::Message> {
             0.5 * crate::REM,
             0.,
         ]))
-        // We're fixing the height here to unitfy it
+        // We're fixing the height here to unify it
         // with the height of entries for a smooth
         // scrolling experience
         .height(crate::ENTRY_HEIGHT)

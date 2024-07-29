@@ -7,7 +7,7 @@ pub fn view(plugin: &crate::model::Plugin) -> iced::Element<'static, crate::Mess
             monospaced: true,
         })
         .size(0.75 * crate::REM)]
-    // We're fixing the height here to unitfy it
+    // We're fixing the height here to unify it
     // with the height of entries for a smooth
     // scrolling experience
     .height(crate::ENTRY_HEIGHT)

@@ -50,7 +50,7 @@
       inherit (cargoTOML.workspace.package) version;
       pname = "centerpiece";
 
-      craneLib = crane.lib.${system};
+      craneLib = crane.mkLib nixpkgs.legacyPackages.${system};
       fontFilter = path: _type: builtins.match ".*ttf$" path != null;
       configFilter = path: _type: builtins.match ".*config.yml$" path != null;
       assetOrCargo =

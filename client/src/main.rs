@@ -77,45 +77,41 @@ impl Application for Centerpiece {
             Message::Search(input) => self.search(input),
 
             Message::Event(event) => match event {
-                iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
-                    key_code: iced::keyboard::KeyCode::Up,
-                    ..
-                })
-                | iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
-                    key_code: iced::keyboard::KeyCode::K,
-                    modifiers: iced::keyboard::Modifiers::CTRL,
-                }) => self.select_previous_entry(),
+                iced::Event::Keyboard(event) => match event {
+                    iced::keyboard::Event::KeyPressed { key, modifiers, .. } => {
+                        if let iced::keyboard::Modifiers::CTRL = modifiers {
+                            return match key.as_ref() {
+                                iced::keyboard::Key::Character("j") => self.select_next_entry(),
+                                iced::keyboard::Key::Character("k") => self.select_previous_entry(),
+                                iced::keyboard::Key::Character("n") => self.select_next_plugin(),
+                                iced::keyboard::Key::Character("p") => {
+                                    self.select_previous_plugin()
+                                }
+                                _ => iced::Command::none(),
+                            };
+                        }
+                        match key.as_ref() {
+                            iced::keyboard::Key::Named(iced::keyboard::key::Named::ArrowUp) => {
+                                self.select_previous_entry()
+                            }
+                            iced::keyboard::Key::Named(iced::keyboard::key::Named::ArrowDown) => {
+                                self.select_next_entry()
+                            }
+                            iced::keyboard::Key::Named(iced::keyboard::key::Named::Enter) => self
+                                .activate_selected_entry()
+                                .unwrap_or(iced::Command::none()),
+                            _ => iced::Command::none(),
+                        }
+                    }
+                    iced::keyboard::Event::KeyReleased { key, .. } => {
+                        if key == iced::keyboard::Key::Named(iced::keyboard::key::Named::Escape) {
+                            return iced::window::close(iced::window::Id::MAIN);
+                        }
+                        iced::Command::none()
+                    }
 
-                iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
-                    key_code: iced::keyboard::KeyCode::Down,
-                    ..
-                })
-                | iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
-                    key_code: iced::keyboard::KeyCode::J,
-                    modifiers: iced::keyboard::Modifiers::CTRL,
-                }) => self.select_next_entry(),
-
-                iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
-                    key_code: iced::keyboard::KeyCode::N,
-                    modifiers: iced::keyboard::Modifiers::CTRL,
-                }) => self.select_next_plugin(),
-
-                iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
-                    key_code: iced::keyboard::KeyCode::P,
-                    modifiers: iced::keyboard::Modifiers::CTRL,
-                }) => self.select_previous_plugin(),
-
-                iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
-                    key_code: iced::keyboard::KeyCode::Enter,
-                    ..
-                }) => self
-                    .activate_selected_entry()
-                    .unwrap_or(iced::Command::none()),
-
-                iced::Event::Keyboard(iced::keyboard::Event::KeyReleased {
-                    key_code: iced::keyboard::KeyCode::Escape,
-                    ..
-                }) => iced::window::close(),
+                    _ => iced::Command::none(),
+                },
 
                 iced::Event::Mouse(iced::mouse::Event::ButtonPressed(
                     iced::mouse::Button::Left,
@@ -130,27 +126,21 @@ impl Application for Centerpiece {
 
             Message::UpdateEntries(plugin_id, entries) => self.update_entries(plugin_id, entries),
 
-            Message::Exit => iced::window::close(),
+            Message::Exit => iced::window::close(iced::window::Id::MAIN),
         }
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-        let mut subscriptions = vec![iced::subscription::events_with(
-            |event, _status| match event {
-                iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
-                    modifiers: _,
-                    key_code: _,
-                }) => Some(Message::Event(event)),
-                iced::Event::Keyboard(iced::keyboard::Event::KeyReleased {
-                    modifiers: _,
-                    key_code: _,
-                }) => Some(Message::Event(event)),
-                iced::Event::Mouse(iced::mouse::Event::ButtonPressed(_)) => {
-                    Some(Message::Event(event))
-                }
-                _ => None,
-            },
-        )];
+        let mut subscriptions = vec![iced::event::listen_with(|event, _status| match event {
+            iced::Event::Keyboard(iced::keyboard::Event::KeyPressed { .. }) => {
+                Some(Message::Event(event))
+            }
+            iced::Event::Keyboard(iced::keyboard::Event::KeyReleased { .. }) => {
+                Some(Message::Event(event))
+            }
+            iced::Event::Mouse(iced::mouse::Event::ButtonPressed(_)) => Some(Message::Event(event)),
+            _ => None,
+        })];
 
         if self.settings.plugin.applications.enable {
             subscriptions.push(crate::plugin::utils::spawn::<
@@ -252,8 +242,7 @@ impl Application for Centerpiece {
     fn view(&self) -> iced::Element<Message> {
         let entries = self.entries();
 
-        let mut lines =
-            iced::widget::column![].padding(iced::Padding::from([0., 0., 0.75 * crate::REM, 0.]));
+        let mut lines = iced::widget::column![];
         let mut divider_added = true;
         let mut header_added = false;
         let mut next_entry_index_to_add = self.active_entry_index;
@@ -319,20 +308,20 @@ impl Application for Centerpiece {
 
 impl Centerpiece {
     fn settings(flags: crate::cli::CliArgs) -> iced::Settings<crate::cli::CliArgs> {
-        let default_text_size = REM;
+        let default_text_size = iced::Pixels(crate::REM);
 
         let default_font = iced::Font {
             family: iced::font::Family::Name("FiraCode Nerd Font"),
             weight: iced::font::Weight::Normal,
             stretch: iced::font::Stretch::Normal,
-            monospaced: true,
+            style: iced::font::Style::default(),
         };
 
         let id = Some(APP_ID.into());
 
         let window = iced::window::Settings {
             transparent: true,
-            size: (650, 380),
+            size: iced::Size::new(650.0, 380.0),
             decorations: false,
             level: iced::window::Level::AlwaysOnTop,
             resizable: false,
@@ -342,6 +331,7 @@ impl Centerpiece {
             icon: None,
             visible: true,
             platform_specific: Self::platform_specific_settings(),
+            exit_on_close_request: true,
         };
 
         iced::Settings {
@@ -354,8 +344,8 @@ impl Centerpiece {
         }
     }
 
-    fn platform_specific_settings() -> iced::window::PlatformSpecific {
-        iced::window::PlatformSpecific {
+    fn platform_specific_settings() -> iced::window::settings::PlatformSpecific {
+        iced::window::settings::PlatformSpecific {
             application_id: APP_ID.into(),
         }
     }
@@ -519,7 +509,7 @@ impl Centerpiece {
 }
 
 pub const REM: f32 = 14.0;
-pub const ENTRY_HEIGHT: f32 = 2.25 * crate::REM;
+pub const ENTRY_HEIGHT: f32 = 2.3 * crate::REM;
 
 struct SandboxStyle {}
 impl iced::application::StyleSheet for SandboxStyle {
@@ -545,10 +535,13 @@ impl iced::widget::container::StyleSheet for ApplicationWrapperStyle {
             background: Some(iced::Background::Color(settings::hexcolor(
                 &color_settings.color.background,
             ))),
-            border_color: iced::Color::TRANSPARENT,
-            border_radius: iced::BorderRadius::from(0.25 * REM),
-            border_width: 0.,
+            border: iced::Border {
+                color: iced::Color::TRANSPARENT,
+                width: 0.,
+                radius: iced::border::Radius::from(0.25 * crate::REM),
+            },
             text_color: None,
+            shadow: iced::Shadow::default(),
         }
     }
 }

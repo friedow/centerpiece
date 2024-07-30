@@ -4,7 +4,7 @@ pub fn view(plugin: &crate::model::Plugin) -> iced::Element<'static, crate::Mess
             family: iced::font::Family::Name("FiraCode Nerd Font"),
             weight: iced::font::Weight::Light,
             stretch: iced::font::Stretch::Normal,
-            monospaced: true,
+            style: iced::font::Style::default(),
         })
         .size(0.75 * crate::REM)]
     // We're fixing the height here to unify it

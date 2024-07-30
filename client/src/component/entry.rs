@@ -52,10 +52,13 @@ impl iced::widget::container::StyleSheet for Style {
 
         iced::widget::container::Appearance {
             background: None,
-            border_radius: iced::BorderRadius::from(0.1 * crate::REM),
-            border_width: 1.,
-            border_color: crate::settings::hexcolor(&color_settings.color.text),
+            border: iced::Border {
+                color: crate::settings::hexcolor(&color_settings.color.text),
+                width: 1.0,
+                radius: iced::border::Radius::from(0.1 * crate::REM),
+            },
             text_color: None,
+            shadow: iced::Shadow::default(),
         }
     }
 }

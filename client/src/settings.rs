@@ -119,6 +119,7 @@ pub struct GitRepositoriesPluginSettings {
 #[derive(Debug, Deserialize)]
 pub struct FontSettings {
     pub default: String,
+    pub size: f32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -132,6 +133,7 @@ impl Default for FontSettings {
     fn default() -> Self {
         Self {
             default: "FiraCode Nerd Font".to_string(),
+            size: 14.0,
         }
     }
 }
@@ -315,6 +317,7 @@ pub struct Settings {
 }
 
 impl Settings {
+
     pub fn new() -> Self {
         let config_directory_result = crate::plugin::utils::centerpiece_config_directory();
         if let Err(error) = config_directory_result {
@@ -347,6 +350,10 @@ impl Settings {
     pub fn get_or_init() -> &'static Self {
         static SETTINGS: OnceLock<Settings> = OnceLock::new();
         SETTINGS.get_or_init(Self::new)
+    }
+
+    pub fn entry_height() -> f32 {
+        Self::get_or_init().font.size * 2.3
     }
 }
 

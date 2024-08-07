@@ -1,5 +1,6 @@
 use clap::Parser;
 use iced::Application;
+use crate::settings::Settings;
 
 mod cli;
 mod component;
@@ -310,12 +311,8 @@ impl Centerpiece {
     fn settings(flags: crate::cli::CliArgs) -> iced::Settings<crate::cli::CliArgs> {
         let default_text_size = iced::Pixels(crate::REM);
 
-        let settings = crate::settings::Settings::new();
-
-        let settings = crate::settings::Settings::new();
-
         let default_font = iced::Font {
-            family: iced::font::Family::Name(&settings.font.default),
+            family: iced::font::Family::Name(&Settings::get_or_init().font.default),
             weight: iced::font::Weight::Normal,
             stretch: iced::font::Stretch::Normal,
             style: iced::font::Style::default(),

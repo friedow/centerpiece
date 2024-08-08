@@ -1,7 +1,6 @@
 use crate::Settings;
 pub fn view() -> iced::Element<'static, crate::Message> {
 
-
     let font_size = Settings::get_or_init().font.size;
     iced::widget::column![iced::widget::horizontal_rule(1)]
         .padding(iced::Padding::from([

@@ -120,6 +120,7 @@ pub struct GitRepositoriesPluginSettings {
 pub struct FontSettings {
     pub default: String,
     pub size: f32,
+    pub prompt_symbol: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -134,6 +135,7 @@ impl Default for FontSettings {
         Self {
             default: "FiraCode Nerd Font".to_string(),
             size: 14.0,
+            prompt_symbol: "󰍉 ".to_string(),
         }
     }
 }

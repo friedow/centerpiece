@@ -42,7 +42,7 @@ impl Application for Centerpiece {
     fn new(flags: crate::cli::CliArgs) -> (Self, iced::Command<Message>) {
         let settings = crate::settings::Settings::try_from(flags).unwrap_or_else(|_| {
             eprintln!("There is an issue with the settings, please check the configuration file.");
-            std::process::exit(0);
+            std::process::exit(1);
         });
 
         (

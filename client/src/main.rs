@@ -3,6 +3,7 @@ use iced::Application;
 
 mod cli;
 mod component;
+mod lock;
 mod model;
 mod plugin;
 mod settings;
@@ -40,6 +41,7 @@ impl Application for Centerpiece {
     type Flags = crate::cli::CliArgs;
 
     fn new(flags: crate::cli::CliArgs) -> (Self, iced::Command<Message>) {
+        let _lock = lock::LockFile::run_exclusive();
         let settings = crate::settings::Settings::try_from(flags).unwrap_or_else(|_| {
             eprintln!("There is an issue with the settings, please check the configuration file.");
             std::process::exit(0);

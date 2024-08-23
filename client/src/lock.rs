@@ -1,6 +1,7 @@
 use std::env;
 use std::fs::File;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
 pub const LOCK_FILE_NAME: &str = "centerpiece.lock";
 pub const XDG_RUNTIME_DIR_ENV: &str = "XDG_RUNTIME_DIR";
@@ -14,6 +15,11 @@ fn get_xdg_runtime_dir() -> Option<String> {
 pub struct LockFile(PathBuf);
 
 impl LockFile {
+    pub fn get_or_init() -> &'static Option<Self> {
+        static LOCK_FILE: OnceLock<Option<LockFile>> = OnceLock::new();
+        LOCK_FILE.get_or_init(Self::init)
+    }
+
     fn init() -> Option<Self> {
         Some(Self(Self::get_lock_file_path()?))
     }
@@ -31,7 +37,7 @@ impl LockFile {
         if self.path().is_file() {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::NotFound,
-                "file not found",
+                "File found",
             ));
         } else {
             let _ = File::create(self.path())?;
@@ -39,16 +45,17 @@ impl LockFile {
         Ok(())
     }
 
-    pub fn unlock(&self) -> std::io::Result<()> {
-        std::fs::remove_file(&self.path())?;
+    pub fn unlock() -> std::io::Result<()> {
+        if let Some(lock_file) = Self::get_or_init() {
+            std::fs::remove_file(&lock_file.path())?;
+        }
         Ok(())
     }
-
     /// Attempts to hold an exclusive lock in the runtime dir.
     /// If we can't find the XDG_RUNTIME_DIR, we don't hold a lock.
     /// If the lock is not successful, then exit `centerpiece`.
     pub fn run_exclusive() {
-        if let Some(lock_file) = Self::init() {
+        if let Some(lock_file) = Self::get_or_init() {
             if lock_file.try_lock().is_err() {
                 eprintln!(
                     "Could not hold an exclusive lock in {lock_file:?} stopping centerpiece."
@@ -56,11 +63,5 @@ impl LockFile {
                 std::process::exit(1);
             }
         }
-    }
-}
-
-impl Drop for LockFile {
-    fn drop(&mut self) {
-        let _ = self.unlock();
     }
 }

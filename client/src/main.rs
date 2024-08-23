@@ -41,7 +41,7 @@ impl Application for Centerpiece {
     type Flags = crate::cli::CliArgs;
 
     fn new(flags: crate::cli::CliArgs) -> (Self, iced::Command<Message>) {
-        let _lock = lock::LockFile::run_exclusive();
+        lock::LockFile::run_exclusive();
         let settings = crate::settings::Settings::try_from(flags).unwrap_or_else(|_| {
             eprintln!("There is an issue with the settings, please check the configuration file.");
             std::process::exit(0);
@@ -107,6 +107,7 @@ impl Application for Centerpiece {
                     }
                     iced::keyboard::Event::KeyReleased { key, .. } => {
                         if key == iced::keyboard::Key::Named(iced::keyboard::key::Named::Escape) {
+                            let _ = lock::LockFile::unlock();
                             return iced::window::close(iced::window::Id::MAIN);
                         }
                         iced::Command::none()
@@ -128,7 +129,10 @@ impl Application for Centerpiece {
 
             Message::UpdateEntries(plugin_id, entries) => self.update_entries(plugin_id, entries),
 
-            Message::Exit => iced::window::close(iced::window::Id::MAIN),
+            Message::Exit => {
+                let _ = lock::LockFile::unlock();
+                iced::window::close(iced::window::Id::MAIN)
+            }
         }
     }
 

@@ -23,7 +23,8 @@ impl fmt::Display for LockFileError {
             LockFileError::AlreadyLocked(ref path) => {
                 write!(
                     f,
-                    "Could not hold an exclusive lock on the lockfile in {}.",
+                    "Could not hold an exclusive lock on the lockfile in {}\n\
+                    If you think this is an error, please remove the lockfile manually",
                     display_path(path)
                 )
             }

@@ -107,7 +107,7 @@ impl Application for Centerpiece {
                     }
                     iced::keyboard::Event::KeyReleased { key, .. } => {
                         if key == iced::keyboard::Key::Named(iced::keyboard::key::Named::Escape) {
-                            let _ = lock::LockFile::unlock();
+                            lock::LockFile::unlock();
                             return iced::window::close(iced::window::Id::MAIN);
                         }
                         iced::Command::none()
@@ -130,7 +130,7 @@ impl Application for Centerpiece {
             Message::UpdateEntries(plugin_id, entries) => self.update_entries(plugin_id, entries),
 
             Message::Exit => {
-                let _ = lock::LockFile::unlock();
+                lock::LockFile::unlock();
                 iced::window::close(iced::window::Id::MAIN)
             }
         }

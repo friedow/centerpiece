@@ -11,6 +11,7 @@ mod settings;
 pub fn main() -> iced::Result {
     let args = crate::cli::CliArgs::parse();
     simple_logger::init_with_level(log::Level::Info).unwrap();
+    lock::LockFile::run_exclusive();
     Centerpiece::run(Centerpiece::settings(args))
 }
 
@@ -41,9 +42,9 @@ impl Application for Centerpiece {
     type Flags = crate::cli::CliArgs;
 
     fn new(flags: crate::cli::CliArgs) -> (Self, iced::Command<Message>) {
-        lock::LockFile::run_exclusive();
         let settings = crate::settings::Settings::try_from(flags).unwrap_or_else(|_| {
             eprintln!("There is an issue with the settings, please check the configuration file.");
+            lock::LockFile::unlock();
             std::process::exit(0);
         });
 

@@ -229,6 +229,9 @@ in
                 exec ${lib.getExe index-git-repositories}
               ''}";
               Type = "oneshot";
+              Nice = 19;
+              IOSchedulingClass = "best-effort";
+              IOSchedulingPriority = 7;
             };
           };
         };

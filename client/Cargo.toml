@@ -57,3 +57,6 @@ dbus = "0.9.7"
 
 # firefox bookmarks
 serde_ini = "0.2.0"
+
+# audio control
+pulsectl-rs = "0.3.2"

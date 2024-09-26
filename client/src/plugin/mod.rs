@@ -1,4 +1,5 @@
 pub mod applications;
+pub mod audio_output;
 pub mod brave;
 pub mod clock;
 pub mod firefox;

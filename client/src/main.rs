@@ -39,7 +39,7 @@ impl Application for Centerpiece {
     type Theme = iced::Theme;
     type Flags = crate::cli::CliArgs;
 
-    fn new(flags: crate::cli::CliArgs) -> (Self, iced::Command<Message>) {
+    fn new(flags: crate::cli::CliArgs) -> (Self, iced::Task<Message>) {
         let settings = crate::settings::Settings::try_from(flags).unwrap_or_else(|_| {
             eprintln!("There is an issue with the settings, please check the configuration file.");
             std::process::exit(1);
@@ -52,7 +52,7 @@ impl Application for Centerpiece {
                 plugins: vec![],
                 settings,
             },
-            iced::Command::batch(vec![
+            iced::Task::batch(vec![
                 iced::font::load(
                     include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
                 )
@@ -61,7 +61,7 @@ impl Application for Centerpiece {
                     include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Light.ttf").as_slice(),
                 )
                 .map(Message::FontLoaded),
-                iced::Command::perform(async {}, move |()| Message::Loaded),
+                iced::Task::perform(async {}, move |()| Message::Loaded),
             ]),
         )
     }
@@ -70,7 +70,7 @@ impl Application for Centerpiece {
         String::from("Centerpiece")
     }
 
-    fn update(&mut self, message: Message) -> iced::Command<Message> {
+    fn update(&mut self, message: Message) -> iced::Task<Message> {
         match message {
             Message::Loaded => self.focus_search_input(),
 
@@ -87,7 +87,7 @@ impl Application for Centerpiece {
                                 iced::keyboard::Key::Character("p") => {
                                     self.select_previous_plugin()
                                 }
-                                _ => iced::Command::none(),
+                                _ => iced::Task::none(),
                             };
                         }
                         match key.as_ref() {
@@ -97,30 +97,30 @@ impl Application for Centerpiece {
                             iced::keyboard::Key::Named(iced::keyboard::key::Named::ArrowDown) => {
                                 self.select_next_entry()
                             }
-                            iced::keyboard::Key::Named(iced::keyboard::key::Named::Enter) => self
-                                .activate_selected_entry()
-                                .unwrap_or(iced::Command::none()),
-                            _ => iced::Command::none(),
+                            iced::keyboard::Key::Named(iced::keyboard::key::Named::Enter) => {
+                                self.activate_selected_entry().unwrap_or(iced::Task::none())
+                            }
+                            _ => iced::Task::none(),
                         }
                     }
                     iced::keyboard::Event::KeyReleased { key, .. } => {
                         if key == iced::keyboard::Key::Named(iced::keyboard::key::Named::Escape) {
                             return iced::window::close(iced::window::Id::MAIN);
                         }
-                        iced::Command::none()
+                        iced::Task::none()
                     }
 
-                    _ => iced::Command::none(),
+                    _ => iced::Task::none(),
                 },
 
                 iced::Event::Mouse(iced::mouse::Event::ButtonPressed(
                     iced::mouse::Button::Left,
                 )) => self.focus_search_input(),
 
-                _ => iced::Command::none(),
+                _ => iced::Task::none(),
             },
 
-            Message::FontLoaded(_) => iced::Command::none(),
+            Message::FontLoaded(_) => iced::Task::none(),
 
             Message::RegisterPlugin(plugin) => self.register_plugin(plugin),
 
@@ -236,7 +236,7 @@ impl Application for Centerpiece {
             >());
         }
 
-        iced::subscription::Subscription::batch(subscriptions)
+        iced::Subscription::batch(subscriptions)
     }
 
     fn view(&self) -> iced::Element<Message> {
@@ -363,6 +363,7 @@ impl Centerpiece {
     fn platform_specific_settings() -> iced::window::settings::PlatformSpecific {
         iced::window::settings::PlatformSpecific {
             application_id: APP_ID.into(),
+            override_redirect: false,
         }
     }
 
@@ -383,7 +384,7 @@ impl Centerpiece {
         }
     }
 
-    fn search(&mut self, input: String) -> iced::Command<Message> {
+    fn search(&mut self, input: String) -> iced::Task<Message> {
         for plugin in self.plugins.iter_mut() {
             let _ = plugin
                 .app_channel_out
@@ -394,18 +395,18 @@ impl Centerpiece {
         self.select_first_entry()
     }
 
-    fn focus_search_input(&self) -> iced::Command<Message> {
+    fn focus_search_input(&self) -> iced::Task<Message> {
         iced::widget::text_input::focus(iced::widget::text_input::Id::new(
             component::query_input::SEARCH_INPUT_ID,
         ))
     }
 
-    fn select_first_entry(&mut self) -> iced::Command<Message> {
+    fn select_first_entry(&mut self) -> iced::Task<Message> {
         self.active_entry_index = 0;
-        iced::Command::none()
+        iced::Task::none()
     }
 
-    fn select_previous_entry(&mut self) -> iced::Command<Message> {
+    fn select_previous_entry(&mut self) -> iced::Task<Message> {
         let entries = self.entries();
         if entries.is_empty() {
             return self.select_first_entry();
@@ -413,24 +414,24 @@ impl Centerpiece {
 
         if self.active_entry_index == 0 {
             self.active_entry_index = entries.len() - 1;
-            return iced::Command::none();
+            return iced::Task::none();
         }
 
         self.active_entry_index -= 1;
-        iced::Command::none()
+        iced::Task::none()
     }
 
-    fn select_next_entry(&mut self) -> iced::Command<Message> {
+    fn select_next_entry(&mut self) -> iced::Task<Message> {
         let entries = self.entries();
         if entries.is_empty() || self.active_entry_index == entries.len() - 1 {
             return self.select_first_entry();
         }
 
         self.active_entry_index += 1;
-        iced::Command::none()
+        iced::Task::none()
     }
 
-    fn select_next_plugin(&mut self) -> iced::Command<Message> {
+    fn select_next_plugin(&mut self) -> iced::Task<Message> {
         let accumulated_entries = self
             .plugins
             .iter()
@@ -444,10 +445,10 @@ impl Centerpiece {
             .unwrap_or(self.active_entry_index);
 
         self.active_entry_index = accumulated_entries;
-        iced::Command::none()
+        iced::Task::none()
     }
 
-    fn select_previous_plugin(&mut self) -> iced::Command<Message> {
+    fn select_previous_plugin(&mut self) -> iced::Task<Message> {
         if self.plugins.is_empty() || self.active_entry_index == 0 {
             return self.select_first_entry();
         }
@@ -466,23 +467,23 @@ impl Centerpiece {
             .unwrap_or(0);
 
         self.active_entry_index = accumulated_entries;
-        iced::Command::none()
+        iced::Task::none()
     }
 
-    fn register_plugin(&mut self, mut plugin: crate::model::Plugin) -> iced::Command<Message> {
+    fn register_plugin(&mut self, mut plugin: crate::model::Plugin) -> iced::Task<Message> {
         let _ = plugin
             .app_channel_out
             .try_send(crate::model::PluginRequest::Search(self.query.clone()));
         self.plugins.push(plugin);
         self.plugins.sort_by(|a, b| b.priority.cmp(&a.priority));
-        iced::Command::none()
+        iced::Task::none()
     }
 
     fn update_entries(
         &mut self,
         plugin_id: String,
         entries: Vec<crate::model::Entry>,
-    ) -> iced::Command<Message> {
+    ) -> iced::Task<Message> {
         let plugin = self
             .plugins
             .iter_mut()
@@ -492,15 +493,15 @@ impl Centerpiece {
                 "Appending entry failed. Could not find plugin with id {:?}",
                 plugin_id
             );
-            return iced::Command::none();
+            return iced::Task::none();
         }
 
         let plugin = plugin.unwrap();
         plugin.entries = entries;
-        iced::Command::none()
+        iced::Task::none()
     }
 
-    fn activate_selected_entry(&mut self) -> Option<iced::Command<Message>> {
+    fn activate_selected_entry(&mut self) -> Option<iced::Task<Message>> {
         let active_entry_id = self.active_entry_id()?.clone();
 
         let entry = self
@@ -520,7 +521,7 @@ impl Centerpiece {
             .app_channel_out
             .try_send(model::PluginRequest::Activate(entry))
             .ok();
-        Some(iced::Command::none())
+        Some(iced::Task::none())
     }
 }
 

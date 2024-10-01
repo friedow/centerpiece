@@ -3,27 +3,23 @@ use iced::futures::StreamExt;
 
 pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>(
 ) -> iced::Subscription<crate::Message> {
-    iced::subscription::channel(
-        std::any::TypeId::of::<PluginType>(),
-        100,
-        |plugin_channel_out| async move {
-            let mut plugin = PluginType::new();
+    iced::stream::channel(100, |plugin_channel_out| async move {
+        let mut plugin = PluginType::new();
 
-            let main_loop_result = plugin.main(plugin_channel_out).await;
-            if let Err(error) = main_loop_result {
-                log::error!(
-                    target: PluginType::id(),
-                    "{:?}", error,
-                );
-                panic!();
-            }
+        let main_loop_result = plugin.main(plugin_channel_out).await;
+        if let Err(error) = main_loop_result {
+            log::error!(
+                target: PluginType::id(),
+                "{:?}", error,
+            );
+            panic!();
+        }
 
-            #[allow(clippy::never_loop)]
-            loop {
-                unreachable!();
-            }
-        },
-    )
+        #[allow(clippy::never_loop)]
+        loop {
+            unreachable!();
+        }
+    })
 }
 
 #[async_trait::async_trait]
@@ -207,7 +203,7 @@ where
     let git_repository_paths_result: Result<T, _> = serde_json::from_reader(reader);
     if let Err(error) = git_repository_paths_result {
         log::error!(
-            error = log::as_error!(error);
+            error = log::error!("{:?}", error);
             "Error while reading index file",
         );
         panic!();

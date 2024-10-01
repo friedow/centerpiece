@@ -30,7 +30,7 @@ hex_color = "3"
 
 # plugins
 async-trait = "0.1.81"
-async-std = "1.12.0"
+async-std = "1.13.0"
 
 # reading index files
 serde_json = "1.0.127"

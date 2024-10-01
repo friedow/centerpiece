@@ -2,72 +2,37 @@ pub const SEARCH_INPUT_ID: &str = "search_input";
 
 pub fn view(query: &str, add_horizontal_rule: bool) -> iced::Element<'static, crate::Message> {
     let mut view = iced::widget::column![iced::widget::row![
-        iced::widget::container(iced::widget::text("󰍉 ").size(1.3 * crate::REM)).padding(
-            iced::Padding::from([0.2 * crate::REM, -0.3 * crate::REM, 0., 0.])
-        ),
+        iced::widget::container(iced::widget::text("󰍉 ").size(1.3 * crate::REM)).padding([
+            0.2 * crate::REM,
+            -0.3 * crate::REM,
+            0.,
+            0.
+        ]),
         iced::widget::text_input("Search", query)
-            .id(iced::widget::text_input::Id::new(SEARCH_INPUT_ID))
+            .id(SEARCH_INPUT_ID)
             .on_input(crate::Message::Search)
             .size(1. * crate::REM)
-            .style(style())
+            .style(|theme: &iced::Theme| {
+                // TODO: should probably use the theme instead of settings here
+                let palette = theme.extended_palette();
+                let color_settings = crate::settings::Settings::get_or_init();
+
+                iced::widget::text_input::Style {
+                    background: iced::Background::Color(iced::Color::TRANSPARENT),
+                    border: iced::Border::default(),
+                    icon: crate::settings::hexcolor(&color_settings.color.surface),
+                    placeholder: crate::settings::hexcolor(&color_settings.color.surface),
+                    value: crate::settings::hexcolor(&color_settings.color.surface),
+                    selection: crate::settings::hexcolor(&color_settings.color.surface),
+                }
+            })
     ]
-    .padding(iced::Padding::from([0.8 * crate::REM, 1.2 * crate::REM])),]
-    .padding(iced::Padding::from([0., 0., 1., 0.]));
+    .padding([0.8 * crate::REM, 1.2 * crate::REM]),]
+    .padding([0., 0., 1., 0.]);
 
     if add_horizontal_rule {
         view = view.push(iced::widget::horizontal_rule(1));
     }
 
     view.into()
-}
-
-fn style() -> iced::theme::TextInput {
-    iced::theme::TextInput::Custom(Box::new(Style {}))
-}
-
-pub struct Style {}
-
-impl iced::widget::text_input::StyleSheet for Style {
-    type Style = iced::Theme;
-
-    fn active(&self, _style: &Self::Style) -> iced::widget::text_input::Appearance {
-        use iced::color;
-        iced::widget::text_input::Appearance {
-            background: iced::Background::Color(iced::Color::TRANSPARENT),
-            border: iced::Border {
-                color: iced::Color::TRANSPARENT,
-                width: 0.,
-                radius: iced::border::Radius::from(0.),
-            },
-            icon_color: iced::color!(0xf3f3f3, 1.),
-        }
-    }
-
-    fn focused(&self, style: &Self::Style) -> iced::widget::text_input::Appearance {
-        self.active(style)
-    }
-
-    fn disabled(&self, style: &Self::Style) -> iced::widget::text_input::Appearance {
-        self.active(style)
-    }
-
-    fn placeholder_color(&self, _style: &Self::Style) -> iced::Color {
-        let color_settings = crate::settings::Settings::get_or_init();
-        crate::settings::hexcolor(&color_settings.color.surface)
-    }
-
-    fn value_color(&self, _style: &Self::Style) -> iced::Color {
-        let color_settings = crate::settings::Settings::get_or_init();
-        crate::settings::hexcolor(&color_settings.color.text)
-    }
-
-    fn disabled_color(&self, _style: &Self::Style) -> iced::Color {
-        let color_settings = crate::settings::Settings::get_or_init();
-        crate::settings::hexcolor(&color_settings.color.surface)
-    }
-
-    fn selection_color(&self, _style: &Self::Style) -> iced::Color {
-        let color_settings = crate::settings::Settings::get_or_init();
-        crate::settings::hexcolor(&color_settings.color.surface)
-    }
 }

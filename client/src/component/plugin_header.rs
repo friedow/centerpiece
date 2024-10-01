@@ -11,11 +11,11 @@ pub fn view(plugin: &crate::model::Plugin) -> iced::Element<'static, crate::Mess
     // with the height of entries for a smooth
     // scrolling experience
     .height(crate::ENTRY_HEIGHT)
-    .padding(iced::Padding::from([
+    .padding([
         0.8 * crate::REM,
         1.25 * crate::REM,
         0.5 * crate::REM,
         1.25 * crate::REM,
-    ]))
+    ])
     .into()
 }

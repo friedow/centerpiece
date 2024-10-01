@@ -247,6 +247,8 @@ impl Application for Centerpiece {
         let mut header_added = false;
         let mut next_entry_index_to_add = self.active_entry_index;
 
+        let color_settings = crate::settings::Settings::get_or_init();
+
         for lines_added in 0..11 {
             if next_entry_index_to_add >= entries.len() {
                 break;
@@ -291,9 +293,18 @@ impl Application for Centerpiece {
             component::query_input::view(&self.query, !entries.is_empty()),
             lines
         ])
-        .style(iced::theme::Container::Custom(Box::new(
-            ApplicationWrapperStyle {},
-        )))
+        .style(iced::widget::container::Style {
+            background: Some(iced::Background::Color(settings::hexcolor(
+                &color_settings.color.background,
+            ))),
+            border: iced::Border {
+                color: iced::Color::TRANSPARENT,
+                width: 0.,
+                radius: iced::border::Radius::from(0.25 * crate::REM),
+            },
+            text_color: None,
+            shadow: iced::Shadow::default(),
+        })
         .into()
     }
 
@@ -301,8 +312,13 @@ impl Application for Centerpiece {
         iced::Theme::Dark
     }
 
-    fn style(&self) -> iced::theme::Application {
-        iced::theme::Application::Custom(Box::new(SandboxStyle {}))
+    fn style(&self) -> iced::application::Application {
+        let color_settings = crate::settings::Settings::get_or_init();
+
+        iced::application::Appearance {
+            background_color: iced::Color::TRANSPARENT,
+            text_color: settings::hexcolor(&color_settings.color.text),
+        }
     }
 }
 
@@ -510,38 +526,3 @@ impl Centerpiece {
 
 pub const REM: f32 = 14.0;
 pub const ENTRY_HEIGHT: f32 = 2.3 * crate::REM;
-
-struct SandboxStyle {}
-impl iced::application::StyleSheet for SandboxStyle {
-    type Style = iced::Theme;
-
-    fn appearance(&self, _style: &Self::Style) -> iced::application::Appearance {
-        let color_settings = crate::settings::Settings::get_or_init();
-
-        iced::application::Appearance {
-            background_color: iced::Color::TRANSPARENT,
-            text_color: settings::hexcolor(&color_settings.color.text),
-        }
-    }
-}
-
-struct ApplicationWrapperStyle {}
-impl iced::widget::container::StyleSheet for ApplicationWrapperStyle {
-    type Style = iced::Theme;
-
-    fn appearance(&self, _style: &Self::Style) -> iced::widget::container::Appearance {
-        let color_settings = crate::settings::Settings::get_or_init();
-        iced::widget::container::Appearance {
-            background: Some(iced::Background::Color(settings::hexcolor(
-                &color_settings.color.background,
-            ))),
-            border: iced::Border {
-                color: iced::Color::TRANSPARENT,
-                width: 0.,
-                radius: iced::border::Radius::from(0.25 * crate::REM),
-            },
-            text_color: None,
-            shadow: iced::Shadow::default(),
-        }
-    }
-}

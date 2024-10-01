@@ -3,22 +3,24 @@ use iced::futures::StreamExt;
 
 pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>(
 ) -> iced::Subscription<crate::Message> {
-    iced::stream::channel(100, |plugin_channel_out| async move {
-        let mut plugin = PluginType::new();
+    iced::Subscription::run(|| {
+        iced::stream::channel(100, |plugin_channel_out| async move {
+            let mut plugin = PluginType::new();
 
-        let main_loop_result = plugin.main(plugin_channel_out).await;
-        if let Err(error) = main_loop_result {
-            log::error!(
-                target: PluginType::id(),
-                "{:?}", error,
-            );
-            panic!();
-        }
+            let main_loop_result = plugin.main(plugin_channel_out).await;
+            if let Err(error) = main_loop_result {
+                log::error!(
+                    target: PluginType::id(),
+                    "{:?}", error,
+                );
+                panic!();
+            }
 
-        #[allow(clippy::never_loop)]
-        loop {
-            unreachable!();
-        }
+            #[allow(clippy::never_loop)]
+            loop {
+                unreachable!();
+            }
+        })
     })
 }
 

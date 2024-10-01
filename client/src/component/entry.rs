@@ -1,18 +1,23 @@
 pub fn view(entry: &crate::model::Entry, active: bool) -> iced::Element<'static, crate::Message> {
-    return iced::widget::container(
+    iced::widget::container(
         iced::widget::container(
             iced::widget::row![
                 iced::widget::text(clipped_title(entry.title.clone()))
                     .size(1. * crate::REM)
                     .width(iced::Length::Fill)
                     .shaping(iced::widget::text::Shaping::Advanced),
-                iced::widget::text(if active { &entry.action } else { "" }).size(1. * crate::REM)
+                iced::widget::text(if active {
+                    entry.action.clone()
+                } else {
+                    "".to_string()
+                })
+                .size(1. * crate::REM)
             ]
             .padding(0.5 * crate::REM),
         )
-        .style(|theme: &iced::Theme, _| {
+        .style(move |_theme: &iced::Theme| {
             // TODO: should probably use the theme instead of settings here
-            let palette = theme.extended_palette();
+            //let palette = theme.extended_palette();
             let color_settings = crate::settings::Settings::get_or_init();
 
             let border = if active {
@@ -38,7 +43,7 @@ pub fn view(entry: &crate::model::Entry, active: bool) -> iced::Element<'static,
     // scrolling experience
     .height(crate::ENTRY_HEIGHT)
     .padding([0., 0.75 * crate::REM])
-    .into();
+    .into()
 }
 
 fn clipped_title(title: String) -> String {

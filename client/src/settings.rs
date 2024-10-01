@@ -159,16 +159,10 @@ impl Default for GitRepositoriesPluginSettings {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
 pub struct GitmojiPluginSettings {
     #[serde(default = "default_false")]
     pub enable: bool,
-}
-
-impl Default for GitmojiPluginSettings {
-    fn default() -> Self {
-        Self { enable: false }
-    }
 }
 
 #[derive(Debug, Deserialize)]

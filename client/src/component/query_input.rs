@@ -14,9 +14,9 @@ pub fn view(query: &str, add_horizontal_rule: bool) -> iced::Element<'static, cr
             .id(SEARCH_INPUT_ID)
             .on_input(crate::Message::Search)
             .size(1. * crate::REM)
-            .style(|theme: &iced::Theme, _| {
+            .style(|_theme: &iced::Theme, _| {
                 // TODO: should probably use the theme instead of settings here
-                let palette = theme.extended_palette();
+                //let palette = theme.extended_palette();
                 let color_settings = crate::settings::Settings::get_or_init();
 
                 iced::widget::text_input::Style {

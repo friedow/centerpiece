@@ -33,6 +33,7 @@
         rustc
         rustfmt
         cargo
+        clippy
       ];
 
       nativeBuildInputs = with pkgs; [

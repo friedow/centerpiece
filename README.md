@@ -281,11 +281,11 @@ You can specify alternative configuration locations through:
        enable: true
      resource_monitor_memory:
        enable: true
+     sway_windows:
+       enable: true
      system:
        enable: true
      wifi:
-       enable: true
-     sway_windows:
        enable: true
    ```
 
@@ -350,13 +350,13 @@ You can specify alternative configuration locations through:
                        resource_monitor_memory = {
                            enable = true;
                        };
+                       sway_windows = {
+                           enable = true;
+                       };
                        system = {
                            enable = true;
                        };
                        wifi = {
-                           enable = true;
-                       };
-                       sway_windows = {
                            enable = true;
                        };
                    };

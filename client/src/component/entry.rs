@@ -15,26 +15,19 @@ pub fn view(entry: &crate::model::Entry, active: bool) -> iced::Element<'static,
             ]
             .padding(0.5 * crate::REM),
         )
-        .style(move |_theme: &iced::Theme| {
-            // TODO: should probably use the theme instead of settings here
-            //let palette = theme.extended_palette();
-            let color_settings = crate::settings::Settings::get_or_init();
-
-            let border = if active {
-                iced::Border {
-                    color: crate::settings::hexcolor(&color_settings.color.text),
-                    width: 1.,
-                    radius: iced::border::Radius::from(0.1 * crate::REM),
-                }
-            } else {
-                iced::Border::default()
+        .style(move |theme: &iced::Theme| {
+            if !active {
+                return iced::widget::container::Style::default();
             };
 
+            let palette = theme.extended_palette();
             iced::widget::container::Style {
-                background: None,
-                border,
-                text_color: None,
-                shadow: iced::Shadow::default(),
+                border: iced::Border {
+                    color: palette.background.base.text,
+                    width: 1.,
+                    radius: iced::border::Radius::from(0.1 * crate::REM),
+                },
+                ..Default::default()
             }
         }),
     )

@@ -121,8 +121,6 @@ fn view(centerpiece: &Centerpiece) -> iced::Element<Message> {
     let mut header_added = false;
     let mut next_entry_index_to_add = centerpiece.active_entry_index;
 
-    let color_settings = crate::settings::Settings::get_or_init();
-
     for lines_added in 0..11 {
         if next_entry_index_to_add >= entries.len() {
             break;
@@ -167,18 +165,16 @@ fn view(centerpiece: &Centerpiece) -> iced::Element<Message> {
         component::query_input::view(&centerpiece.query, !entries.is_empty()),
         lines
     ])
-    .style(|_| iced::widget::container::Style {
-        background: Some(iced::Background::Color(settings::hexcolor(
-            &color_settings.color.background,
-        ))),
-        border: iced::Border {
-            color: iced::Color::TRANSPARENT,
-            width: 0.,
-            radius: iced::border::Radius::from(0.25 * crate::REM),
-        },
-        text_color: None,
-        shadow: iced::Shadow::default(),
+    .style(|theme: &iced::Theme| {
+        let palette = theme.extended_palette();
+
+        iced::widget::container::Style {
+            background: Some(iced::Background::Color(palette.background.base.color)),
+            border: iced::Border::default().rounded(0.25 * crate::REM),
+            ..Default::default()
+        }
     })
+    .padding(iced::padding::bottom(0.75 * crate::REM))
     .into()
 }
 
@@ -296,7 +292,17 @@ fn subscription(_centerpiece: &Centerpiece) -> iced::Subscription<Message> {
 }
 
 fn theme(_centerpiece: &Centerpiece) -> iced::Theme {
-    iced::Theme::Dark
+    let settings = crate::settings::Settings::get_or_init();
+    iced::Theme::custom(
+        "centerpiece theme".to_string(),
+        iced::theme::Palette {
+            background: crate::settings::hexcolor(&settings.color.background),
+            text: crate::settings::hexcolor(&settings.color.text),
+            primary: crate::settings::hexcolor(&settings.color.text),
+            success: crate::settings::hexcolor(&settings.color.text),
+            danger: crate::settings::hexcolor(&settings.color.text),
+        },
+    )
 }
 
 fn style(_centerpiece: &Centerpiece, _theme: &iced::Theme) -> iced::application::Appearance {

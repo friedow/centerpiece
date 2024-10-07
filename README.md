@@ -248,6 +248,9 @@ You can specify alternative configuration locations through:
 1. Use the following config keys to configure centerpiece. These are all config keys including their respective defaults.
 
    ```yml
+   color:
+     text: "#ffffff"
+     background: "#000000"
    plugin:
      applications:
        enable: true
@@ -299,6 +302,10 @@ You can specify alternative configuration locations through:
            programs.centerpiece = {
                enable = true;
                config = {
+                   color = {
+                       text = "#ffffff";
+                       background = "#000000";
+                   };
                    plugin = {
                        applications = {
                            enable = true;

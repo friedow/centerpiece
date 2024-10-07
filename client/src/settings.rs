@@ -120,7 +120,6 @@ pub struct GitRepositoriesPluginSettings {
 pub struct ColorSettings {
     pub text: String,
     pub background: String,
-    pub surface: String,
 }
 
 impl Default for ColorSettings {
@@ -128,7 +127,6 @@ impl Default for ColorSettings {
         Self {
             text: "#ffffff".to_string(),
             background: "#000000".to_string(),
-            surface: "#ffffff22".to_string(),
         }
     }
 }
@@ -320,6 +318,7 @@ impl Settings {
             );
             panic!();
         }
+
         config_result.unwrap()
     }
 

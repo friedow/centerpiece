@@ -12,7 +12,7 @@ pub fn view(query: &str, add_horizontal_rule: bool) -> iced::Element<'static, cr
             side: iced::widget::text_input::Side::Left,
         })
         .size(1. * crate::REM)
-        .padding([0.8 * crate::REM, 1.2 * crate::REM])
+        .padding([1.0 * crate::REM, 1.2 * crate::REM])
         .style(style),]
     .padding(iced::Padding::default().bottom(1.));
 

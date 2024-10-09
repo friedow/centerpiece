@@ -30,19 +30,14 @@ pub fn profile_path() -> anyhow::Result<String> {
     let mut default_profile = profiles_file_contents
         .values()
         .find(|section| match section {
-            Section::Profile { default, .. } => {
-                default.clone().unwrap_or(String::from("")) == String::from("1")
-            }
+            Section::Profile { default, .. } => default.clone().unwrap_or(String::from("")) == *"1",
             _ => false,
         });
 
     if default_profile.is_none() {
         default_profile = profiles_file_contents
             .values()
-            .find(|section| match section {
-                Section::Profile { .. } => true,
-                _ => false,
-            });
+            .find(|section| matches!(section, Section::Profile { .. }));
     }
 
     if default_profile.is_none() {

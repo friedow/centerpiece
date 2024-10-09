@@ -106,7 +106,7 @@ fn terminal_command(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> 
     return desktop_entry
         .exec()?
         .split_ascii_whitespace()
-        .nth(0)
+        .next()
         .map(String::from);
 }
 

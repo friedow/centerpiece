@@ -120,15 +120,20 @@ pub struct GitRepositoriesPluginSettings {
 pub struct ColorSettings {
     pub text: String,
     pub background: String,
+    #[deprecated(
+        since = "1.2.0",
+        note = "color.surface has been replaced by automatic shading of the background color. Please remove this field from your configuration."
+    )]
     pub surface: String,
 }
 
 impl Default for ColorSettings {
     fn default() -> Self {
+        #[allow(deprecated)]
         Self {
             text: "#ffffff".to_string(),
             background: "#000000".to_string(),
-            surface: "#ffffff22".to_string(),
+            surface: "deprecated".to_string(),
         }
     }
 }
@@ -159,16 +164,10 @@ impl Default for GitRepositoriesPluginSettings {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
 pub struct GitmojiPluginSettings {
     #[serde(default = "default_false")]
     pub enable: bool,
-}
-
-impl Default for GitmojiPluginSettings {
-    fn default() -> Self {
-        Self { enable: false }
-    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -326,7 +325,14 @@ impl Settings {
             );
             panic!();
         }
-        config_result.unwrap()
+        let settings: Settings = config_result.unwrap();
+
+        #[allow(deprecated)]
+        if settings.color.surface != String::from("deprecated") {
+            log::warn!("color.surface has been replaced by automatic shading of the background color in cernterpiece version 1.2.0. Please remove this field from your configuration.")
+        }
+
+        settings
     }
 
     pub fn get_or_init() -> &'static Self {

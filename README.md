@@ -88,7 +88,7 @@ plugin:
 
 _Open bookmarks and browser history in new tabs._
 
-### Brave
+#### Brave
 
 In addition to bookmarks and history there is also a plugin to open special bookmarks in app mode.
 This will launch a brave instance without address and tab bar.
@@ -107,7 +107,7 @@ plugin:
     enable: true
 ```
 
-### Firefox
+#### Firefox
 
 **Related config keys**
 
@@ -233,7 +233,7 @@ plugin:
     enable: true
 ```
 
-# Configure
+## Configure
 
 You can configure centerpiece through yaml or nix.
 
@@ -242,12 +242,15 @@ You can specify alternative configuration locations through:
 - the `--config` flag
 - the `CENTERPIECE_CONFIGURATION_FILE` environment variable
 
-## Using yml
+### Using yml
 
 1. Create a `config.yml` file in `~/.config/centerpiece/config.yml`.
 1. Use the following config keys to configure centerpiece. These are all config keys including their respective defaults.
 
    ```yml
+   color:
+     text: "#ffffff"
+     background: "#000000"
    plugin:
      applications:
        enable: true
@@ -278,15 +281,15 @@ You can specify alternative configuration locations through:
        enable: true
      resource_monitor_memory:
        enable: true
+     sway_windows:
+       enable: true
      system:
        enable: true
      wifi:
        enable: true
-     sway_windows:
-       enable: true
    ```
 
-## Using nix
+### Using nix
 
 1. Install the home-manager module as documented in the ['Run it!' section](#run-it).
 1. Use the following config keys to configure centerpiece. These are all config keys including their respective defaults.
@@ -299,6 +302,10 @@ You can specify alternative configuration locations through:
            programs.centerpiece = {
                enable = true;
                config = {
+                   color = {
+                       text = "#ffffff";
+                       background = "#000000";
+                   };
                    plugin = {
                        applications = {
                            enable = true;
@@ -343,13 +350,13 @@ You can specify alternative configuration locations through:
                        resource_monitor_memory = {
                            enable = true;
                        };
+                       sway_windows = {
+                           enable = true;
+                       };
                        system = {
                            enable = true;
                        };
                        wifi = {
-                           enable = true;
-                       };
-                       sway_windows = {
                            enable = true;
                        };
                    };
@@ -365,15 +372,15 @@ You can specify alternative configuration locations through:
    }
    ```
 
-# Contribute
+## Contribute
 
-## Repository Structure
+### Repository Structure
 
-### /client
+#### /client
 
 Contains the graphical application and the plugin code that is needed during runtime. This is most of the plugin code which handles requests for searching and opening of entries.
 
-### /services
+#### /services
 
 Computations for generating plugin entries can be time consuming. For example listing all git repositories entails searching your whole home directory for directories with the name `.git`. To avoid slowing down the graphical application during run time this directory contains code for small systemd services that write indices for plugins with time consuming queries.
 

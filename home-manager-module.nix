@@ -13,177 +13,193 @@ in
   options.programs.centerpiece = {
     enable = lib.mkEnableOption (lib.mdDoc "Centerpiece");
 
-    config.plugin = {
-      applications = {
-        enable = lib.mkOption {
-          default = true;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable the plugin.";
+    config = {
+      color = {
+        text = lib.mkOption {
+          default = "#ffffff";
+          type = lib.types.str;
+          description = lib.mdDoc "Text color within centerpiece.";
+        };
+
+        background = lib.mkOption {
+          default = "#000000";
+          type = lib.types.str;
+          description = lib.mdDoc "Background color within centerpiece.";
         };
       };
 
-      brave_bookmarks = {
-        enable = lib.mkOption {
-          default = true;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable the plugin.";
+      plugin = {
+        applications = {
+          enable = lib.mkOption {
+            default = true;
+            type = lib.types.bool;
+            description = lib.mdDoc "Enable / disable the plugin.";
+          };
         };
-      };
 
-      brave_history = {
-        enable = lib.mkOption {
-          default = true;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable the plugin.";
+        brave_bookmarks = {
+          enable = lib.mkOption {
+            default = true;
+            type = lib.types.bool;
+            description = lib.mdDoc "Enable / disable the plugin.";
+          };
         };
-      };
 
-      brave_progressive_web_apps = {
-        enable = lib.mkOption {
-          default = true;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable the plugin.";
+        brave_history = {
+          enable = lib.mkOption {
+            default = true;
+            type = lib.types.bool;
+            description = lib.mdDoc "Enable / disable the plugin.";
+          };
         };
-      };
 
-      clock = {
-        enable = lib.mkOption {
-          default = true;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable the plugin.";
+        brave_progressive_web_apps = {
+          enable = lib.mkOption {
+            default = true;
+            type = lib.types.bool;
+            description = lib.mdDoc "Enable / disable the plugin.";
+          };
         };
-      };
 
-      firefox_bookmarks = {
-        enable = lib.mkOption {
-          default = true;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable the plugin.";
+        clock = {
+          enable = lib.mkOption {
+            default = true;
+            type = lib.types.bool;
+            description = lib.mdDoc "Enable / disable the plugin.";
+          };
         };
-      };
 
-      firefox_history = {
-        enable = lib.mkOption {
-          default = true;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable the plugin.";
+        firefox_bookmarks = {
+          enable = lib.mkOption {
+            default = true;
+            type = lib.types.bool;
+            description = lib.mdDoc "Enable / disable the plugin.";
+          };
         };
-      };
 
-      git_repositories = {
-        enable = lib.mkOption {
-          default = true;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable the plugin.";
+        firefox_history = {
+          enable = lib.mkOption {
+            default = true;
+            type = lib.types.bool;
+            description = lib.mdDoc "Enable / disable the plugin.";
+          };
         };
-        zoxide = lib.mkOption {
-          default = true;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable zoxide integration.";
-        };
-        commands = lib.mkOption {
-          default = [
-            [
-              "alacritty"
-              "--command"
-              "nvim"
-              "$GIT_DIRECTORY"
-            ]
-            [
-              "alacritty"
-              "--working-directory"
-              "$GIT_DIRECTORY"
-            ]
-          ];
-          type = lib.types.listOf (lib.types.listOf lib.types.str);
-          description = lib.mdDoc ''
-            The commands to launch when an entry is selected.
-            Use the $GIT_DIRECTORY variable to pass in the selected directory.
-            Use the $GIT_DIRECTORY_NAME variable to pass in the selected directory name.
-          '';
-          example = [
-            [
-              "code"
-              "--new-window"
-              "$GIT_DIRECTORY"
-            ]
-            [
-              "alacritty"
-              "--command"
-              "lazygit"
-              "--path"
-              "$GIT_DIRECTORY"
-            ]
-            [
-              "alacritty"
-              "--working-directory"
-              "$GIT_DIRECTORY"
-            ]
-          ];
-        };
-      };
 
-      gitmoji = {
-        enable = lib.mkOption {
-          default = false;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable the plugin.";
+        git_repositories = {
+          enable = lib.mkOption {
+            default = true;
+            type = lib.types.bool;
+            description = lib.mdDoc "Enable / disable the plugin.";
+          };
+          zoxide = lib.mkOption {
+            default = true;
+            type = lib.types.bool;
+            description = lib.mdDoc "Enable / disable zoxide integration.";
+          };
+          commands = lib.mkOption {
+            default = [
+              [
+                "alacritty"
+                "--command"
+                "nvim"
+                "$GIT_DIRECTORY"
+              ]
+              [
+                "alacritty"
+                "--working-directory"
+                "$GIT_DIRECTORY"
+              ]
+            ];
+            type = lib.types.listOf (lib.types.listOf lib.types.str);
+            description = lib.mdDoc ''
+              The commands to launch when an entry is selected.
+              Use the $GIT_DIRECTORY variable to pass in the selected directory.
+              Use the $GIT_DIRECTORY_NAME variable to pass in the selected directory name.
+            '';
+            example = [
+              [
+                "code"
+                "--new-window"
+                "$GIT_DIRECTORY"
+              ]
+              [
+                "alacritty"
+                "--command"
+                "lazygit"
+                "--path"
+                "$GIT_DIRECTORY"
+              ]
+              [
+                "alacritty"
+                "--working-directory"
+                "$GIT_DIRECTORY"
+              ]
+            ];
+          };
         };
-      };
 
-      resource_monitor_battery = {
-        enable = lib.mkOption {
-          default = true;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable the plugin.";
+        gitmoji = {
+          enable = lib.mkOption {
+            default = false;
+            type = lib.types.bool;
+            description = lib.mdDoc "Enable / disable the plugin.";
+          };
         };
-      };
 
-      resource_monitor_cpu = {
-        enable = lib.mkOption {
-          default = true;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable the plugin.";
+        resource_monitor_battery = {
+          enable = lib.mkOption {
+            default = true;
+            type = lib.types.bool;
+            description = lib.mdDoc "Enable / disable the plugin.";
+          };
         };
-      };
 
-      resource_monitor_disks = {
-        enable = lib.mkOption {
-          default = true;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable the plugin.";
+        resource_monitor_cpu = {
+          enable = lib.mkOption {
+            default = true;
+            type = lib.types.bool;
+            description = lib.mdDoc "Enable / disable the plugin.";
+          };
         };
-      };
 
-      resource_monitor_memory = {
-        enable = lib.mkOption {
-          default = true;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable the plugin.";
+        resource_monitor_disks = {
+          enable = lib.mkOption {
+            default = true;
+            type = lib.types.bool;
+            description = lib.mdDoc "Enable / disable the plugin.";
+          };
         };
-      };
 
-      sway_windows = {
-        enable = lib.mkOption {
-          default = true;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable the plugin.";
+        resource_monitor_memory = {
+          enable = lib.mkOption {
+            default = true;
+            type = lib.types.bool;
+            description = lib.mdDoc "Enable / disable the plugin.";
+          };
         };
-      };
 
-      system = {
-        enable = lib.mkOption {
-          default = true;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable the plugin.";
+        sway_windows = {
+          enable = lib.mkOption {
+            default = true;
+            type = lib.types.bool;
+            description = lib.mdDoc "Enable / disable the plugin.";
+          };
         };
-      };
 
-      wifi = {
-        enable = lib.mkOption {
-          default = true;
-          type = lib.types.bool;
-          description = lib.mdDoc "Enable / disable the plugin.";
+        system = {
+          enable = lib.mkOption {
+            default = true;
+            type = lib.types.bool;
+            description = lib.mdDoc "Enable / disable the plugin.";
+          };
+        };
+
+        wifi = {
+          enable = lib.mkOption {
+            default = true;
+            type = lib.types.bool;
+            description = lib.mdDoc "Enable / disable the plugin.";
+          };
         };
       };
     };

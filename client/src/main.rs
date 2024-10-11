@@ -28,15 +28,6 @@ pub fn main() -> iced::Result {
         .run_with(Centerpiece::new)
 }
 
-#[derive(Debug, Clone, Copy)]
-enum WindowDirection {
-    Top,
-    Left,
-    Right,
-    Bottom,
-}
-
-#[iced_layershell::to_layer_message]
 #[derive(Debug, Clone)]
 pub enum Message {
     Loaded,
@@ -45,7 +36,6 @@ pub enum Message {
     FontLoaded(Result<(), iced::font::Error>),
     RegisterPlugin(model::Plugin),
     UpdateEntries(String, Vec<model::Entry>),
-    Direction(WindowDirection),
     Exit,
 }
 
@@ -119,44 +109,7 @@ fn update(centerpiece: &mut Centerpiece, message: Message) -> iced::Task<Message
             centerpiece.update_entries(plugin_id, entries)
         }
 
-        Message::Direction(direction) => match direction {
-            WindowDirection::Left => iced::task::Task::batch(vec![
-                iced::task::Task::done(Message::AnchorChange(
-                    iced_layershell::reexport::Anchor::Left
-                        | iced_layershell::reexport::Anchor::Top
-                        | iced_layershell::reexport::Anchor::Bottom,
-                )),
-                iced::task::Task::done(Message::SizeChange((400, 0))),
-            ]),
-            WindowDirection::Right => iced::task::Task::batch(vec![
-                iced::task::Task::done(Message::AnchorChange(
-                    iced_layershell::reexport::Anchor::Right
-                        | iced_layershell::reexport::Anchor::Top
-                        | iced_layershell::reexport::Anchor::Bottom,
-                )),
-                iced::task::Task::done(Message::SizeChange((400, 0))),
-            ]),
-            WindowDirection::Bottom => iced::task::Task::batch(vec![
-                iced::task::Task::done(Message::AnchorChange(
-                    iced_layershell::reexport::Anchor::Bottom
-                        | iced_layershell::reexport::Anchor::Left
-                        | iced_layershell::reexport::Anchor::Right,
-                )),
-                iced::task::Task::done(Message::SizeChange((0, 400))),
-            ]),
-            WindowDirection::Top => iced::task::Task::batch(vec![
-                iced::task::Task::done(Message::AnchorChange(
-                    iced_layershell::reexport::Anchor::Top
-                        | iced_layershell::reexport::Anchor::Left
-                        | iced_layershell::reexport::Anchor::Right,
-                )),
-                iced::task::Task::done(Message::SizeChange((0, 400))),
-            ]),
-        },
-
         Message::Exit => iced::window::get_latest().and_then(iced::window::close),
-
-        _ => unreachable!(),
     }
 }
 
@@ -372,12 +325,11 @@ fn settings() -> iced_layershell::settings::Settings {
         },
         default_text_size: iced::Pixels(crate::REM),
         layer_settings: iced_layershell::settings::LayerShellSettings {
-            size: Some((0, 400)),
-            exclusive_zone: 400,
+            size: Some((400, 400)),
             anchor: iced_layershell::reexport::Anchor::Bottom
                 | iced_layershell::reexport::Anchor::Left
+                | iced_layershell::reexport::Anchor::Right
                 | iced_layershell::reexport::Anchor::Right,
-            start_mode,
             ..Default::default()
         },
         ..Default::default()

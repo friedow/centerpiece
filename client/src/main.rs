@@ -327,11 +327,10 @@ fn settings() -> iced_layershell::settings::Settings<()> {
         },
         default_text_size: iced::Pixels(crate::REM),
         layer_settings: iced_layershell::settings::LayerShellSettings {
-            size: Some((400, 400)),
-            anchor: iced_layershell::reexport::Anchor::Bottom
-                | iced_layershell::reexport::Anchor::Top
-                | iced_layershell::reexport::Anchor::Right
-                | iced_layershell::reexport::Anchor::Left,
+            size: Some((650, 380)),
+            layer: iced_layershell::reexport::Layer::Top,
+            anchor: iced_layershell::reexport::Anchor::Top,
+            margin: (200, 0, 0, 0),
             ..Default::default()
         },
         ..Default::default()

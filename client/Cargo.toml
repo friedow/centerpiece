@@ -25,6 +25,7 @@ serde_yaml = "0.9.34"
 
 # application window
 iced = { version = "0.13.1", features = ["svg"] }
+iced_layershell = "0.9.4"
 
 hex_color = "3"
 
@@ -57,3 +58,4 @@ dbus = "0.9.7"
 
 # firefox bookmarks
 serde_ini = "0.2.0"
+iced_runtime = "0.13.2"

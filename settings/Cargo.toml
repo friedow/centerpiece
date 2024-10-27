@@ -12,5 +12,3 @@ serde_yaml = "0.9.34"
 iced = { version = "0.13.1", features = ["svg"] }
 hex_color = "3"
 clap = { version = "4.5.18", features = ["derive", "env"] }
-
-

@@ -331,6 +331,7 @@ fn settings() -> iced_layershell::settings::Settings<()> {
             size: Some((650, 380)),
             layer: iced_layershell::reexport::Layer::Top,
             anchor: iced_layershell::reexport::Anchor::Top,
+            keyboard_interactivity: iced_layershell::reexport::KeyboardInteractivity::Exclusive,
             margin: (200, 0, 0, 0),
             ..Default::default()
         },

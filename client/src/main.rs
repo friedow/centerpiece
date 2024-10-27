@@ -3,6 +3,7 @@ use clap::Parser;
 use iced::Theme;
 use iced_layershell::to_layer_message;
 use iced_layershell::Application;
+use iced_runtime::Action;
 mod cli;
 mod component;
 mod model;
@@ -86,7 +87,7 @@ impl Application for Centerpiece {
                     }
                     iced::keyboard::Event::KeyReleased { key, .. } => {
                         if key == iced::keyboard::Key::Named(iced::keyboard::key::Named::Escape) {
-                            return iced::window::get_latest().and_then(iced::window::close);
+                            return iced_runtime::task::effect(Action::Exit);
                         }
                         iced::Task::none()
                     }

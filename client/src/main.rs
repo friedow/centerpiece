@@ -108,7 +108,7 @@ impl Application for Centerpiece {
 
             Message::UpdateEntries(plugin_id, entries) => self.update_entries(plugin_id, entries),
 
-            Message::Exit => iced::window::get_latest().and_then(iced::window::close),
+            Message::Exit => iced_runtime::task::effect(Action::Exit),
             _ => iced::Task::none(),
         }
     }

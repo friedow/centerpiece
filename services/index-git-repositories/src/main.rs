@@ -38,15 +38,8 @@ fn main() {
     write_index_file(git_repository_paths);
 }
 
-pub fn cache_directory() -> anyhow::Result<String> {
-    let home_directory = std::env::var("HOME")?;
-    let cache_in_home = format!("{home_directory}/.cache");
-    let cache_directory = std::env::var("XDG_CACHE_HOME").unwrap_or(cache_in_home);
-    Ok(format!("{cache_directory}/centerpiece"))
-}
-
 fn write_index_file(git_repository_paths: Vec<&str>) {
-    let cache_directory_result = cache_directory();
+    let cache_directory_result = settings::centerpiece_cache_directory();
     if let Err(error) = cache_directory_result {
         log::error!(
         error = log::error!("{:?}", error);

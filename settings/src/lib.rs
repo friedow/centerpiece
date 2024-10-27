@@ -144,14 +144,29 @@ pub struct GitRepositoriesPluginSettings {
     pub commands: Vec<Vec<String>>,
 }
 
+fn default_white() -> String {
+    "#ffffff".into()
+}
+
+fn default_black() -> String {
+    "#000000".into()
+}
+
+fn default_deprecated() -> String {
+    "deprecated".into()
+}
+
 #[derive(Debug, Deserialize)]
 pub struct ColorSettings {
+    #[serde(default = "default_white")]
     pub text: String,
+    #[serde(default = "default_black")]
     pub background: String,
     #[deprecated(
         since = "1.2.0",
         note = "color.surface has been replaced by automatic shading of the background color. Please remove this field from your configuration."
     )]
+    #[serde(default = "default_deprecated")]
     pub surface: String,
 }
 
@@ -159,9 +174,9 @@ impl Default for ColorSettings {
     fn default() -> Self {
         #[allow(deprecated)]
         Self {
-            text: "#ffffff".to_string(),
-            background: "#000000".to_string(),
-            surface: "deprecated".to_string(),
+            text: default_white(),
+            background: default_black(),
+            surface: default_deprecated(),
         }
     }
 }

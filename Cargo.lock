@@ -654,6 +654,7 @@ dependencies = [
  "hex_color",
  "iced",
  "iced_layershell",
+ "iced_runtime",
  "log",
  "networkmanager",
  "serde",

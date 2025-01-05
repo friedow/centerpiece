@@ -1,4 +1,5 @@
 use crate::plugin::utils::Plugin;
+use systemstat::{Platform, System};
 
 pub struct CpuPlugin {
     sysinfo: sysinfo::System,
@@ -40,6 +41,15 @@ impl Plugin for CpuPlugin {
             self.sysinfo.cpus().len()
         );
 
+        // Option type allows handling failures of the temperature retrieval
+        let max_cpu_temp: Option<String> = match System::new().cpu_temp() {
+            Ok(cpu_temp) => Some(format!("Temperature: {}°C", cpu_temp)),
+            Err(e) => {
+                log::warn!("Cannot determine max temperature: {e:?}");
+                None
+            }
+        };
+
         for cpu_core in self.sysinfo.cpus() {
             let core_usage = match cpu_core.cpu_usage() as i32 {
                 0..=12 => " ▁",
@@ -55,13 +65,17 @@ impl Plugin for CpuPlugin {
             core_usages.push_str(core_usage);
         }
 
-        self.entries.push(crate::model::Entry {
-            id: "cpu".into(),
-            title: core_usages,
-            action: String::from(""),
-            meta: String::from("Resource Monitor CPU"),
-            command: None,
-        });
+        self.entries = [Some(core_usages), max_cpu_temp]
+            .iter()
+            .flatten() // Remove None
+            .map(|c| crate::model::Entry {
+                id: "cpu".into(),
+                title: c.to_string(),
+                action: String::from(""),
+                meta: String::from("Resource Monitor CPU"),
+                command: None,
+            })
+            .collect();
 
         Ok(())
     }

@@ -59,3 +59,4 @@ dbus = "0.9.7"
 # firefox bookmarks
 serde_ini = "0.2.0"
 iced_runtime = "0.13.2"
+systemstat = "0.2.4"

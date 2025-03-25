@@ -197,6 +197,8 @@ fn subscription(_: &Centerpiece) -> iced::Subscription<Message> {
 
     let settings = crate::settings::Settings::get_or_init();
 
+    subscriptions.push(crate::plugin::unix_socket_listener::spawn());
+
     if settings.plugin.applications.enable {
         subscriptions.push(crate::plugin::utils::spawn::<
             crate::plugin::applications::ApplicationsPlugin,

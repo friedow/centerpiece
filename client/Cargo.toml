@@ -60,3 +60,8 @@ dbus = "0.9.7"
 serde_ini = "0.2.0"
 iced_runtime = "0.13.2"
 systemstat = "0.2.4"
+
+# ipc plugin
+tokio = { version = "1.44.0", features = ["full"]}
+interprocess = { version = "2.2.3", features = ["tokio"] }
+

@@ -1,6 +1,9 @@
 use {
     interprocess::local_socket::{prelude::*, GenericFilePath, GenericNamespaced, Stream},
-    std::io::{prelude::*, BufReader},
+    std::{
+        io::{prelude::*, BufReader},
+        thread::sleep_ms,
+    },
 };
 
 fn main() -> std::io::Result<()> {
@@ -11,10 +14,18 @@ fn main() -> std::io::Result<()> {
     };
 
     let mut buffer = String::with_capacity(128);
-    let conn = Stream::connect(name)?;
-    let mut conn = BufReader::new(conn);
-    conn.get_mut().write_all(b"Hello from client!\n")?;
-    conn.read_line(&mut buffer)?;
-    print!("Server answered: {buffer}");
+    loop {
+        let conn_res = Stream::connect(name.clone());
+        if let Err(err) = conn_res {
+            sleep_ms(1000);
+            continue;
+        }
+        let conn = conn_res.unwrap();
+        let mut conn = BufReader::new(conn);
+        conn.get_mut().write_all(b"Hello from client!\n")?;
+        conn.read_line(&mut buffer)?;
+        print!("Server answered: {buffer}");
+        sleep_ms(1000);
+    }
     Ok(())
 }

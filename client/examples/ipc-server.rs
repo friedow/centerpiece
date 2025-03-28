@@ -1,23 +1,49 @@
-use {
-    interprocess::local_socket::{prelude::*, GenericNamespaced, ListenerOptions, Stream},
-    std::io::{self, prelude::*, BufReader},
-};
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    //}
+    use {
+        interprocess::local_socket::{
+            tokio::{prelude::*, Stream},
+            GenericNamespaced, ListenerOptions,
+        },
+        std::io,
+        tokio::{
+            io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
+            try_join,
+        },
+    };
 
-fn handle_error(conn: io::Result<Stream>) -> Option<Stream> {
-    match conn {
-        Ok(c) => Some(c),
-        Err(e) => {
-            eprintln!("Incoming connection failed: {e}");
-            None
-        }
+    // Describe the things we do when we've got a connection ready.
+    async fn handle_conn(conn: Stream) -> io::Result<()> {
+        let mut recver = BufReader::new(&conn);
+        let mut sender = &conn;
+
+        // Allocate a sizeable buffer for receiving. This size should be big enough and easy to
+        // find for the allocator.
+        let mut buffer = String::with_capacity(128);
+
+        // Describe the send operation as sending our whole message.
+        let send = sender.write_all(b"Hello from server!\n");
+        // Describe the receive operation as receiving a line into our big buffer.
+        let recv = recver.read_line(&mut buffer);
+
+        // Run both operations concurrently.
+        try_join!(recv, send)?;
+
+        // Produce our output!
+        println!("Client answered: {}", buffer.trim());
+        Ok(())
     }
-}
 
-fn main() -> std::io::Result<()> {
+    // Pick a name.
     let printname = "example.sock";
     let name = printname.to_ns_name::<GenericNamespaced>()?;
+
+    // Configure our listener...
     let opts = ListenerOptions::new().name(name);
-    let listener = match opts.create_sync() {
+
+    // ...and create it.
+    let listener = match opts.create_tokio() {
         Err(e) if e.kind() == io::ErrorKind::AddrInUse => {
             // When a program that uses a file-type socket name terminates its socket server
             // without deleting the file, a "corpse socket" remains, which can neither be
@@ -33,21 +59,34 @@ fn main() -> std::io::Result<()> {
                 "Error: could not start server because the socket file is occupied. Please check
                 if {printname} is in use by another process and try again."
             );
-            return Err(e);
+            return Err(e.into());
         }
         x => x?,
     };
 
+    // The syncronization between the server and client, if any is used, goes here.
     eprintln!("Server running at {printname}");
 
-    let mut buffer = String::with_capacity(128);
-    for conn in listener.incoming().filter_map(handle_error) {
-        let mut conn = BufReader::new(conn);
-        println!("Incoming connection!");
-        conn.read_line(&mut buffer)?;
-        print!("Client answered: {buffer}");
-        conn.get_mut().write_all(b"Hello from server!\n")?;
-        buffer.clear();
+    // Set up our loop boilerplate that processes our incoming connections.
+    loop {
+        // Sort out situations when establishing an incoming connection caused an error.
+        let conn = match listener.accept().await {
+            Ok(c) => c,
+            Err(e) => {
+                eprintln!("There was an error with an incoming connection: {e}");
+                continue;
+            }
+        };
+
+        // Spawn new parallel asynchronous tasks onto the Tokio runtime and hand the connection
+        // over to them so that multiple clients could be processed simultaneously in a
+        // lightweight fashion.
+        tokio::spawn(async move {
+            // The outer match processes errors that happen when we're connecting to something.
+            // The inner if-let processes errors that happen during the connection.
+            if let Err(e) = handle_conn(conn).await {
+                eprintln!("Error while handling connection: {e}");
+            }
+        });
     }
-    Ok(())
-}
+} //

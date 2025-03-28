@@ -87,8 +87,8 @@ fn update(centerpiece: &mut Centerpiece, message: Message) -> iced::Task<Message
                     }
                 }
                 iced::keyboard::Event::KeyReleased { key, .. } => {
-                    if key == iced::keyboard::Key::Named(iced::keyboard::key::Named::Tab) {
-                        return iced::exit();
+                    if key == iced::keyboard::Key::Named(iced::keyboard::key::Named::Escape) {
+                        return iced_runtime::task::effect(Action::Exit);
                     }
                     iced::Task::none()
                 }

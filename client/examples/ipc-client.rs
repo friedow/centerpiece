@@ -1,13 +1,20 @@
 use std::error::Error;
 use std::io;
+use std::thread::sleep_ms;
 use tokio::net::UnixStream;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     // Connect to a peer
-    let stream = UnixStream::connect("/tmp/centerpiece").await?;
 
     loop {
+        let stream_res = UnixStream::connect("/tmp/centerpiece").await;
+        if let Err(err) = stream_res {
+            sleep_ms(1000);
+            continue;
+        }
+        let stream = stream_res.unwrap();
+
         // Wait for the socket to be writable
         stream.writable().await?;
 

@@ -1,31 +1,30 @@
-use {
-    interprocess::local_socket::{prelude::*, GenericFilePath, GenericNamespaced, Stream},
-    std::{
-        io::{prelude::*, BufReader},
-        thread::sleep_ms,
-    },
-};
+use std::error::Error;
+use std::io;
+use tokio::net::UnixStream;
 
-fn main() -> std::io::Result<()> {
-    let name = if GenericNamespaced::is_supported() {
-        "example.sock".to_ns_name::<GenericNamespaced>()?
-    } else {
-        "/tmp/example.sock".to_fs_name::<GenericFilePath>()?
-    };
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
+    // Connect to a peer
+    let stream = UnixStream::connect("/tmp/centerpiece").await?;
 
-    let mut buffer = String::with_capacity(128);
     loop {
-        let conn_res = Stream::connect(name.clone());
-        if let Err(err) = conn_res {
-            sleep_ms(1000);
-            continue;
+        // Wait for the socket to be writable
+        stream.writable().await?;
+
+        // Try to write data, this may still fail with `WouldBlock`
+        // if the readiness event is a false positive.
+        match stream.try_write(b"hello world") {
+            Ok(n) => {
+                break;
+            }
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                continue;
+            }
+            Err(e) => {
+                return Err(e.into());
+            }
         }
-        let conn = conn_res.unwrap();
-        let mut conn = BufReader::new(conn);
-        conn.get_mut().write_all(b"Hello from client!\n")?;
-        conn.read_line(&mut buffer)?;
-        print!("Server answered: {buffer}");
-        sleep_ms(1000);
     }
+
     Ok(())
 }

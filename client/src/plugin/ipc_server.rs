@@ -1,12 +1,11 @@
+use anyhow::Context;
 use std::error::Error;
 use std::io;
 use tokio::net::UnixListener;
 
 async fn main(
     mut plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
-) -> Result<(), Box<dyn Error>> {
-    let (mut app_channel_out, mut plugin_channel_in) = iced::futures::channel::mpsc::channel(100);
-
+) -> anyhow::Result<(), Box<dyn Error>> {
     println!("RUNNING!");
     let listener = UnixListener::bind("/tmp/centerpiece").unwrap();
     println!("LAUNCHING!");
@@ -27,6 +26,10 @@ async fn main(
                     Ok(n) => {
                         println!("read {} bytes", n);
                         println!("{}", String::from_utf8_lossy(&buf));
+
+                        plugin_channel_out
+                            .try_send(crate::Message::Show)
+                            .context(format!("Failed to send message to show application.",))?;
                     }
                     Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
                         continue;

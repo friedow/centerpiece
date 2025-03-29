@@ -1,7 +1,6 @@
 use clap::Parser;
-
 use iced_layershell::to_layer_message;
-use iced_runtime::Action;
+
 mod component;
 mod model;
 mod plugin;
@@ -22,7 +21,7 @@ pub fn main() -> Result<(), iced_layershell::Error> {
         .run_with(Centerpiece::new)
 }
 
-#[to_layer_message]
+#[to_layer_message(multi)]
 #[derive(Debug, Clone)]
 pub enum Message {
     Loaded,
@@ -86,7 +85,7 @@ fn update(centerpiece: &mut Centerpiece, message: Message) -> iced::Task<Message
                 }
                 iced::keyboard::Event::KeyReleased { key, .. } => {
                     if key == iced::keyboard::Key::Named(iced::keyboard::key::Named::Escape) {
-                        return iced_runtime::task::effect(Action::Exit);
+                        return iced_runtime::task::effect(iced_runtime::Action::Exit);
                     }
                     iced::Task::none()
                 }
@@ -109,14 +108,25 @@ fn update(centerpiece: &mut Centerpiece, message: Message) -> iced::Task<Message
             centerpiece.update_entries(plugin_id, entries)
         }
 
-        Message::Show => (settings()),
+        Message::Show => iced::Task::done(Message::NewLayerShell {
+            id: iced::window::Id::unique(),
+            settings: iced_layershell::reexport::NewLayerShellSettings {
+                size: Some((650, 380)),
+                layer: iced_layershell::reexport::Layer::Top,
+                anchor: iced_layershell::reexport::Anchor::Top,
+                keyboard_interactivity: iced_layershell::reexport::KeyboardInteractivity::Exclusive,
+                margin: Some((200, 0, 0, 0)),
+                ..Default::default()
+            },
+        }),
 
-        Message::Exit => iced_runtime::task::effect(Action::Exit),
+        Message::Exit => iced_runtime::task::effect(iced_runtime::Action::Exit),
+
         _ => iced::Task::none(),
     }
 }
 
-fn view(centerpice: &Centerpiece) -> iced::Element<Message> {
+fn view(centerpice: &Centerpiece, window_id: iced::window::Id) -> iced::Element<Message> {
     let entries = centerpice.entries();
 
     let mut lines = iced::widget::column![];
@@ -181,7 +191,7 @@ fn view(centerpice: &Centerpiece) -> iced::Element<Message> {
     .into()
 }
 
-fn remove_id(_: &Centerpiece, _id: iced::window::Id) {}
+fn remove_id(_: &mut Centerpiece, _id: iced::window::Id) {}
 
 fn subscription(_: &Centerpiece) -> iced::Subscription<Message> {
     let mut subscriptions = vec![iced::event::listen_with(

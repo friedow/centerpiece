@@ -2,7 +2,11 @@ use std::error::Error;
 use std::io;
 use tokio::net::UnixListener;
 
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main(
+    mut plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
+) -> Result<(), Box<dyn Error>> {
+    let (mut app_channel_out, mut plugin_channel_in) = iced::futures::channel::mpsc::channel(100);
+
     println!("RUNNING!");
     let listener = UnixListener::bind("/tmp/centerpiece").unwrap();
     println!("LAUNCHING!");
@@ -41,7 +45,19 @@ async fn main() -> Result<(), Box<dyn Error>> {
 pub fn spawn() -> iced::Subscription<crate::Message> {
     iced::Subscription::run(|| {
         iced::stream::channel(100, |plugin_channel_out| async move {
-            main().await;
+            let main_loop_result = main(plugin_channel_out).await;
+            if let Err(error) = main_loop_result {
+                log::error!(
+                    target: "ipc_server",
+                    "{:?}", error,
+                );
+                panic!();
+            }
+
+            #[allow(clippy::never_loop)]
+            loop {
+                unreachable!();
+            }
         })
     })
 }

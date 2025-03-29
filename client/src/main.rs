@@ -7,7 +7,6 @@ mod component;
 mod model;
 mod plugin;
 mod settings;
-use iced_layershell::build_pattern::application;
 
 pub fn main() -> Result<(), iced_layershell::Error> {
     let args = crate::cli::CliArgs::parse();
@@ -17,7 +16,7 @@ pub fn main() -> Result<(), iced_layershell::Error> {
     });
 
     simple_logger::init_with_level(log::Level::Info).unwrap();
-    application(namespace, update, view)
+    iced_layershell::build_pattern::daemon(namespace, update, view, remove_id)
         .settings(settings())
         .subscription(subscription)
         .theme(theme)
@@ -34,6 +33,7 @@ pub enum Message {
     FontLoaded(Result<(), iced::font::Error>),
     RegisterPlugin(model::Plugin),
     UpdateEntries(String, Vec<model::Entry>),
+    Show,
     Exit,
 }
 
@@ -111,6 +111,8 @@ fn update(centerpiece: &mut Centerpiece, message: Message) -> iced::Task<Message
             centerpiece.update_entries(plugin_id, entries)
         }
 
+        Message::Show => (settings()),
+
         Message::Exit => iced_runtime::task::effect(Action::Exit),
         _ => iced::Task::none(),
     }
@@ -181,6 +183,8 @@ fn view(centerpice: &Centerpiece) -> iced::Element<Message> {
     .into()
 }
 
+fn remove_id(_: &Centerpiece, _id: iced::window::Id) {}
+
 fn subscription(_: &Centerpiece) -> iced::Subscription<Message> {
     let mut subscriptions = vec![iced::event::listen_with(
         |event, _status, _id| match event {
@@ -197,7 +201,7 @@ fn subscription(_: &Centerpiece) -> iced::Subscription<Message> {
 
     let settings = crate::settings::Settings::get_or_init();
 
-    subscriptions.push(crate::plugin::unix_socket_listener::spawn());
+    subscriptions.push(crate::plugin::ipc_server::spawn());
 
     if settings.plugin.applications.enable {
         subscriptions.push(crate::plugin::utils::spawn::<
@@ -335,6 +339,7 @@ fn settings() -> iced_layershell::build_pattern::MainSettings {
             anchor: iced_layershell::reexport::Anchor::Top,
             keyboard_interactivity: iced_layershell::reexport::KeyboardInteractivity::Exclusive,
             margin: (200, 0, 0, 0),
+            start_mode: iced_layershell::settings::StartMode::Background,
             ..Default::default()
         },
         ..Default::default()

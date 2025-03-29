@@ -371,7 +371,7 @@ impl Settings {
         let settings: Settings = config_result.unwrap();
 
         #[allow(deprecated)]
-        if settings.color.surface != String::from("deprecated") {
+        if settings.color.surface != *"deprecated" {
             log::warn!("color.surface has been replaced by automatic shading of the background color in cernterpiece version 1.2.0. Please remove this field from your configuration.")
         }
 

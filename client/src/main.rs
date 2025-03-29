@@ -1,10 +1,14 @@
 use clap::Parser;
 
+use iced_layershell::to_layer_message;
+use iced_runtime::Action;
 mod component;
 mod model;
 mod plugin;
 
-pub fn main() -> iced::Result {
+use iced_layershell::build_pattern::application;
+
+pub fn main() -> Result<(), iced_layershell::Error> {
     let args = settings::cli::CliArgs::parse();
     settings::Settings::try_from(args).unwrap_or_else(|_| {
         eprintln!("There is an issue with the settings, please check the configuration file.");
@@ -12,20 +16,15 @@ pub fn main() -> iced::Result {
     });
 
     simple_logger::init_with_level(log::Level::Info).unwrap();
-    iced::application("Centerpiece", update, view)
-        .decorations(false)
-        .level(iced::window::Level::AlwaysOnTop)
-        .position(iced::window::Position::Centered)
-        .resizable(false)
+    application(namespace, update, view)
         .settings(settings())
-        .style(style)
         .subscription(subscription)
         .theme(theme)
-        .transparent(true)
-        .window_size([650., 380.])
+        .style(style)
         .run_with(Centerpiece::new)
 }
 
+#[to_layer_message]
 #[derive(Debug, Clone)]
 pub enum Message {
     Loaded,
@@ -44,6 +43,10 @@ struct Centerpiece {
 }
 
 pub const APP_ID: &str = "centerpiece";
+
+fn namespace(_: &Centerpiece) -> String {
+    "centerpiece".to_string()
+}
 
 fn update(centerpiece: &mut Centerpiece, message: Message) -> iced::Task<Message> {
     match message {
@@ -84,7 +87,7 @@ fn update(centerpiece: &mut Centerpiece, message: Message) -> iced::Task<Message
                 }
                 iced::keyboard::Event::KeyReleased { key, .. } => {
                     if key == iced::keyboard::Key::Named(iced::keyboard::key::Named::Escape) {
-                        return iced::window::get_latest().and_then(iced::window::close);
+                        return iced_runtime::task::effect(Action::Exit);
                     }
                     iced::Task::none()
                 }
@@ -107,17 +110,18 @@ fn update(centerpiece: &mut Centerpiece, message: Message) -> iced::Task<Message
             centerpiece.update_entries(plugin_id, entries)
         }
 
-        Message::Exit => iced::window::get_latest().and_then(iced::window::close),
+        Message::Exit => iced_runtime::task::effect(Action::Exit),
+        _ => iced::Task::none(),
     }
 }
 
-fn view(centerpiece: &Centerpiece) -> iced::Element<Message> {
-    let entries = centerpiece.entries();
+fn view(centerpice: &Centerpiece) -> iced::Element<Message> {
+    let entries = centerpice.entries();
 
     let mut lines = iced::widget::column![];
     let mut divider_added = true;
     let mut header_added = false;
-    let mut next_entry_index_to_add = centerpiece.active_entry_index;
+    let mut next_entry_index_to_add = centerpice.active_entry_index;
 
     for lines_added in 0..11 {
         if next_entry_index_to_add >= entries.len() {
@@ -126,7 +130,7 @@ fn view(centerpiece: &Centerpiece) -> iced::Element<Message> {
 
         let mut plugin_to_add = None;
         let mut last_plugin_start_index = 0;
-        for plugin in centerpiece.plugins.iter() {
+        for plugin in centerpice.plugins.iter() {
             if last_plugin_start_index == next_entry_index_to_add {
                 plugin_to_add = Some(plugin);
             }
@@ -152,7 +156,7 @@ fn view(centerpiece: &Centerpiece) -> iced::Element<Message> {
 
         lines = lines.push(component::entry::view(
             entries[next_entry_index_to_add],
-            next_entry_index_to_add == centerpiece.active_entry_index,
+            next_entry_index_to_add == centerpice.active_entry_index,
         ));
         divider_added = false;
         header_added = false;
@@ -160,7 +164,7 @@ fn view(centerpiece: &Centerpiece) -> iced::Element<Message> {
     }
 
     iced::widget::container(iced::widget::column![
-        component::query_input::view(&centerpiece.query, !entries.is_empty()),
+        component::query_input::view(&centerpice.query, !entries.is_empty()),
         lines
     ])
     .style(|theme: &iced::Theme| {
@@ -176,7 +180,7 @@ fn view(centerpiece: &Centerpiece) -> iced::Element<Message> {
     .into()
 }
 
-fn subscription(_centerpiece: &Centerpiece) -> iced::Subscription<Message> {
+fn subscription(_: &Centerpiece) -> iced::Subscription<Message> {
     let mut subscriptions = vec![iced::event::listen_with(
         |event, _status, _id| match event {
             iced::Event::Keyboard(iced::keyboard::Event::KeyPressed { .. }) => {
@@ -303,17 +307,17 @@ fn theme(_centerpiece: &Centerpiece) -> iced::Theme {
     )
 }
 
-fn style(_centerpiece: &Centerpiece, _theme: &iced::Theme) -> iced::application::Appearance {
+fn style(_centerpiece: &Centerpiece, _theme: &iced::Theme) -> iced_layershell::Appearance {
     let color_settings = settings::Settings::get_or_init();
 
-    iced::application::Appearance {
+    iced_layershell::Appearance {
         background_color: iced::Color::TRANSPARENT,
         text_color: settings::hexcolor(&color_settings.color.text),
     }
 }
 
-fn settings() -> iced::Settings {
-    iced::Settings {
+fn settings() -> iced_layershell::build_pattern::MainSettings {
+    iced_layershell::build_pattern::MainSettings {
         id: Some(APP_ID.into()),
         default_font: iced::Font {
             family: iced::font::Family::Name("FiraCode Nerd Font"),
@@ -322,6 +326,14 @@ fn settings() -> iced::Settings {
             style: iced::font::Style::default(),
         },
         default_text_size: iced::Pixels(crate::REM),
+        layer_settings: iced_layershell::settings::LayerShellSettings {
+            size: Some((650, 380)),
+            layer: iced_layershell::reexport::Layer::Top,
+            anchor: iced_layershell::reexport::Anchor::Top,
+            keyboard_interactivity: iced_layershell::reexport::KeyboardInteractivity::Exclusive,
+            margin: (200, 0, 0, 0),
+            ..Default::default()
+        },
         ..Default::default()
     }
 }

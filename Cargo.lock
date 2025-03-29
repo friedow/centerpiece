@@ -651,7 +651,6 @@ dependencies = [
  "clap",
  "dbus",
  "freedesktop-desktop-entry",
- "hex_color",
  "iced",
  "iced_layershell",
  "iced_runtime",
@@ -661,6 +660,7 @@ dependencies = [
  "serde_ini",
  "serde_json",
  "serde_yaml",
+ "settings",
  "simple_logger",
  "sqlite",
  "swayipc",
@@ -2159,6 +2159,7 @@ dependencies = [
  "log",
  "rust_search",
  "serde_json",
+ "settings",
  "simple_logger",
 ]
 
@@ -3662,6 +3663,19 @@ dependencies = [
  "ryu",
  "serde",
  "unsafe-libyaml",
+]
+
+[[package]]
+name = "settings"
+version = "1.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "hex_color",
+ "iced",
+ "log",
+ "serde",
+ "serde_yaml",
 ]
 
 [[package]]

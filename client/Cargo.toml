@@ -9,6 +9,7 @@ edition = "2021"
 
 [dependencies]
 # general
+settings = { path = "../settings" }
 anyhow = { version = "1.0.96", features = ["backtrace"] }
 clap = { version = "4.5.21", features = ["derive", "env"] }
 log = { version = "0.4.22", features = ["kv_unstable_serde"] }
@@ -26,8 +27,6 @@ serde_yaml = "0.9.34"
 # application window
 iced = { version = "0.13.1", features = ["svg"] }
 iced_layershell = "0.12.0"
-
-hex_color = "3"
 
 # plugins
 async-trait = "0.1.83"

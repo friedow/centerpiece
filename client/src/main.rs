@@ -2,15 +2,13 @@ use clap::Parser;
 
 use iced_layershell::to_layer_message;
 use iced_runtime::Action;
-mod cli;
 mod component;
 mod model;
 mod plugin;
-mod settings;
 
 pub fn main() -> Result<(), iced_layershell::Error> {
-    let args = crate::cli::CliArgs::parse();
-    crate::settings::Settings::try_from(args).unwrap_or_else(|_| {
+    let args = settings::cli::CliArgs::parse();
+    settings::Settings::try_from(args).unwrap_or_else(|_| {
         eprintln!("There is an issue with the settings, please check the configuration file.");
         std::process::exit(1);
     });
@@ -199,7 +197,7 @@ fn subscription(_: &Centerpiece) -> iced::Subscription<Message> {
         },
     )];
 
-    let settings = crate::settings::Settings::get_or_init();
+    let settings = settings::Settings::get_or_init();
 
     subscriptions.push(crate::plugin::ipc_server::spawn());
 
@@ -300,22 +298,22 @@ fn subscription(_: &Centerpiece) -> iced::Subscription<Message> {
     iced::Subscription::batch(subscriptions)
 }
 
-fn theme(_: &Centerpiece) -> iced::Theme {
-    let settings = crate::settings::Settings::get_or_init();
+fn theme(_centerpiece: &Centerpiece) -> iced::Theme {
+    let settings = settings::Settings::get_or_init();
     iced::Theme::custom(
         "centerpiece theme".to_string(),
         iced::theme::Palette {
-            background: crate::settings::hexcolor(&settings.color.background),
-            text: crate::settings::hexcolor(&settings.color.text),
-            primary: crate::settings::hexcolor(&settings.color.text),
-            success: crate::settings::hexcolor(&settings.color.text),
-            danger: crate::settings::hexcolor(&settings.color.text),
+            background: settings::hexcolor(&settings.color.background),
+            text: settings::hexcolor(&settings.color.text),
+            primary: settings::hexcolor(&settings.color.text),
+            success: settings::hexcolor(&settings.color.text),
+            danger: settings::hexcolor(&settings.color.text),
         },
     )
 }
 
-fn style(_: &Centerpiece, _theme: &iced::Theme) -> iced_layershell::Appearance {
-    let color_settings = crate::settings::Settings::get_or_init();
+fn style(_centerpiece: &Centerpiece, _theme: &iced::Theme) -> iced_layershell::Appearance {
+    let color_settings = settings::Settings::get_or_init();
 
     iced_layershell::Appearance {
         background_color: iced::Color::TRANSPARENT,

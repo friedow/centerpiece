@@ -355,13 +355,26 @@ fn settings() -> iced_layershell::build_pattern::MainSettings {
 }
 
 fn focus_search_input() -> iced::Task<Message> {
-    iced::widget::text_input::focus(iced::widget::text_input::Id::new(
-        component::query_input::SEARCH_INPUT_ID,
-    ))
+    println!("does happen");
+
+    iced::Task::batch(vec![
+        iced::widget::text_input::focus(iced::widget::text_input::Id::new(
+            component::query_input::SEARCH_INPUT_ID,
+        )),
+        iced::font::load(
+            include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
+        )
+        .map(Message::FontLoaded),
+        iced::font::load(
+            include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Light.ttf").as_slice(),
+        )
+        .map(Message::FontLoaded),
+    ])
 }
 
 impl Centerpiece {
     fn new() -> (Self, iced::Task<Message>) {
+        println!("font loading dispatched");
         (
             Self {
                 query: String::from(""),

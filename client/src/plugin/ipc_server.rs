@@ -62,11 +62,6 @@ pub fn spawn() -> iced::Subscription<crate::Message> {
                 );
                 panic!();
             }
-
-            #[allow(clippy::never_loop)]
-            loop {
-                unreachable!();
-            }
         })
     })
 }

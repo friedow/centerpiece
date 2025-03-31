@@ -24,12 +24,13 @@ pub fn main() -> Result<(), iced_layershell::Error> {
 #[to_layer_message(multi)]
 #[derive(Debug, Clone)]
 pub enum Message {
-    Loaded,
+    None,
     Search(String),
     Event(iced::Event),
     FontLoaded(Result<(), iced::font::Error>),
     RegisterPlugin(model::Plugin),
     UpdateEntries(String, Vec<model::Entry>),
+    WindowOpened,
     Show,
     Exit,
 }
@@ -48,8 +49,6 @@ fn namespace(_: &Centerpiece) -> String {
 
 fn update(centerpiece: &mut Centerpiece, message: Message) -> iced::Task<Message> {
     match message {
-        Message::Loaded => focus_search_input(),
-
         Message::Search(input) => centerpiece.search(input),
 
         Message::Event(event) => match event {
@@ -118,15 +117,18 @@ fn update(centerpiece: &mut Centerpiece, message: Message) -> iced::Task<Message
                 margin: Some((200, 0, 0, 0)),
                 ..Default::default()
             },
-        }),
+        })
+        .chain(iced::Task::done(Message::WindowOpened)),
 
         Message::Exit => iced_runtime::task::effect(iced_runtime::Action::Exit),
+
+        Message::WindowOpened => iced::Task::batch(vec![load_font(), focus_search_input()]),
 
         _ => iced::Task::none(),
     }
 }
 
-fn view(centerpice: &Centerpiece, window_id: iced::window::Id) -> iced::Element<Message> {
+fn view(centerpice: &Centerpiece, _window_id: iced::window::Id) -> iced::Element<Message> {
     let entries = centerpice.entries();
 
     let mut lines = iced::widget::column![];
@@ -355,12 +357,13 @@ fn settings() -> iced_layershell::build_pattern::MainSettings {
 }
 
 fn focus_search_input() -> iced::Task<Message> {
-    println!("does happen");
+    iced::widget::text_input::focus(iced::widget::text_input::Id::new(
+        component::query_input::SEARCH_INPUT_ID,
+    ))
+}
 
+fn load_font() -> iced::Task<Message> {
     iced::Task::batch(vec![
-        iced::widget::text_input::focus(iced::widget::text_input::Id::new(
-            component::query_input::SEARCH_INPUT_ID,
-        )),
         iced::font::load(
             include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
         )
@@ -374,24 +377,13 @@ fn focus_search_input() -> iced::Task<Message> {
 
 impl Centerpiece {
     fn new() -> (Self, iced::Task<Message>) {
-        println!("font loading dispatched");
         (
             Self {
                 query: String::from(""),
                 active_entry_index: 0,
                 plugins: vec![],
             },
-            iced::Task::batch(vec![
-                iced::font::load(
-                    include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
-                )
-                .map(Message::FontLoaded),
-                iced::font::load(
-                    include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Light.ttf").as_slice(),
-                )
-                .map(Message::FontLoaded),
-                iced::Task::perform(async {}, move |()| Message::Loaded),
-            ]),
+            iced::Task::done(Message::None),
         )
     }
 

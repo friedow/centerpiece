@@ -8,9 +8,9 @@ async fn main(
     mut plugin_channel_out: iced::futures::channel::mpsc::Sender<crate::Message>,
 ) -> anyhow::Result<(), Box<dyn Error>> {
     println!("RUNNING!");
-    plugin_channel_out
-        .try_send(crate::Message::Show)
-        .context(format!("Failed to send message to show application.",))?;
+    //plugin_channel_out
+    //    .try_send(crate::Message::Show)
+    //    .context(format!("Failed to send message to show application.",))?;
 
     let _ = fs::remove_file("/tmp/centerpiece").await;
     let listener = UnixListener::bind("/tmp/centerpiece").unwrap();

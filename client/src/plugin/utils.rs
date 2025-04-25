@@ -1,5 +1,10 @@
 use anyhow::Context;
 use iced::futures::StreamExt;
+use nucleo_matcher::{
+    pattern::{Atom, AtomKind, CaseMatching, Normalization, Pattern},
+    Matcher, Utf32Str,
+};
+use std::cmp::Reverse;
 
 pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>(
 ) -> iced::Subscription<crate::Message> {
@@ -22,6 +27,59 @@ pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>(
             }
         })
     })
+}
+
+/// Fuzzy matches against the title of the entry, falling back to substring matching
+/// against the meta of the entry if no match is found in the title.
+fn fuzzy_match(query: &str, entries: Vec<crate::model::Entry>) -> Vec<crate::model::Entry> {
+    let mut matcher_config = nucleo_matcher::Config::DEFAULT;
+    matcher_config.prefer_prefix = true; // Higher score to matches earlier in the string
+    let mut fuzzy_matcher = Matcher::new(matcher_config);
+    let fuzzy_atom = Atom::new(
+        query,
+        CaseMatching::Ignore,
+        Normalization::Smart,
+        AtomKind::Fuzzy,
+        false,
+    );
+
+    let mut substring_matcher = Matcher::new(nucleo_matcher::Config::DEFAULT);
+    let substring_atom = Atom::new(
+        query,
+        CaseMatching::Ignore,
+        Normalization::Smart,
+        AtomKind::Substring,
+        true,
+    );
+
+    let mut buf = Vec::new();
+    let mut filtered_entries = entries
+        .into_iter()
+        .flat_map(|entry| {
+            // Attempt to fuzzy match against the title
+            fuzzy_atom
+                .score(
+                    Utf32Str::new(entry.title.as_ref(), &mut buf),
+                    &mut fuzzy_matcher,
+                )
+                // Fallback to substring match against the meta
+                .or_else(|| {
+                    substring_atom.score(
+                        Utf32Str::new(entry.meta.as_ref(), &mut buf),
+                        &mut substring_matcher,
+                    )
+                })
+                .map(|score| (score, entry))
+        })
+        .collect::<Vec<_>>();
+
+    // Sort by score
+    filtered_entries.sort_by_key(|(score, _entry)| Reverse(*score));
+
+    filtered_entries
+        .into_iter()
+        .map(|(_, entry)| entry)
+        .collect::<Vec<_>>()
 }
 
 #[async_trait::async_trait]
@@ -133,14 +191,7 @@ pub trait Plugin {
         query: &str,
         plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
-        let filtered_entries = self
-            .entries()
-            .into_iter()
-            .filter(|entry| {
-                let keywords = format!("{} {}", entry.title, entry.meta).to_lowercase();
-                keywords.contains(&query.to_lowercase())
-            })
-            .collect::<Vec<crate::model::Entry>>();
+        let filtered_entries = fuzzy_match(query, self.entries());
 
         plugin_channel_out
             .try_send(crate::Message::UpdateEntries(

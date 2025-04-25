@@ -59,3 +59,6 @@ dbus = "0.9.7"
 serde_ini = "0.2.0"
 iced_runtime = "0.13.2"
 systemstat = "0.2.4"
+
+# fuzzy matcher
+nucleo-matcher = "0.3.1"

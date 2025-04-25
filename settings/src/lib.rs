@@ -181,6 +181,31 @@ impl Default for ColorSettings {
     }
 }
 
+fn default_font_family() -> String {
+    "FiraCode Nerd Font".to_string()
+}
+
+fn default_font_size() -> f32 {
+    14.0
+}
+
+#[derive(Debug, Deserialize)]
+pub struct FontSettings {
+    #[serde(default = "default_font_family")]
+    pub family: String,
+    #[serde(default = "default_font_size")]
+    pub size: f32,
+}
+
+impl Default for FontSettings {
+    fn default() -> Self {
+        Self {
+            family: default_font_family(),
+            size: default_font_size(),
+        }
+    }
+}
+
 fn default_commands() -> Vec<Vec<String>> {
     vec![
         vec![
@@ -333,12 +358,20 @@ pub struct PluginSettings {
     pub wifi: WifiPluginSettings,
 }
 
+fn default_scale() -> f64 {
+    1.
+}
+
 #[derive(Debug, Default, Deserialize)]
 pub struct Settings {
+    #[serde(default = "default_scale")]
+    pub scale: f64,
     #[serde(default)]
     pub plugin: PluginSettings,
     #[serde(default)]
     pub color: ColorSettings,
+    #[serde(default)]
+    pub font: FontSettings,
 }
 
 impl Settings {
@@ -372,7 +405,9 @@ impl Settings {
 
         #[allow(deprecated)]
         if settings.color.surface != *"deprecated" {
-            log::warn!("color.surface has been replaced by automatic shading of the background color in cernterpiece version 1.2.0. Please remove this field from your configuration.")
+            log::warn!(
+                "color.surface has been replaced by automatic shading of the background color in cernterpiece version 1.2.0. Please remove this field from your configuration."
+            )
         }
 
         settings

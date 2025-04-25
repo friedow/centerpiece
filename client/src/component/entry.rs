@@ -3,7 +3,7 @@ pub fn view(entry: &crate::model::Entry, active: bool) -> iced::Element<'static,
         iced::widget::container(
             iced::widget::row![
                 iced::widget::text(clipped_title(entry.title.clone()))
-                    .size(1. * crate::REM)
+                    .size(1. * crate::rem())
                     .width(iced::Length::Fill)
                     .shaping(iced::widget::text::Shaping::Advanced),
                 iced::widget::text(if active {
@@ -11,9 +11,9 @@ pub fn view(entry: &crate::model::Entry, active: bool) -> iced::Element<'static,
                 } else {
                     "".to_string()
                 })
-                .size(1. * crate::REM)
+                .size(1. * crate::rem())
             ]
-            .padding(0.5 * crate::REM),
+            .padding(0.5 * crate::rem()),
         )
         .style(move |theme: &iced::Theme| {
             if !active {
@@ -25,7 +25,7 @@ pub fn view(entry: &crate::model::Entry, active: bool) -> iced::Element<'static,
                 border: iced::Border {
                     color: palette.background.base.text,
                     width: 1.,
-                    radius: iced::border::Radius::from(0.1 * crate::REM),
+                    radius: iced::border::Radius::from(0.1 * crate::rem()),
                 },
                 ..Default::default()
             }
@@ -34,8 +34,8 @@ pub fn view(entry: &crate::model::Entry, active: bool) -> iced::Element<'static,
     // We're fixing the height here to unify it
     // with the height of plugin headers for a smooth
     // scrolling experience
-    .height(crate::ENTRY_HEIGHT)
-    .padding([0., 0.75 * crate::REM])
+    .height(crate::entry_height())
+    .padding([0., 0.75 * crate::rem()])
     .into()
 }
 

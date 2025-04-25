@@ -172,11 +172,11 @@ fn view(centerpice: &Centerpiece) -> iced::Element<Message> {
 
         iced::widget::container::Style {
             background: Some(iced::Background::Color(palette.background.base.color)),
-            border: iced::Border::default().rounded(0.25 * crate::REM),
+            border: iced::Border::default().rounded(0.25 * crate::rem()),
             ..Default::default()
         }
     })
-    .padding(iced::padding::bottom(0.75 * crate::REM))
+    .padding(iced::padding::bottom(0.75 * crate::rem()))
     .into()
 }
 
@@ -317,17 +317,22 @@ fn style(_centerpiece: &Centerpiece, _theme: &iced::Theme) -> iced_layershell::A
 }
 
 fn settings() -> iced_layershell::build_pattern::MainSettings {
+    let settings = settings::Settings::get_or_init();
+
+    let width = (650.0 * settings.scale).round() as u32;
+    let height = (380.0 * settings.scale).round() as u32;
+
     iced_layershell::build_pattern::MainSettings {
         id: Some(APP_ID.into()),
         default_font: iced::Font {
-            family: iced::font::Family::Name("FiraCode Nerd Font"),
+            family: iced::font::Family::Name(&settings.font.family),
             weight: iced::font::Weight::Normal,
             stretch: iced::font::Stretch::Normal,
             style: iced::font::Style::default(),
         },
-        default_text_size: iced::Pixels(crate::REM),
+        default_text_size: iced::Pixels(settings.font.size),
         layer_settings: iced_layershell::settings::LayerShellSettings {
-            size: Some((650, 380)),
+            size: Some((width, height)),
             layer: iced_layershell::reexport::Layer::Top,
             anchor: iced_layershell::reexport::Anchor::Top,
             keyboard_interactivity: iced_layershell::reexport::KeyboardInteractivity::Exclusive,
@@ -518,5 +523,11 @@ impl Centerpiece {
     }
 }
 
-pub const REM: f32 = 14.0;
-pub const ENTRY_HEIGHT: f32 = 2.3 * crate::REM;
+pub fn rem() -> f32 {
+    let settings = settings::Settings::get_or_init();
+    (settings.scale as f32) * settings.font.size
+}
+
+pub fn entry_height() -> f32 {
+    2.3 * rem()
+}

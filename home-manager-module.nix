@@ -14,6 +14,12 @@ in
     enable = lib.mkEnableOption (lib.mdDoc "Centerpiece");
 
     config = {
+      scale = lib.mkOption {
+        default = 1;
+        type = lib.types.float;
+        description = lib.mdDoc "Scale factor";
+      };
+
       color = {
         text = lib.mkOption {
           default = "#ffffff";
@@ -25,6 +31,19 @@ in
           default = "#000000";
           type = lib.types.str;
           description = lib.mdDoc "Background color within centerpiece.";
+        };
+      };
+
+      font = {
+        family = lib.mkOption {
+          default = "FiraCode Nerd Font";
+          type = lib.types.str;
+          description = lib.mdDoc "To list the available fonts on your system, use `fc-list : family | sed 's/,.*$//' | sort | uniq`";
+        };
+        size = lib.mkOption {
+          default = 14;
+          type = lib.types.int;
+          description = lib.mdDoc "Font size";
         };
       };
 

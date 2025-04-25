@@ -62,6 +62,7 @@ fn fuzzy_match(query: &str, entries: Vec<crate::model::Entry>) -> Vec<crate::mod
                     Utf32Str::new(entry.title.as_ref(), &mut buf),
                     &mut fuzzy_matcher,
                 )
+                .map(|score| score + 1000) // Always prefer title matches
                 // Fallback to substring match against the meta
                 .or_else(|| {
                     substring_atom.score(

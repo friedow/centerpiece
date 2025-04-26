@@ -7,6 +7,7 @@ mod model;
 mod plugin;
 
 use iced_layershell::build_pattern::application;
+use settings::Settings;
 
 pub fn main() -> Result<(), iced_layershell::Error> {
     let args = settings::cli::CliArgs::parse();
@@ -351,23 +352,29 @@ fn focus_search_input() -> iced::Task<Message> {
 
 impl Centerpiece {
     fn new() -> (Self, iced::Task<Message>) {
+        let fonts = if Settings::get_or_init().font.family == "FiraCode Nerd Font" {
+            vec![
+                include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
+                include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Light.ttf").as_slice(),
+            ]
+        } else {
+            vec![include_bytes!("../assets/Symbols/SymbolsNerdFont-Regular.ttf").as_slice()]
+        };
+
         (
             Self {
                 query: String::from(""),
                 active_entry_index: 0,
                 plugins: vec![],
             },
-            iced::Task::batch(vec![
-                iced::font::load(
-                    include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
-                )
-                .map(Message::FontLoaded),
-                iced::font::load(
-                    include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Light.ttf").as_slice(),
-                )
-                .map(Message::FontLoaded),
-                iced::Task::perform(async {}, move |()| Message::Loaded),
-            ]),
+            iced::Task::batch(
+                fonts
+                    .into_iter()
+                    .map(|font| iced::font::load(font).map(Message::FontLoaded))
+                    .chain(vec![iced::Task::perform(async {}, move |()| {
+                        Message::Loaded
+                    })]),
+            ),
         )
     }
 

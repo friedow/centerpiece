@@ -9,6 +9,13 @@ mod plugin;
 use iced_layershell::build_pattern::application;
 
 pub fn main() -> Result<(), iced_layershell::Error> {
+    // Workaround for https://github.com/friedow/centerpiece/issues/237
+    // WGPU picks the lower power GPU by default, which on some systems,
+    // will pick an IGPU that doesn't exist leading to a black screen.
+    if std::env::var("WGPU_POWER_PREF").is_err() {
+        std::env::set_var("WGPU_POWER_PREF", "high");
+    }
+
     let args = settings::cli::CliArgs::parse();
     settings::Settings::try_from(args).unwrap_or_else(|_| {
         eprintln!("There is an issue with the settings, please check the configuration file.");

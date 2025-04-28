@@ -254,7 +254,7 @@ You can specify alternative configuration locations through:
      background: "#000000"
    font:
      # To list the available fonts on your system, use `fc-list : family | sed 's/,.*$//' | sort | uniq`
-     family: "FiraCode Nerd Font"
+     family: monospace # 'monospace' | 'serif' | 'sans_serif' | 'cursive' | 'fantasy' | 'your-font-name'
      size: 14
    plugin:
      applications:
@@ -314,7 +314,7 @@ You can specify alternative configuration locations through:
                    };
                    font = {
                        # To list the available fonts on your system, use `fc-list : family | sed 's/,.*$//' | sort | uniq`
-                       family = "FiraCode Nerd Font";
+                       family = "monospace"; # 'monospace' | 'serif' | 'sans_serif' | 'cursive' | 'fantasy' | 'your-font-name'
                        size = 14;
                    };
                    plugin = {

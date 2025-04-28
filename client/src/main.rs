@@ -7,7 +7,6 @@ mod model;
 mod plugin;
 
 use iced_layershell::build_pattern::application;
-use settings::Settings;
 
 pub fn main() -> Result<(), iced_layershell::Error> {
     let args = settings::cli::CliArgs::parse();
@@ -326,7 +325,7 @@ fn settings() -> iced_layershell::build_pattern::MainSettings {
     iced_layershell::build_pattern::MainSettings {
         id: Some(APP_ID.into()),
         default_font: iced::Font {
-            family: iced::font::Family::Name(&settings.font.family),
+            family: settings.font.family,
             weight: iced::font::Weight::Normal,
             stretch: iced::font::Stretch::Normal,
             style: iced::font::Style::default(),
@@ -352,29 +351,18 @@ fn focus_search_input() -> iced::Task<Message> {
 
 impl Centerpiece {
     fn new() -> (Self, iced::Task<Message>) {
-        let fonts = if Settings::get_or_init().font.family == "FiraCode Nerd Font" {
-            vec![
-                include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
-                include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Light.ttf").as_slice(),
-            ]
-        } else {
-            vec![include_bytes!("../assets/Symbols/SymbolsNerdFont-Regular.ttf").as_slice()]
-        };
-
         (
             Self {
                 query: String::from(""),
                 active_entry_index: 0,
                 plugins: vec![],
             },
-            iced::Task::batch(
-                fonts
-                    .into_iter()
-                    .map(|font| iced::font::load(font).map(Message::FontLoaded))
-                    .chain(vec![iced::Task::perform(async {}, move |()| {
-                        Message::Loaded
-                    })]),
-            ),
+            iced::Task::batch(vec![
+                // Load the symbols only nerd font to ensure they're always available
+                iced::font::load(include_bytes!("../assets/SymbolsNerdFont.ttf").as_slice())
+                    .map(Message::FontLoaded),
+                iced::Task::perform(async {}, move |()| Message::Loaded),
+            ]),
         )
     }
 

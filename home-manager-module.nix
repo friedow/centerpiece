@@ -36,9 +36,9 @@ in
 
       font = {
         family = lib.mkOption {
-          default = "FiraCode Nerd Font";
+          default = "monospace";
           type = lib.types.str;
-          description = lib.mdDoc "To list the available fonts on your system, use `fc-list : family | sed 's/,.*$//' | sort | uniq`";
+          description = lib.mdDoc "To list the available fonts on your system, use `fc-list : family | sed 's/,.*$//' | sort | uniq`. May be the name of a font or one of: 'monospace' | 'serif' | 'sans_serif' | 'cursive' | 'fantasy'";
         };
         size = lib.mkOption {
           default = 14;

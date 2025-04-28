@@ -181,8 +181,8 @@ impl Default for ColorSettings {
     }
 }
 
-fn default_font_family() -> String {
-    "FiraCode Nerd Font".to_string()
+fn default_font_family() -> iced::font::Family {
+    iced::font::Family::Monospace
 }
 
 fn default_font_size() -> f32 {
@@ -191,10 +191,34 @@ fn default_font_size() -> f32 {
 
 #[derive(Debug, Deserialize)]
 pub struct FontSettings {
-    #[serde(default = "default_font_family")]
-    pub family: String,
+    #[serde(
+        default = "default_font_family",
+        deserialize_with = "deserialize_font_family"
+    )]
+    pub family: iced::font::Family,
     #[serde(default = "default_font_size")]
     pub size: f32,
+}
+
+fn deserialize_font_family<'de, D>(deserializer: D) -> Result<iced::font::Family, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+
+    match s.to_lowercase().as_str() {
+        "monospace" => Ok(iced::font::Family::Monospace),
+        "serif" => Ok(iced::font::Family::Serif),
+        "sans_serif" | "sans-serif" => Ok(iced::font::Family::SansSerif),
+        "cursive" => Ok(iced::font::Family::Cursive),
+        "fantasy" => Ok(iced::font::Family::Fantasy),
+        _ => {
+            // Convert String to &'static str by leaking it
+            // This is appropriate since we only generate one settings struct
+            let static_str = Box::leak(s.into_boxed_str());
+            Ok(iced::font::Family::Name(static_str))
+        }
+    }
 }
 
 impl Default for FontSettings {

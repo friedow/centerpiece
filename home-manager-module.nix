@@ -15,7 +15,7 @@ in
 
     config = {
       scale = lib.mkOption {
-        default = 1;
+        default = 1.;
         type = lib.types.float;
         description = lib.mdDoc "Scale factor";
       };

@@ -4,8 +4,7 @@ use clap::Parser;
 
 mod component;
 mod model;
-// TODO: add this again
-// mod plugin;
+mod plugin;
 
 pub fn main() {
     let args = settings::cli::CliArgs::parse();
@@ -16,7 +15,6 @@ pub fn main() {
 
     simple_logger::init_with_level(log::Level::Info).unwrap();
 
-    let native_options = eframe::NativeOptions::default();
     eframe::run_native(
         "centerpiece",
         settings(),
@@ -37,19 +35,25 @@ struct Centerpiece {
     query: String,
     active_entry_index: usize,
     plugins: Vec<model::Plugin>,
+    plugin_channels: Vec<std::sync::mpsc::Receiver<Message>>,
 }
 
 impl eframe::App for Centerpiece {
     fn update(&mut self, ctx: &eframe::egui::Context, frame: &mut eframe::Frame) {
         self.handle_input(ctx);
 
-        let messages = vec![];
+        let mut messages = vec![];
 
-        // for plugin in self.plugins {
-        // TODO: try to recieve plugin messages and put them into messages
-        // }
+        for plugin_channel in &self.plugin_channels {
+            let message_result = plugin_channel.try_recv();
+            if message_result.is_err() {
+                continue;
+            }
+            messages.push(message_result.unwrap());
+        }
 
         self.handle_messages(messages);
+
         eframe::egui::CentralPanel::default().show(ctx, |ui| {
             ui.vertical(|ui| {
                 // component::query_input::view(ui, &mut self.query, !entries.is_empty());

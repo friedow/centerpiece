@@ -30,16 +30,14 @@ pub fn centerpiece_cache_directory() -> anyhow::Result<String> {
     Ok(format!("{cache_directory}/centerpiece"))
 }
 
-pub fn hexcolor(color: &str) -> iced::Color {
-    let hex_col = hex_color::HexColor::parse(color).unwrap_or_else(|_| {
+pub fn hexcolor(color: &str) -> egui::Color32 {
+    egui::Color32::from_hex(color).unwrap_or_else(|_| {
         eprintln!(
             "Failed to parse color settings: {} is not a valid color code",
             color
         );
         std::process::exit(0);
-    });
-
-    iced::Color::from_rgba8(hex_col.r, hex_col.g, hex_col.b, (hex_col.a as f32) / 255.0)
+    })
 }
 
 fn default_true() -> bool {

@@ -25,8 +25,7 @@ serde = { version = "1.0.217", features = ["derive"] }
 serde_yaml = "0.9.34"
 
 # application window
-iced = { version = "0.13.1", features = ["svg"] }
-iced_layershell = "0.13.5"
+eframe = "0.31.1"
 
 # plugins
 async-trait = "0.1.83"
@@ -57,7 +56,6 @@ dbus = "0.9.7"
 
 # firefox bookmarks
 serde_ini = "0.2.0"
-iced_runtime = "0.13.2"
 systemstat = "0.2.4"
 
 # fuzzy matcher

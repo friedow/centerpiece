@@ -4,7 +4,7 @@ pub struct Plugin {
     pub priority: u32,
     pub title: String,
     pub entries: Vec<Entry>,
-    pub app_channel_out: iced::futures::channel::mpsc::Sender<PluginRequest>,
+    pub app_channel_out: std::sync::mpsc::Sender<PluginRequest>,
 }
 
 #[derive(Debug, Clone, Ord, PartialOrd)]

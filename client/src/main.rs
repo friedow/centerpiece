@@ -35,7 +35,7 @@ struct Centerpiece {
     query: String,
     active_entry_index: usize,
     plugins: Vec<model::Plugin>,
-    plugin_channels: Vec<std::sync::mpsc::Receiver<Message>>,
+    plugin_channels: Vec<async_std::channel::Receiver<Message>>,
 }
 
 impl eframe::App for Centerpiece {
@@ -482,7 +482,7 @@ impl Centerpiece {
 
         plugin
             .app_channel_out
-            .send(model::PluginRequest::Activate(entry))
+            .send_blocking(model::PluginRequest::Activate(entry))
             .ok()
     }
 }

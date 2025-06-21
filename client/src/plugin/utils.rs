@@ -1,4 +1,5 @@
 use anyhow::Context;
+use async_std::stream::StreamExt;
 use nucleo_matcher::{
     pattern::{Atom, AtomKind, CaseMatching, Normalization},
     Matcher, Utf32Str,
@@ -6,8 +7,8 @@ use nucleo_matcher::{
 use std::cmp::Reverse;
 
 pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>(
-) -> std::sync::mpsc::Receiver<crate::Message> {
-    let (plugin_channel_out, app_channel_in) = std::sync::mpsc::channel();
+) -> async_std::channel::Receiver<crate::Message> {
+    let (plugin_channel_out, app_channel_in) = async_std::channel::bounded(100);
 
     std::thread::spawn(async move || {
         let mut plugin = PluginType::new();
@@ -100,7 +101,7 @@ pub trait Plugin {
 
     fn plugin(
         &self,
-        app_channel_out: &mut std::sync::mpsc::Sender<crate::model::PluginRequest>,
+        app_channel_out: &mut async_std::channel::Sender<crate::model::PluginRequest>,
     ) -> crate::model::Plugin {
         crate::model::Plugin {
             id: String::from(Self::id()),
@@ -113,11 +114,11 @@ pub trait Plugin {
 
     async fn main(
         &mut self,
-        mut plugin_channel_out: std::sync::mpsc::Sender<crate::Message>,
+        mut plugin_channel_out: async_std::channel::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
         self.update_entries()?;
 
-        let (mut app_channel_out, mut plugin_channel_in) = std::sync::mpsc::channel();
+        let (mut app_channel_out, mut plugin_channel_in) = async_std::channel::bounded(100);
         self.register_plugin(&mut plugin_channel_out, &mut app_channel_out)?;
         let mut last_query = String::from("");
 
@@ -133,11 +134,11 @@ pub trait Plugin {
 
     fn register_plugin(
         &mut self,
-        plugin_channel_out: &mut std::sync::mpsc::Sender<crate::Message>,
-        app_channel_out: &mut std::sync::mpsc::Sender<crate::model::PluginRequest>,
+        plugin_channel_out: &mut async_std::channel::Sender<crate::Message>,
+        app_channel_out: &mut async_std::channel::Sender<crate::model::PluginRequest>,
     ) -> anyhow::Result<()> {
         plugin_channel_out
-            .send(crate::Message::RegisterPlugin(self.plugin(app_channel_out)))
+            .send_blocking(crate::Message::RegisterPlugin(self.plugin(app_channel_out)))
             .context("Failed to send message to register plugin.")?;
 
         Ok(())
@@ -145,27 +146,24 @@ pub trait Plugin {
 
     async fn update(
         &mut self,
-        plugin_channel_out: &mut std::sync::mpsc::Sender<crate::Message>,
-        plugin_channel_in: &mut std::sync::mpsc::Receiver<crate::model::PluginRequest>,
+        plugin_channel_out: &mut async_std::channel::Sender<crate::Message>,
+        plugin_channel_in: &mut async_std::channel::Receiver<crate::model::PluginRequest>,
         last_query: &mut String,
     ) -> anyhow::Result<()> {
-        let plugin_request_future =
-            async_std::future::poll_fn(|_: &mut async_std::task::Context<'_>| {
-                let plugin_request_future = plugin_channel_in.try_recv();
-                if plugin_request_future.is_err() {
-                    return async_std::task::Poll::Pending;
-                }
-                async_std::task::Poll::Ready(plugin_request_future.unwrap())
-            });
-
-        let plugin_request = match Self::update_timeout() {
+        let plugin_request_future = plugin_channel_in.next();
+        let plugin_request_option = match Self::update_timeout() {
             Some(update_timeout) => {
                 async_std::future::timeout(update_timeout, plugin_request_future)
                     .await
-                    .unwrap_or(crate::model::PluginRequest::Timeout)
+                    .unwrap_or(Some(crate::model::PluginRequest::Timeout))
             }
             None => plugin_request_future.await,
         };
+        if plugin_request_option.is_none() {
+            // TODO: is this handled correctly?
+            return Ok(());
+        }
+        let plugin_request = plugin_request_option.unwrap();
 
         match plugin_request {
             crate::model::PluginRequest::Search(query) => {
@@ -193,12 +191,12 @@ pub trait Plugin {
     fn search(
         &mut self,
         query: &str,
-        plugin_channel_out: &mut std::sync::mpsc::Sender<crate::Message>,
+        plugin_channel_out: &mut async_std::channel::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
         let filtered_entries = fuzzy_match(query, self.entries());
 
         plugin_channel_out
-            .send(crate::Message::UpdateEntries(
+            .send_blocking(crate::Message::UpdateEntries(
                 String::from(Self::id()),
                 filtered_entries,
             ))
@@ -213,7 +211,7 @@ pub trait Plugin {
     fn activate(
         &mut self,
         _entry: crate::model::Entry,
-        _plugin_channel_out: &mut std::sync::mpsc::Sender<crate::Message>,
+        _plugin_channel_out: &mut async_std::channel::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
         Ok(())
     }

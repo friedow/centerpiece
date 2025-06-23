@@ -110,106 +110,6 @@ impl eframe::App for Centerpiece {
     }
 }
 
-// fn subscription(_: &Centerpiece) -> iced::Subscription<Message> {
-//     let settings = settings::Settings::get_or_init();
-//
-//     if settings.plugin.applications.enable {
-//         subscriptions.push(crate::plugin::utils::spawn::<
-//             crate::plugin::applications::ApplicationsPlugin,
-//         >());
-//     }
-//
-//     if settings.plugin.brave_bookmarks.enable {
-//         subscriptions.push(crate::plugin::utils::spawn::<
-//             crate::plugin::brave::bookmarks::BookmarksPlugin,
-//         >());
-//     }
-//
-//     if settings.plugin.brave_progressive_web_apps.enable {
-//         subscriptions.push(crate::plugin::utils::spawn::<
-//             crate::plugin::brave::progressive_web_apps::ProgressiveWebAppsPlugin,
-//         >());
-//     }
-//
-//     if settings.plugin.brave_history.enable {
-//         subscriptions.push(crate::plugin::utils::spawn::<
-//             crate::plugin::brave::history::HistoryPlugin,
-//         >());
-//     }
-//
-//     if settings.plugin.clock.enable {
-//         subscriptions.push(crate::plugin::utils::spawn::<
-//             crate::plugin::clock::ClockPlugin,
-//         >());
-//     }
-//
-//     if settings.plugin.firefox_bookmarks.enable {
-//         subscriptions.push(crate::plugin::utils::spawn::<
-//             crate::plugin::firefox::bookmarks::BookmarksPlugin,
-//         >());
-//     }
-//
-//     if settings.plugin.firefox_history.enable {
-//         subscriptions.push(crate::plugin::utils::spawn::<
-//             crate::plugin::firefox::history::HistoryPlugin,
-//         >());
-//     }
-//
-//     if settings.plugin.git_repositories.enable {
-//         subscriptions.push(crate::plugin::utils::spawn::<
-//             crate::plugin::git_repositories::GitRepositoriesPlugin,
-//         >());
-//     }
-//
-//     if settings.plugin.gitmoji.enable {
-//         subscriptions.push(crate::plugin::utils::spawn::<
-//             crate::plugin::gitmoji::GitmojiPlugin,
-//         >());
-//     }
-//
-//     if settings.plugin.resource_monitor_battery.enable {
-//         subscriptions.push(crate::plugin::utils::spawn::<
-//             crate::plugin::resource_monitor::battery::BatteryPlugin,
-//         >());
-//     }
-//
-//     if settings.plugin.resource_monitor_cpu.enable {
-//         subscriptions.push(crate::plugin::utils::spawn::<
-//             crate::plugin::resource_monitor::cpu::CpuPlugin,
-//         >());
-//     }
-//
-//     if settings.plugin.resource_monitor_disks.enable {
-//         subscriptions.push(crate::plugin::utils::spawn::<
-//             crate::plugin::resource_monitor::disks::DisksPlugin,
-//         >());
-//     }
-//
-//     if settings.plugin.resource_monitor_memory.enable {
-//         subscriptions.push(crate::plugin::utils::spawn::<
-//             crate::plugin::resource_monitor::memory::MemoryPlugin,
-//         >());
-//     }
-//
-//     if settings.plugin.system.enable {
-//         subscriptions.push(crate::plugin::utils::spawn::<
-//             crate::plugin::system::SystemPlugin,
-//         >());
-//     }
-//
-//     if settings.plugin.wifi.enable {
-//         subscriptions.push(crate::plugin::utils::spawn::<crate::plugin::wifi::WifiPlugin>());
-//     }
-//
-//     if settings.plugin.sway_windows.enable {
-//         subscriptions.push(crate::plugin::utils::spawn::<
-//             crate::plugin::sway_windows::SwayWindowsPlugin,
-//         >());
-//     }
-//
-//     iced::Subscription::batch(subscriptions)
-// }
-
 // TODO: fix styles
 // fn theme(_centerpiece: &Centerpiece) -> iced::Theme {
 //     let settings = settings::Settings::get_or_init();
@@ -295,7 +195,110 @@ impl Centerpiece {
         // Restore app state using cc.storage (requires the "persistence" feature).
         // Use the cc.gl (a glow::Context) to create graphics shaders and buffers that you can use
         // for e.g. egui::PaintCallback.
-        Self::default()
+        let mut centerpiece = Self::default();
+        println!("creating centerpiece");
+        centerpiece.launch_plugins();
+        return centerpiece;
+    }
+
+    fn launch_plugins(self: &mut Centerpiece) {
+        let mut centerpiece = Self::default();
+        let settings = settings::Settings::get_or_init();
+
+        if settings.plugin.applications.enable {
+            self.plugin_channels.push(crate::plugin::utils::spawn::<
+                crate::plugin::applications::ApplicationsPlugin,
+            >());
+        }
+
+        if settings.plugin.brave_bookmarks.enable {
+            self.plugin_channels.push(crate::plugin::utils::spawn::<
+                crate::plugin::brave::bookmarks::BookmarksPlugin,
+            >());
+        }
+
+        if settings.plugin.brave_progressive_web_apps.enable {
+            self.plugin_channels.push(crate::plugin::utils::spawn::<
+                crate::plugin::brave::progressive_web_apps::ProgressiveWebAppsPlugin,
+            >());
+        }
+
+        if settings.plugin.brave_history.enable {
+            self.plugin_channels.push(crate::plugin::utils::spawn::<
+                crate::plugin::brave::history::HistoryPlugin,
+            >());
+        }
+
+        if settings.plugin.clock.enable {
+            self.plugin_channels.push(crate::plugin::utils::spawn::<
+                crate::plugin::clock::ClockPlugin,
+            >());
+        }
+
+        if settings.plugin.firefox_bookmarks.enable {
+            self.plugin_channels.push(crate::plugin::utils::spawn::<
+                crate::plugin::firefox::bookmarks::BookmarksPlugin,
+            >());
+        }
+
+        if settings.plugin.firefox_history.enable {
+            self.plugin_channels.push(crate::plugin::utils::spawn::<
+                crate::plugin::firefox::history::HistoryPlugin,
+            >());
+        }
+
+        if settings.plugin.git_repositories.enable {
+            self.plugin_channels.push(crate::plugin::utils::spawn::<
+                crate::plugin::git_repositories::GitRepositoriesPlugin,
+            >());
+        }
+
+        if settings.plugin.gitmoji.enable {
+            self.plugin_channels.push(crate::plugin::utils::spawn::<
+                crate::plugin::gitmoji::GitmojiPlugin,
+            >());
+        }
+
+        if settings.plugin.resource_monitor_battery.enable {
+            self.plugin_channels.push(crate::plugin::utils::spawn::<
+                crate::plugin::resource_monitor::battery::BatteryPlugin,
+            >());
+        }
+
+        if settings.plugin.resource_monitor_cpu.enable {
+            self.plugin_channels.push(crate::plugin::utils::spawn::<
+                crate::plugin::resource_monitor::cpu::CpuPlugin,
+            >());
+        }
+
+        if settings.plugin.resource_monitor_disks.enable {
+            self.plugin_channels.push(crate::plugin::utils::spawn::<
+                crate::plugin::resource_monitor::disks::DisksPlugin,
+            >());
+        }
+
+        if settings.plugin.resource_monitor_memory.enable {
+            self.plugin_channels.push(crate::plugin::utils::spawn::<
+                crate::plugin::resource_monitor::memory::MemoryPlugin,
+            >());
+        }
+
+        if settings.plugin.system.enable {
+            self.plugin_channels.push(crate::plugin::utils::spawn::<
+                crate::plugin::system::SystemPlugin,
+            >());
+        }
+
+        if settings.plugin.wifi.enable {
+            self.plugin_channels
+                .push(crate::plugin::utils::spawn::<crate::plugin::wifi::WifiPlugin>());
+        }
+
+        if settings.plugin.sway_windows.enable {
+            self.plugin_channels.push(crate::plugin::utils::spawn::<
+                crate::plugin::sway_windows::SwayWindowsPlugin,
+            >());
+        }
     }
 
     fn handle_input(&mut self, ctx: &eframe::egui::Context) {

@@ -76,7 +76,7 @@ impl Plugin for HistoryPlugin {
     fn activate(
         &mut self,
         entry: crate::model::Entry,
-        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
+        plugin_channel_out: &mut async_std::channel::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
         std::process::Command::new("firefox")
             .arg(&entry.id)

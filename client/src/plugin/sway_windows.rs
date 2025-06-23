@@ -98,7 +98,7 @@ impl Plugin for SwayWindowsPlugin {
     fn activate(
         &mut self,
         entry: crate::model::Entry,
-        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
+        plugin_channel_out: &mut async_std::channel::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
         self.sway
             .run_command(format!("[con_id={}] focus", entry.id))

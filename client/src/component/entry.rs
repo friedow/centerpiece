@@ -1,11 +1,11 @@
+use eframe::egui::{Label, RichText};
+
 pub fn view(ui: &mut eframe::egui::Ui, entry: &crate::model::Entry, active: bool) {
     ui.horizontal(|ui| {
         ui.label(clipped_title(entry.title.clone()));
-        ui.label(if active {
-            entry.action.clone()
-        } else {
-            "".to_string()
-        });
+        if active {
+            ui.add(Label::new(entry.action.clone()).halign(eframe::egui::Align::Max))
+        }
     });
     // iced::widget::container(
     //     iced::widget::container(

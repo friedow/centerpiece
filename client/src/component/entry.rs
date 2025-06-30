@@ -1,62 +1,31 @@
-use eframe::egui::{Label, RichText};
-
 pub fn view(ui: &mut eframe::egui::Ui, entry: &crate::model::Entry, active: bool) {
-    ui.horizontal(|ui| {
-        ui.label(clipped_title(entry.title.clone()));
-        if active {
-            ui.add(Label::new(entry.action.clone()).halign(eframe::egui::Align::Max))
-        }
+    let settings = settings::Settings::get_or_init();
+    let text_color = settings::hexcolor(&settings.color.text);
+    let stroke_color = if active {
+        text_color
+    } else {
+        eframe::egui::Color32::TRANSPARENT
+    };
+    let stroke = eframe::egui::Stroke::new(1., stroke_color);
+
+    eframe::egui::Frame::new().stroke(stroke).corner_radius(0.1 * crate::REM).inner_margin(0.5 * crate::REM).show(ui, |ui| {
+        eframe::egui::containers::Sides::new().show(ui,
+            |ui| {
+                let mut job = eframe::egui::text::LayoutJob::single_section(
+                    entry.title.clone(),
+                    eframe::egui::TextFormat {
+                        color: text_color,
+                        ..Default::default()
+                    },
+                );
+                job.wrap = eframe::egui::text::TextWrapping::truncate_at_width(60.);
+                ui.label(job);
+            },
+            |ui| {
+                if active {
+                    ui.label(eframe::egui::RichText::new(entry.action.clone()).color(text_color));
+                }
+            }
+        );
     });
-    // iced::widget::container(
-    //     iced::widget::container(
-    //         iced::widget::row![
-    //             iced::widget::text(clipped_title(entry.title.clone()))
-    //                 .size(1. * crate::REM)
-    //                 .width(iced::Length::Fill)
-    //                 .shaping(iced::widget::text::Shaping::Advanced),
-    //             iced::widget::text(if active {
-    //                 entry.action.clone()
-    //             } else {
-    //                 "".to_string()
-    //             })
-    //             .size(1. * crate::REM)
-    //         ]
-    //         .padding(0.5 * crate::REM),
-    //     )
-    //     .style(move |theme: &iced::Theme| {
-    //         if !active {
-    //             return iced::widget::container::Style::default();
-    //         };
-    //
-    //         let palette = theme.extended_palette();
-    //         iced::widget::container::Style {
-    //             border: iced::Border {
-    //                 color: palette.background.base.text,
-    //                 width: 1.,
-    //                 radius: iced::border::Radius::from(0.1 * crate::REM),
-    //             },
-    //             ..Default::default()
-    //         }
-    //     }),
-    // )
-    // // We're fixing the height here to unify it
-    // // with the height of plugin headers for a smooth
-    // // scrolling experience
-    // .height(crate::ENTRY_HEIGHT)
-    // .padding([0., 0.75 * crate::REM])
-    // .into()
-}
-
-fn clipped_title(title: String) -> String {
-    if title.char_indices().count() <= 57 {
-        return title;
-    }
-
-    let mut clipped_title: String = title
-        .char_indices()
-        .map(|(_, character)| character)
-        .take(57)
-        .collect();
-    clipped_title.push_str("...");
-    clipped_title
 }

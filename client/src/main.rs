@@ -18,13 +18,12 @@ pub fn main() {
     eframe::run_native(
         "centerpiece",
         settings(),
-        Box::new(|cc| Ok(Box::new(Centerpiece::new(cc)))),
+        Box::new(|_cc| Ok(Box::new(Centerpiece::new()))),
     );
 }
 
 #[derive(Debug, Clone)]
 pub enum Message {
-    Search(String),
     RegisterPlugin(model::Plugin),
     UpdateEntries(String, Vec<model::Entry>),
     Exit,
@@ -39,7 +38,7 @@ struct Centerpiece {
 }
 
 impl eframe::App for Centerpiece {
-    fn update(&mut self, ctx: &eframe::egui::Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
         self.handle_input(ctx);
 
         let mut messages = vec![];
@@ -55,12 +54,15 @@ impl eframe::App for Centerpiece {
         self.handle_messages(messages);
 
         eframe::egui::CentralPanel::default().show(ctx, |ui| {
-            ui.add(
+            let response = ui.add(
                 eframe::egui::TextEdit::singleline(&mut self.query)
                     .hint_text("Search")
                     .lock_focus(true)
                     .desired_width(f32::INFINITY),
             );
+            if response.changed() {
+                self.search();
+            }
 
             let entries = self.entries();
             if !entries.is_empty() {
@@ -192,7 +194,7 @@ impl Centerpiece {
     //     )
     // }
 
-    fn new(cc: &eframe::CreationContext<'_>) -> Self {
+    fn new() -> Self {
         // Customize egui here with cc.egui_ctx.set_fonts and cc.egui_ctx.set_visuals.
         // Restore app state using cc.storage (requires the "persistence" feature).
         // Use the cc.gl (a glow::Context) to create graphics shaders and buffers that you can use
@@ -204,7 +206,6 @@ impl Centerpiece {
     }
 
     fn launch_plugins(self: &mut Centerpiece) {
-        let mut centerpiece = Self::default();
         let settings = settings::Settings::get_or_init();
 
         if settings.plugin.applications.enable {
@@ -339,8 +340,6 @@ impl Centerpiece {
     fn handle_messages(&mut self, messages: Vec<Message>) {
         for message in messages {
             match message {
-                Message::Search(input) => self.search(input),
-
                 Message::RegisterPlugin(plugin) => self.register_plugin(plugin),
 
                 Message::UpdateEntries(plugin_id, entries) => {
@@ -369,14 +368,13 @@ impl Centerpiece {
         }
     }
 
-    fn search(&mut self, input: String) {
+    fn search(&mut self) {
         for plugin in self.plugins.iter_mut() {
             let _ = plugin
                 .app_channel_out
-                .send(crate::model::PluginRequest::Search(input.clone()));
+                .send_blocking(crate::model::PluginRequest::Search(self.query.clone()));
         }
 
-        self.query = input;
         self.select_first_entry();
     }
 
@@ -444,7 +442,7 @@ impl Centerpiece {
         self.active_entry_index = accumulated_entries;
     }
 
-    fn register_plugin(&mut self, mut plugin: crate::model::Plugin) {
+    fn register_plugin(&mut self, plugin: crate::model::Plugin) {
         let _ = plugin
             .app_channel_out
             .send(crate::model::PluginRequest::Search(self.query.clone()));

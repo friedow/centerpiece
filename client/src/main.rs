@@ -55,57 +55,59 @@ impl eframe::App for Centerpiece {
         self.handle_messages(messages);
 
         eframe::egui::CentralPanel::default().show(ctx, |ui| {
-            ui.vertical(|ui| {
-                // component::query_input::view(ui, &mut self.query, !entries.is_empty());
-                ui.text_edit_singleline(&mut self.query);
+            ui.add(
+                eframe::egui::TextEdit::singleline(&mut self.query)
+                    .hint_text("Search")
+                    .lock_focus(true)
+                    .desired_width(f32::INFINITY),
+            );
 
-                let entries = self.entries();
-                if !entries.is_empty() {
-                    ui.separator();
+            let entries = self.entries();
+            if !entries.is_empty() {
+                ui.separator();
+            }
+
+            let mut divider_added = true;
+            let mut header_added = false;
+            let mut next_entry_index_to_add = self.active_entry_index;
+
+            for lines_added in 0..11 {
+                if next_entry_index_to_add >= entries.len() {
+                    break;
                 }
 
-                let mut divider_added = true;
-                let mut header_added = false;
-                let mut next_entry_index_to_add = self.active_entry_index;
-
-                for lines_added in 0..11 {
-                    if next_entry_index_to_add >= entries.len() {
-                        break;
+                let mut plugin_to_add = None;
+                let mut last_plugin_start_index = 0;
+                for plugin in self.plugins.iter() {
+                    if last_plugin_start_index == next_entry_index_to_add {
+                        plugin_to_add = Some(plugin);
                     }
-
-                    let mut plugin_to_add = None;
-                    let mut last_plugin_start_index = 0;
-                    for plugin in self.plugins.iter() {
-                        if last_plugin_start_index == next_entry_index_to_add {
-                            plugin_to_add = Some(plugin);
-                        }
-                        last_plugin_start_index += plugin.entries.len();
-                    }
-
-                    if !divider_added && plugin_to_add.is_some() {
-                        component::divider::view(ui);
-                        divider_added = true;
-                        continue;
-                    }
-
-                    if !header_added && plugin_to_add.is_some() {
-                        component::plugin_header::view(ui, plugin_to_add.unwrap());
-                        header_added = true;
-                        continue;
-                    } else if lines_added == 0 {
-                        component::entry::view(ui, entries[next_entry_index_to_add - 1], false);
-                    }
-
-                    component::entry::view(
-                        ui,
-                        entries[next_entry_index_to_add],
-                        next_entry_index_to_add == self.active_entry_index,
-                    );
-                    divider_added = false;
-                    header_added = false;
-                    next_entry_index_to_add += 1;
+                    last_plugin_start_index += plugin.entries.len();
                 }
-            });
+
+                if !divider_added && plugin_to_add.is_some() {
+                    component::divider::view(ui);
+                    divider_added = true;
+                    continue;
+                }
+
+                if !header_added && plugin_to_add.is_some() {
+                    component::plugin_header::view(ui, plugin_to_add.unwrap());
+                    header_added = true;
+                    continue;
+                } else if lines_added == 0 {
+                    component::entry::view(ui, entries[next_entry_index_to_add - 1], false);
+                }
+
+                component::entry::view(
+                    ui,
+                    entries[next_entry_index_to_add],
+                    next_entry_index_to_add == self.active_entry_index,
+                );
+                divider_added = false;
+                header_added = false;
+                next_entry_index_to_add += 1;
+            }
         });
     }
 }

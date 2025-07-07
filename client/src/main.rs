@@ -58,8 +58,11 @@ impl eframe::App for Centerpiece {
                 eframe::egui::TextEdit::singleline(&mut self.query)
                     .hint_text("Search")
                     .lock_focus(true)
-                    .desired_width(f32::INFINITY),
+                    .desired_width(f32::INFINITY)
+                    .frame(false)
+                    .font(eframe::egui::TextStyle::Heading),
             );
+            response.request_focus();
             if response.changed() {
                 self.search();
             }

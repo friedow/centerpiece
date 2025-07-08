@@ -12,6 +12,7 @@ pub fn view(ui: &mut eframe::egui::Ui, entry: &crate::model::Entry, active: bool
         .stroke(stroke)
         .corner_radius(0.1 * crate::REM)
         .inner_margin(0.5 * crate::REM)
+        .outer_margin(eframe::egui::vec2(1. * crate::REM, 0.))
         .show(ui, |ui| {
             eframe::egui::containers::Sides::new().show(
                 ui,
@@ -20,6 +21,7 @@ pub fn view(ui: &mut eframe::egui::Ui, entry: &crate::model::Entry, active: bool
                         entry.title.clone(),
                         eframe::egui::TextFormat {
                             color: text_color,
+                            font_id: eframe::egui::FontId::monospace(1. * crate::REM),
                             ..Default::default()
                         },
                     );

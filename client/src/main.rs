@@ -1,6 +1,7 @@
 use std::process::exit;
 
 use clap::Parser;
+use eframe::egui::{self, vec2, Separator};
 
 mod component;
 mod model;
@@ -18,7 +19,7 @@ pub fn main() {
     eframe::run_native(
         "centerpiece",
         settings(),
-        Box::new(|_cc| Ok(Box::new(Centerpiece::new()))),
+        Box::new(|cc| Ok(Box::new(Centerpiece::new(cc)))),
     );
 }
 
@@ -53,67 +54,86 @@ impl eframe::App for Centerpiece {
 
         self.handle_messages(messages);
 
-        eframe::egui::CentralPanel::default().show(ctx, |ui| {
-            let response = ui.add(
-                eframe::egui::TextEdit::singleline(&mut self.query)
-                    .hint_text("Search")
-                    .lock_focus(true)
-                    .desired_width(f32::INFINITY)
-                    .frame(false)
-                    .font(eframe::egui::TextStyle::Heading),
-            );
-            response.request_focus();
-            if response.changed() {
-                self.search();
-            }
+        let settings = settings::Settings::get_or_init();
 
-            let entries = self.entries();
-            if !entries.is_empty() {
-                ui.separator();
-            }
-
-            let mut divider_added = true;
-            let mut header_added = false;
-            let mut next_entry_index_to_add = self.active_entry_index;
-
-            for lines_added in 0..11 {
-                if next_entry_index_to_add >= entries.len() {
-                    break;
-                }
-
-                let mut plugin_to_add = None;
-                let mut last_plugin_start_index = 0;
-                for plugin in self.plugins.iter() {
-                    if last_plugin_start_index == next_entry_index_to_add {
-                        plugin_to_add = Some(plugin);
-                    }
-                    last_plugin_start_index += plugin.entries.len();
-                }
-
-                if !divider_added && plugin_to_add.is_some() {
-                    component::divider::view(ui);
-                    divider_added = true;
-                    continue;
-                }
-
-                if !header_added && plugin_to_add.is_some() {
-                    component::plugin_header::view(ui, plugin_to_add.unwrap());
-                    header_added = true;
-                    continue;
-                } else if lines_added == 0 {
-                    component::entry::view(ui, entries[next_entry_index_to_add - 1], false);
-                }
-
-                component::entry::view(
-                    ui,
-                    entries[next_entry_index_to_add],
-                    next_entry_index_to_add == self.active_entry_index,
+        eframe::egui::CentralPanel::default()
+            .frame(
+                eframe::egui::Frame::new()
+                    .fill(settings::hexcolor(&settings.color.background))
+                    .inner_margin(0),
+            )
+            .show(ctx, |ui| {
+                let response = ui.add(
+                    eframe::egui::TextEdit::singleline(&mut self.query)
+                        .hint_text("Search")
+                        .lock_focus(true)
+                        .desired_width(f32::INFINITY)
+                        .frame(false)
+                        .font(eframe::egui::TextStyle::Body)
+                        .text_color(settings::hexcolor(&settings.color.text))
+                        .margin(eframe::egui::epaint::Marginf {
+                            left: 1. * crate::REM,
+                            right: 1. * crate::REM,
+                            top: 1. * crate::REM,
+                            bottom: 0.75 * crate::REM,
+                        }),
                 );
-                divider_added = false;
-                header_added = false;
-                next_entry_index_to_add += 1;
-            }
-        });
+                response.request_focus();
+                if response.changed() {
+                    self.search();
+                }
+
+                let entries = self.entries();
+                if !entries.is_empty() {
+                    ui.add(Separator::default().spacing(0.));
+                }
+
+                let mut divider_added = true;
+                let mut header_added = false;
+                let mut next_entry_index_to_add = self.active_entry_index;
+                let mut lines_added = 0;
+
+                while ui.available_height() > 0. {
+                    if next_entry_index_to_add >= entries.len() {
+                        break;
+                    }
+
+                    let mut plugin_to_add = None;
+                    let mut last_plugin_start_index = 0;
+                    for plugin in self.plugins.iter() {
+                        if last_plugin_start_index == next_entry_index_to_add {
+                            plugin_to_add = Some(plugin);
+                        }
+                        last_plugin_start_index += plugin.entries.len();
+                    }
+
+                    if !divider_added && plugin_to_add.is_some() {
+                        component::divider::view(ui);
+                        divider_added = true;
+                        lines_added += 1;
+                        continue;
+                    }
+
+                    if !header_added && plugin_to_add.is_some() {
+                        component::plugin_header::view(ui, plugin_to_add.unwrap());
+                        header_added = true;
+                        lines_added += 1;
+                        continue;
+                    } else if lines_added == 0 {
+                        component::entry::view(ui, entries[next_entry_index_to_add - 1], false);
+                    }
+
+                    component::entry::view(
+                        ui,
+                        entries[next_entry_index_to_add],
+                        next_entry_index_to_add == self.active_entry_index,
+                    );
+                    divider_added = false;
+                    header_added = false;
+                    next_entry_index_to_add += 1;
+                    lines_added += 1;
+                }
+            });
     }
 }
 
@@ -197,7 +217,35 @@ impl Centerpiece {
     //     )
     // }
 
-    fn new() -> Self {
+    fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        let mut fonts = eframe::egui::FontDefinitions::default();
+        fonts.font_data.insert(
+            "test".to_owned(),
+            std::sync::Arc::new(eframe::egui::FontData::from_static(include_bytes!(
+                "../assets/FiraCode/FiraCodeNerdFont-Regular.ttf"
+            ))),
+        );
+        fonts
+            .families
+            .entry(eframe::egui::FontFamily::Monospace)
+            .or_default()
+            .insert(0, "test".to_owned());
+        cc.egui_ctx.set_fonts(fonts);
+
+        let text_styles: std::collections::BTreeMap<_, _> = [
+            (
+                eframe::egui::TextStyle::Heading,
+                eframe::egui::FontId::new(0.75 * crate::REM, eframe::egui::FontFamily::Monospace),
+            ),
+            (
+                eframe::egui::TextStyle::Body,
+                eframe::egui::FontId::new(1. * crate::REM, eframe::egui::FontFamily::Monospace),
+            ),
+        ]
+        .into();
+        cc.egui_ctx
+            .all_styles_mut(move |style| style.text_styles = text_styles.clone());
+
         // Customize egui here with cc.egui_ctx.set_fonts and cc.egui_ctx.set_visuals.
         // Restore app state using cc.storage (requires the "persistence" feature).
         // Use the cc.gl (a glow::Context) to create graphics shaders and buffers that you can use

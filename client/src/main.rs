@@ -369,23 +369,18 @@ impl Centerpiece {
             exit(0);
         }
 
-        if ctx.input(|i| i.modifiers.ctrl && i.key_down(eframe::egui::Key::J)) {
+        if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(eframe::egui::Key::J)) {
             self.select_next_entry();
         }
-        if ctx.input(|i| i.modifiers.ctrl && i.key_down(eframe::egui::Key::K)) {
+        if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(eframe::egui::Key::K)) {
             self.select_previous_entry();
         }
-        if ctx.input(|i| i.modifiers.ctrl && i.key_down(eframe::egui::Key::P)) {
+        if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(eframe::egui::Key::P)) {
             self.select_previous_plugin();
         }
-        if ctx.input(|i| i.modifiers.ctrl && i.key_down(eframe::egui::Key::N)) {
+        if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(eframe::egui::Key::N)) {
             self.select_next_plugin();
         }
-
-        // TODO: needs to be revived
-        // iced::Event::Mouse(iced::mouse::Event::ButtonPressed(iced::mouse::Button::Left)) => {
-        //   focus_search_input()
-        // }
     }
 
     fn handle_messages(&mut self, messages: Vec<Message>) {

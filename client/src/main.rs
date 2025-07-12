@@ -170,16 +170,16 @@ impl Centerpiece {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
         let mut fonts = eframe::egui::FontDefinitions::default();
         fonts.font_data.insert(
-            "test".to_owned(),
+            "NerdFontSymbols".to_owned(),
             std::sync::Arc::new(eframe::egui::FontData::from_static(include_bytes!(
-                "../assets/FiraCode/FiraCodeNerdFont-Regular.ttf"
+                "../assets/SymbolsNerdFontMono-Regular.ttf"
             ))),
         );
         fonts
             .families
             .entry(eframe::egui::FontFamily::Monospace)
             .or_default()
-            .insert(0, "test".to_owned());
+            .push("NerdFontSymbols".to_owned());
         cc.egui_ctx.set_fonts(fonts);
 
         let text_styles: std::collections::BTreeMap<_, _> = [

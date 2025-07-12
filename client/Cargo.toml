@@ -25,7 +25,7 @@ serde = { version = "1.0.217", features = ["derive"] }
 serde_yaml = "0.9.34"
 
 # application window
-eframe = "0.31.1"
+eframe = { version = "0.31.1", default-features = false, features = ["glow", "wayland"] }
 
 # plugins
 async-trait = "0.1.83"

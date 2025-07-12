@@ -1,7 +1,7 @@
 use std::process::exit;
 
 use clap::Parser;
-use eframe::egui::{self, vec2, Separator};
+use eframe::egui::{self, Separator};
 
 mod component;
 mod model;
@@ -39,6 +39,10 @@ struct Centerpiece {
 }
 
 impl eframe::App for Centerpiece {
+    fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
+        egui::Rgba::TRANSPARENT.to_array()
+    }
+
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
         self.handle_input(ctx);
 
@@ -57,130 +61,104 @@ impl eframe::App for Centerpiece {
         let settings = settings::Settings::get_or_init();
 
         eframe::egui::CentralPanel::default()
-            .frame(
-                eframe::egui::Frame::new()
-                    .fill(settings::hexcolor(&settings.color.background))
-                    .inner_margin(0),
-            )
+            .frame(eframe::egui::Frame::new())
             .show(ctx, |ui| {
-                let response = ui.add(
-                    eframe::egui::TextEdit::singleline(&mut self.query)
-                        .hint_text("Search")
-                        .lock_focus(true)
-                        .desired_width(f32::INFINITY)
-                        .frame(false)
-                        .font(eframe::egui::TextStyle::Body)
-                        .text_color(settings::hexcolor(&settings.color.text))
-                        .margin(eframe::egui::epaint::Marginf {
-                            left: 1. * crate::REM,
-                            right: 1. * crate::REM,
-                            top: 1. * crate::REM,
-                            bottom: 0.75 * crate::REM,
-                        }),
-                );
-                response.request_focus();
-                if response.changed() {
-                    self.search();
-                }
-
-                let entries = self.entries();
-                if !entries.is_empty() {
-                    ui.add(Separator::default().spacing(0.));
-                }
-
-                let mut divider_added = true;
-                let mut header_added = false;
-                let mut next_entry_index_to_add = self.active_entry_index;
-                let mut lines_added = 0;
-
-                while ui.available_height() > 0. {
-                    if next_entry_index_to_add >= entries.len() {
-                        break;
-                    }
-
-                    let mut plugin_to_add = None;
-                    let mut last_plugin_start_index = 0;
-                    for plugin in self.plugins.iter() {
-                        if last_plugin_start_index == next_entry_index_to_add {
-                            plugin_to_add = Some(plugin);
+                eframe::egui::Frame::new()
+                    .inner_margin(eframe::egui::epaint::Marginf {
+                        bottom: 1. * crate::REM,
+                        ..Default::default()
+                    })
+                    .fill(settings::hexcolor(&settings.color.background))
+                    .show(ui, |ui| {
+                        let response = ui.add(
+                            eframe::egui::TextEdit::singleline(&mut self.query)
+                                .hint_text("Search")
+                                .lock_focus(true)
+                                .desired_width(f32::INFINITY)
+                                .frame(false)
+                                .margin(eframe::egui::epaint::Marginf {
+                                    left: 1. * crate::REM,
+                                    right: 1. * crate::REM,
+                                    top: 1. * crate::REM,
+                                    bottom: 0.75 * crate::REM,
+                                }),
+                        );
+                        response.request_focus();
+                        if response.changed() {
+                            self.search();
                         }
-                        last_plugin_start_index += plugin.entries.len();
-                    }
 
-                    if !divider_added && plugin_to_add.is_some() {
-                        component::divider::view(ui);
-                        divider_added = true;
-                        lines_added += 1;
-                        continue;
-                    }
+                        let entries = self.entries();
+                        if !entries.is_empty() {
+                            ui.add(Separator::default().spacing(0.));
+                        }
 
-                    if !header_added && plugin_to_add.is_some() {
-                        component::plugin_header::view(ui, plugin_to_add.unwrap());
-                        header_added = true;
-                        lines_added += 1;
-                        continue;
-                    } else if lines_added == 0 {
-                        component::entry::view(ui, entries[next_entry_index_to_add - 1], false);
-                    }
+                        let mut divider_added = true;
+                        let mut header_added = false;
+                        let mut next_entry_index_to_add = self.active_entry_index;
+                        let mut lines_added = 0;
 
-                    component::entry::view(
-                        ui,
-                        entries[next_entry_index_to_add],
-                        next_entry_index_to_add == self.active_entry_index,
-                    );
-                    divider_added = false;
-                    header_added = false;
-                    next_entry_index_to_add += 1;
-                    lines_added += 1;
-                }
+                        while ui.available_height() > 0. {
+                            if next_entry_index_to_add >= entries.len() {
+                                break;
+                            }
+
+                            let mut plugin_to_add = None;
+                            let mut last_plugin_start_index = 0;
+                            for plugin in self.plugins.iter() {
+                                if last_plugin_start_index == next_entry_index_to_add {
+                                    plugin_to_add = Some(plugin);
+                                }
+                                last_plugin_start_index += plugin.entries.len();
+                            }
+
+                            if !divider_added && plugin_to_add.is_some() {
+                                component::divider::view(ui);
+                                divider_added = true;
+                                lines_added += 1;
+                                continue;
+                            }
+
+                            if !header_added && plugin_to_add.is_some() {
+                                component::plugin_header::view(ui, plugin_to_add.unwrap());
+                                header_added = true;
+                                lines_added += 1;
+                                continue;
+                            } else if lines_added == 0 {
+                                component::entry::view(
+                                    ui,
+                                    entries[next_entry_index_to_add - 1],
+                                    false,
+                                );
+                            }
+
+                            component::entry::view(
+                                ui,
+                                entries[next_entry_index_to_add],
+                                next_entry_index_to_add == self.active_entry_index,
+                            );
+                            divider_added = false;
+                            header_added = false;
+                            next_entry_index_to_add += 1;
+                            lines_added += 1;
+                        }
+                    });
             });
     }
 }
 
-// TODO: fix styles
-// fn theme(_centerpiece: &Centerpiece) -> iced::Theme {
-//     let settings = settings::Settings::get_or_init();
-//     iced::Theme::custom(
-//         "centerpiece theme".to_string(),
-//         iced::theme::Palette {
-//             background: settings::hexcolor(&settings.color.background),
-//             text: settings::hexcolor(&settings.color.text),
-//             primary: settings::hexcolor(&settings.color.text),
-//             success: settings::hexcolor(&settings.color.text),
-//             danger: settings::hexcolor(&settings.color.text),
-//         },
-//     )
-// }
-
-// fn style(_centerpiece: &Centerpiece, _theme: &iced::Theme) -> iced_layershell::Appearance {
-//     let color_settings = settings::Settings::get_or_init();
-//
-//     iced_layershell::Appearance {
-//         background_color: iced::Color::TRANSPARENT,
-//         text_color: settings::hexcolor(&color_settings.color.text),
-//     }
-// }
-
 fn settings() -> eframe::NativeOptions {
     eframe::NativeOptions {
-        // TODO: figure out how to load custom fonts
-        // default_font: iced::Font {
-        //     family: iced::font::Family::Name("FiraCode Nerd Font"),
-        //     weight: iced::font::Weight::Normal,
-        //     stretch: iced::font::Stretch::Normal,
-        //     style: iced::font::Style::default(),
-        // },
-        // default_text_size: iced::Pixels(crate::REM),
         // layer_settings: iced_layershell::settings::LayerShellSettings {
         //     size: Some((650, 380)),
         //     layer: iced_layershell::reexport::Layer::Top,
         //     anchor: iced_layershell::reexport::Anchor::Top,
         //     keyboard_interactivity: iced_layershell::reexport::KeyboardInteractivity::Exclusive,
         //     margin: (200, 0, 0, 0),
-        //     ..Default::default()
         // },
         viewport: eframe::egui::ViewportBuilder {
             window_level: Some(eframe::egui::WindowLevel::AlwaysOnTop),
+            transparent: Some(true),
             ..Default::default()
         },
         centered: true,
@@ -188,35 +166,7 @@ fn settings() -> eframe::NativeOptions {
     }
 }
 
-// TODO: needs to be fixed
-// fn focus_search_input() -> iced::Task<Message> {
-//     iced::widget::text_input::focus(iced::widget::text_input::Id::new(
-//         component::query_input::SEARCH_INPUT_ID,
-//     ))
-// }
-
 impl Centerpiece {
-    // fn new() -> (Self, iced::Task<Message>) {
-    //     (
-    //         Self {
-    //             query: String::from(""),
-    //             active_entry_index: 0,
-    //             plugins: vec![],
-    //         },
-    //         iced::Task::batch(vec![
-    //             iced::font::load(
-    //                 include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Regular.ttf").as_slice(),
-    //             )
-    //             .map(Message::FontLoaded),
-    //             iced::font::load(
-    //                 include_bytes!("../assets/FiraCode/FiraCodeNerdFont-Light.ttf").as_slice(),
-    //             )
-    //             .map(Message::FontLoaded),
-    //             iced::Task::perform(async {}, move |()| Message::Loaded),
-    //         ]),
-    //     )
-    // }
-
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
         let mut fonts = eframe::egui::FontDefinitions::default();
         fonts.font_data.insert(
@@ -246,10 +196,20 @@ impl Centerpiece {
         cc.egui_ctx
             .all_styles_mut(move |style| style.text_styles = text_styles.clone());
 
-        // Customize egui here with cc.egui_ctx.set_fonts and cc.egui_ctx.set_visuals.
-        // Restore app state using cc.storage (requires the "persistence" feature).
-        // Use the cc.gl (a glow::Context) to create graphics shaders and buffers that you can use
-        // for e.g. egui::PaintCallback.
+        let settings = settings::Settings::get_or_init();
+        cc.egui_ctx.set_visuals_of(
+            eframe::egui::Theme::Dark,
+            eframe::egui::Visuals {
+                override_text_color: Some(settings::hexcolor(&settings.color.text)),
+                panel_fill: eframe::egui::Color32::TRANSPARENT,
+                extreme_bg_color: eframe::egui::Color32::TRANSPARENT,
+                code_bg_color: eframe::egui::Color32::TRANSPARENT,
+                faint_bg_color: eframe::egui::Color32::TRANSPARENT,
+                window_fill: eframe::egui::Color32::TRANSPARENT,
+                ..Default::default()
+            },
+        );
+
         let mut centerpiece = Self::default();
         println!("creating centerpiece");
         centerpiece.launch_plugins();

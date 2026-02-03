@@ -7,12 +7,12 @@ pub fn view(query: &str, add_horizontal_rule: bool) -> iced::Element<'static, cr
         .icon(iced::widget::text_input::Icon {
             font: crate::settings().default_font,
             code_point: '󰍉',
-            size: Some(iced::Pixels(1.3 * crate::REM)),
-            spacing: crate::REM,
+            size: Some(iced::Pixels(1.3 * crate::rem())),
+            spacing: crate::rem(),
             side: iced::widget::text_input::Side::Left,
         })
-        .size(1. * crate::REM)
-        .padding([1.0 * crate::REM, 1.2 * crate::REM])
+        .size(1. * crate::rem())
+        .padding([1.0 * crate::rem(), 1.2 * crate::rem()])
         .style(style),]
     .padding(iced::Padding::default().bottom(1.));
 

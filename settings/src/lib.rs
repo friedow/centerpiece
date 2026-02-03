@@ -181,6 +181,55 @@ impl Default for ColorSettings {
     }
 }
 
+fn default_font_family() -> iced::font::Family {
+    iced::font::Family::Monospace
+}
+
+fn default_font_size() -> f32 {
+    14.0
+}
+
+#[derive(Debug, Deserialize)]
+pub struct FontSettings {
+    #[serde(
+        default = "default_font_family",
+        deserialize_with = "deserialize_font_family"
+    )]
+    pub family: iced::font::Family,
+    #[serde(default = "default_font_size")]
+    pub size: f32,
+}
+
+fn deserialize_font_family<'de, D>(deserializer: D) -> Result<iced::font::Family, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+
+    match s.to_lowercase().as_str() {
+        "monospace" => Ok(iced::font::Family::Monospace),
+        "serif" => Ok(iced::font::Family::Serif),
+        "sans_serif" | "sans-serif" => Ok(iced::font::Family::SansSerif),
+        "cursive" => Ok(iced::font::Family::Cursive),
+        "fantasy" => Ok(iced::font::Family::Fantasy),
+        _ => {
+            // Convert String to &'static str by leaking it
+            // This is appropriate since we only generate one settings struct
+            let static_str = Box::leak(s.into_boxed_str());
+            Ok(iced::font::Family::Name(static_str))
+        }
+    }
+}
+
+impl Default for FontSettings {
+    fn default() -> Self {
+        Self {
+            family: default_font_family(),
+            size: default_font_size(),
+        }
+    }
+}
+
 fn default_commands() -> Vec<Vec<String>> {
     vec![
         vec![
@@ -333,12 +382,20 @@ pub struct PluginSettings {
     pub wifi: WifiPluginSettings,
 }
 
+fn default_scale() -> f64 {
+    1.
+}
+
 #[derive(Debug, Default, Deserialize)]
 pub struct Settings {
+    #[serde(default = "default_scale")]
+    pub scale: f64,
     #[serde(default)]
     pub plugin: PluginSettings,
     #[serde(default)]
     pub color: ColorSettings,
+    #[serde(default)]
+    pub font: FontSettings,
 }
 
 impl Settings {
@@ -372,7 +429,9 @@ impl Settings {
 
         #[allow(deprecated)]
         if settings.color.surface != *"deprecated" {
-            log::warn!("color.surface has been replaced by automatic shading of the background color in cernterpiece version 1.2.0. Please remove this field from your configuration.")
+            log::warn!(
+                "color.surface has been replaced by automatic shading of the background color in cernterpiece version 1.2.0. Please remove this field from your configuration."
+            )
         }
 
         settings

@@ -248,9 +248,14 @@ You can specify alternative configuration locations through:
 1. Use the following config keys to configure centerpiece. These are all config keys including their respective defaults.
 
    ```yml
+   scale: 1.0
    color:
      text: "#ffffff"
      background: "#000000"
+   font:
+     # To list the available fonts on your system, use `fc-list : family | sed 's/,.*$//' | sort | uniq`
+     family: monospace # 'monospace' | 'serif' | 'sans_serif' | 'cursive' | 'fantasy' | 'your-font-name'
+     size: 14
    plugin:
      applications:
        enable: true
@@ -302,9 +307,15 @@ You can specify alternative configuration locations through:
            programs.centerpiece = {
                enable = true;
                config = {
+                   scale = 1.0;
                    color = {
                        text = "#ffffff";
                        background = "#000000";
+                   };
+                   font = {
+                       # To list the available fonts on your system, use `fc-list : family | sed 's/,.*$//' | sort | uniq`
+                       family = "monospace"; # 'monospace' | 'serif' | 'sans_serif' | 'cursive' | 'fantasy' | 'your-font-name'
+                       size = 14;
                    };
                    plugin = {
                        applications = {

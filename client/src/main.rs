@@ -20,7 +20,8 @@ pub fn main() {
         "centerpiece",
         settings(),
         Box::new(|cc| Ok(Box::new(Centerpiece::new(cc)))),
-    ).unwrap_or_else(|_| {
+    )
+    .unwrap_or_else(|_| {
         eprintln!("There was an issue creating the centerpiece window.");
         std::process::exit(1);
     });

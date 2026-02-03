@@ -1,13 +1,13 @@
 use anyhow::Context;
 use async_std::stream::StreamExt;
 use nucleo_matcher::{
-    pattern::{Atom, AtomKind, CaseMatching, Normalization},
     Matcher, Utf32Str,
+    pattern::{Atom, AtomKind, CaseMatching, Normalization},
 };
 use std::cmp::Reverse;
 
-pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>(
-) -> async_std::channel::Receiver<crate::Message> {
+pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>()
+-> async_std::channel::Receiver<crate::Message> {
     let (plugin_channel_out, app_channel_in) = async_std::channel::bounded(100);
 
     async_std::task::spawn(async {

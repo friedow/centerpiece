@@ -1,7 +1,7 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use dbus::blocking::Connection;
-use networkmanager::devices::{Device, Wireless};
 use networkmanager::NetworkManager;
+use networkmanager::devices::{Device, Wireless};
 use std::matches;
 
 use crate::plugin::utils::Plugin;

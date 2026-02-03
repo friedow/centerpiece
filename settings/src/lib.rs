@@ -370,7 +370,9 @@ impl Settings {
 
         #[allow(deprecated)]
         if settings.color.surface != *"deprecated" {
-            log::warn!("color.surface has been replaced by automatic shading of the background color in cernterpiece version 1.2.0. Please remove this field from your configuration.")
+            log::warn!(
+                "color.surface has been replaced by automatic shading of the background color in cernterpiece version 1.2.0. Please remove this field from your configuration."
+            )
         }
 
         settings

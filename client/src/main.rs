@@ -20,7 +20,10 @@ pub fn main() {
         "centerpiece",
         settings(),
         Box::new(|cc| Ok(Box::new(Centerpiece::new(cc)))),
-    );
+    ).unwrap_or_else(|_| {
+        eprintln!("There was an issue creating the centerpiece window.");
+        std::process::exit(1);
+    });
 }
 
 #[derive(Debug, Clone)]
@@ -70,19 +73,7 @@ impl eframe::App for Centerpiece {
                     })
                     .fill(settings::hexcolor(&settings.color.background))
                     .show(ui, |ui| {
-                        let response = ui.add(
-                            eframe::egui::TextEdit::singleline(&mut self.query)
-                                .hint_text("Search")
-                                .lock_focus(true)
-                                .desired_width(f32::INFINITY)
-                                .frame(false)
-                                .margin(eframe::egui::epaint::Marginf {
-                                    left: 1. * crate::REM,
-                                    right: 1. * crate::REM,
-                                    top: 1. * crate::REM,
-                                    bottom: 0.75 * crate::REM,
-                                }),
-                        );
+                        let response = component::query_input::view(ui, &mut self.query);
                         response.request_focus();
                         if response.changed() {
                             self.search();
@@ -113,7 +104,7 @@ impl eframe::App for Centerpiece {
                             }
 
                             if !divider_added && plugin_to_add.is_some() {
-                                component::divider::view(ui);
+                                ui.separator();
                                 divider_added = true;
                                 lines_added += 1;
                                 continue;

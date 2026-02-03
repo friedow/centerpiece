@@ -9,10 +9,8 @@ use std::cmp::Reverse;
 pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>(
 ) -> async_std::channel::Receiver<crate::Message> {
     let (plugin_channel_out, app_channel_in) = async_std::channel::bounded(100);
-    println!("creating plugin thread");
 
     async_std::task::spawn(async {
-        eprintln!("inside plugin thread");
         let mut plugin = PluginType::new();
 
         let main_loop_result = plugin.main(plugin_channel_out).await;
@@ -162,7 +160,6 @@ pub trait Plugin {
             None => plugin_request_future.await,
         };
         if plugin_request_option.is_none() {
-            // TODO: is this handled correctly?
             return Ok(());
         }
         let plugin_request = plugin_request_option.unwrap();

@@ -1,7 +1,7 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use dbus::blocking::Connection;
-use networkmanager::devices::{Device, Wireless};
 use networkmanager::NetworkManager;
+use networkmanager::devices::{Device, Wireless};
 use std::matches;
 
 use crate::plugin::utils::Plugin;
@@ -133,7 +133,7 @@ impl Plugin for WifiPlugin {
     fn activate(
         &mut self,
         entry: crate::model::Entry,
-        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
+        plugin_channel_out: &mut async_std::channel::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
         let command = entry.command.context(format!(
             "Failed to unpack command while activating entry with id '{}'.",

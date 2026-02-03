@@ -1,54 +1,28 @@
-pub fn view(entry: &crate::model::Entry, active: bool) -> iced::Element<'static, crate::Message> {
-    iced::widget::container(
-        iced::widget::container(
-            iced::widget::row![
-                iced::widget::text(clipped_title(entry.title.clone()))
-                    .size(1. * crate::REM)
-                    .width(iced::Length::Fill)
-                    .shaping(iced::widget::text::Shaping::Advanced),
-                iced::widget::text(if active {
-                    entry.action.clone()
-                } else {
-                    "".to_string()
-                })
-                .size(1. * crate::REM)
-            ]
-            .padding(0.5 * crate::REM),
-        )
-        .style(move |theme: &iced::Theme| {
-            if !active {
-                return iced::widget::container::Style::default();
-            };
+pub fn view(ui: &mut eframe::egui::Ui, entry: &crate::model::Entry, active: bool) {
+    let settings = settings::Settings::get_or_init();
+    let stroke_color = if active {
+        settings::hexcolor(&settings.color.text)
+    } else {
+        eframe::egui::Color32::TRANSPARENT
+    };
+    let stroke = eframe::egui::Stroke::new(1., stroke_color);
 
-            let palette = theme.extended_palette();
-            iced::widget::container::Style {
-                border: iced::Border {
-                    color: palette.background.base.text,
-                    width: 1.,
-                    radius: iced::border::Radius::from(0.1 * crate::REM),
+    eframe::egui::Frame::new()
+        .stroke(stroke)
+        .corner_radius(0.1 * crate::REM)
+        .inner_margin(0.5 * crate::REM)
+        .outer_margin(eframe::egui::vec2(1. * crate::REM, 0.))
+        .show(ui, |ui| {
+            eframe::egui::containers::Sides::new().show(
+                ui,
+                |ui| {
+                    ui.add(eframe::egui::Label::new(entry.title.clone()).truncate());
                 },
-                ..Default::default()
-            }
-        }),
-    )
-    // We're fixing the height here to unify it
-    // with the height of plugin headers for a smooth
-    // scrolling experience
-    .height(crate::ENTRY_HEIGHT)
-    .padding([0., 0.75 * crate::REM])
-    .into()
-}
-
-fn clipped_title(title: String) -> String {
-    if title.char_indices().count() <= 57 {
-        return title;
-    }
-
-    let mut clipped_title: String = title
-        .char_indices()
-        .map(|(_, character)| character)
-        .take(57)
-        .collect();
-    clipped_title.push_str("...");
-    clipped_title
+                |ui| {
+                    if active {
+                        ui.label(entry.action.clone());
+                    }
+                },
+            );
+        });
 }

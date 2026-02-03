@@ -9,6 +9,5 @@ anyhow = "1.0.86"
 
 serde = { version = "1.0.210", features = ["derive"] }
 serde_yaml = "0.9.34"
-iced = { version = "0.13.1", features = ["svg"] }
-hex_color = "3"
+egui = { version = "0.31.1", features = ["color-hex"] }
 clap = { version = "4.5.18", features = ["derive", "env"] }

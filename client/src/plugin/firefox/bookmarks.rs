@@ -43,7 +43,7 @@ impl Plugin for BookmarksPlugin {
         let connection = sqlite::open(bookmarks_cache_file_path)?;
         let query = "
             SELECT moz_bookmarks.title, moz_places.url
-            FROM 
+            FROM
         	    moz_bookmarks
             	LEFT JOIN moz_places
                 ON moz_bookmarks.fk = moz_places.id
@@ -78,7 +78,7 @@ impl Plugin for BookmarksPlugin {
     fn activate(
         &mut self,
         entry: crate::model::Entry,
-        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
+        plugin_channel_out: &mut async_std::channel::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
         std::process::Command::new("firefox")
             .arg(&entry.id)

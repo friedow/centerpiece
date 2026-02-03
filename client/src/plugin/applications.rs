@@ -180,7 +180,7 @@ impl Plugin for ApplicationsPlugin {
     fn activate(
         &mut self,
         entry: crate::model::Entry,
-        plugin_channel_out: &mut iced::futures::channel::mpsc::Sender<crate::Message>,
+        plugin_channel_out: &mut async_std::channel::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
         let command = entry.command.context(format!(
             "Failed to unpack command while activating entry with id '{}'.",

@@ -7,3 +7,9 @@ members = ["client", "services/index-git-repositories", "settings"]
 
 [workspace.package]
 version = "1.1.0"
+
+[profile.release]
+codegen-units = 1
+lto = true
+panic = "abort"
+strip = true

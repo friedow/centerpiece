@@ -10,7 +10,7 @@ edition = "2021"
 [dependencies]
 # general
 settings = { path = "../settings" }
-anyhow = { version = "1.0.96", features = ["backtrace"] }
+anyhow = { version = "1.0.100", features = ["backtrace"] }
 clap = { version = "4.5.21", features = ["derive", "env"] }
 log = { version = "0.4.22", features = ["kv_unstable_serde"] }
 simple_logger = { version = "5.0.0", features = [

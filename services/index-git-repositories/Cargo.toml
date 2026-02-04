@@ -1,7 +1,7 @@
 [package]
 name = "index-git-repositories"
 version.workspace = true
-edition = "2021"
+edition.workspace = true
 
 [dependencies]
 settings = { path = "../../settings" }

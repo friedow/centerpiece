@@ -1,5 +1,16 @@
 use crate::plugin::utils::Plugin;
 use anyhow::Context;
+use std::sync::OnceLock;
+
+fn current_desktop() -> &'static str {
+    static DESKTOP: OnceLock<String> = OnceLock::new();
+    DESKTOP.get_or_init(|| std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_else(|_| "sway".into()))
+}
+
+fn locale() -> &'static str {
+    static LOCALE: OnceLock<String> = OnceLock::new();
+    LOCALE.get_or_init(|| std::env::var("LANG").unwrap_or_else(|_| "en_US".into()))
+}
 
 pub struct ApplicationsPlugin {
     entries: Vec<crate::model::Entry>,
@@ -38,9 +49,8 @@ fn to_entry(
         cmd.insert(1, "-e".into());
     }
 
-    let locale = std::env::var("LANG").unwrap_or(String::from("en_US"));
     let mut meta = desktop_entry
-        .keywords(&[&locale])
+        .keywords(&[locale()])
         .map(|kws| kws.join(" "))
         .unwrap_or_default();
     meta.push_str(" Applications Apps");
@@ -74,19 +84,20 @@ fn is_visible(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> bool {
         }
     }
 
-    let desktop = std::env::var("XDG_CURRENT_DESKTOP").unwrap_or(String::from("sway"));
+    let desktop = current_desktop();
     // filter entries where NotShowIn == current desktop
     if let Some(not_show_in) = desktop_entry.desktop_entry("NotShowIn") {
-        let not_show_in_desktops = not_show_in.to_ascii_lowercase();
-
-        if not_show_in_desktops.split(';').any(|d| d == desktop) {
+        if not_show_in
+            .split(';')
+            .any(|d| d.eq_ignore_ascii_case(desktop))
+        {
             return false;
         }
     }
 
     // filter entries where OnlyShowIn != current desktop
     if let Some(only_show_in) = desktop_entry.only_show_in() {
-        if !only_show_in.contains(&desktop.as_str()) {
+        if !only_show_in.iter().any(|d| d.eq_ignore_ascii_case(desktop)) {
             return false;
         }
     }
@@ -110,9 +121,8 @@ fn terminal_command(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> 
 }
 
 fn name(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> String {
-    let locale = std::env::var("LANG").unwrap_or(String::from("en_US"));
     desktop_entry
-        .name(&[&locale])
+        .name(&[locale()])
         .unwrap_or_default()
         .to_string()
 }

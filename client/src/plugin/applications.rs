@@ -86,10 +86,7 @@ fn is_visible(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> bool {
 
     // filter entries where OnlyShowIn != current desktop
     if let Some(only_show_in) = desktop_entry.only_show_in() {
-        if !only_show_in
-            .iter()
-            .any(|d| d.eq_ignore_ascii_case(&desktop))
-        {
+        if !only_show_in.contains(&desktop.as_str()) {
             return false;
         }
     }

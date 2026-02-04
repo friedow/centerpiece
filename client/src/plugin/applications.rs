@@ -38,10 +38,11 @@ fn to_entry(
         cmd.insert(1, "-e".into());
     }
 
+    let locale = std::env::var("LANG").unwrap_or(String::from("en_US"));
     let mut meta = desktop_entry
-        .keywords()
-        .unwrap_or(std::borrow::Cow::from(""))
-        .replace(';', " ");
+        .keywords(&[&locale])
+        .map(|kws| kws.join(" "))
+        .unwrap_or_default();
     meta.push_str(" Applications Apps");
 
     Some(crate::model::Entry {
@@ -85,9 +86,10 @@ fn is_visible(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> bool {
 
     // filter entries where OnlyShowIn != current desktop
     if let Some(only_show_in) = desktop_entry.only_show_in() {
-        let only_show_in_desktops = only_show_in.to_ascii_lowercase();
-
-        if !only_show_in_desktops.split(';').all(|d| d != desktop) {
+        if !only_show_in
+            .iter()
+            .any(|d| d.eq_ignore_ascii_case(&desktop))
+        {
             return false;
         }
     }
@@ -98,22 +100,22 @@ fn is_visible(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> bool {
 fn terminal_command(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> Option<String> {
     if !desktop_entry
         .categories()?
-        .split(';')
-        .any(|category| category == "TerminalEmulator")
+        .iter()
+        .any(|category| *category == "TerminalEmulator")
     {
         return None;
     }
-    return desktop_entry
+    desktop_entry
         .exec()?
         .split_ascii_whitespace()
         .next()
-        .map(String::from);
+        .map(String::from)
 }
 
 fn name(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> String {
     let locale = std::env::var("LANG").unwrap_or(String::from("en_US"));
     desktop_entry
-        .name(Some(&locale))
+        .name(&[&locale])
         .unwrap_or_default()
         .to_string()
 }
@@ -157,8 +159,9 @@ impl Plugin for ApplicationsPlugin {
 
         let mut desktop_entries: Vec<freedesktop_desktop_entry::DesktopEntry> = bytes_collection
             .iter()
-            .filter_map(|(bytes, path)| {
-                freedesktop_desktop_entry::DesktopEntry::decode(bytes, path).ok()
+            .filter_map(|(path, content)| {
+                freedesktop_desktop_entry::DesktopEntry::from_str(path, content, None::<&[&str]>)
+                    .ok()
             })
             .collect();
 

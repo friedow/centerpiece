@@ -31,7 +31,7 @@ eframe = { version = "0.31.1", default-features = false, features = [
 ] }
 
 # plugins
-async-trait = "0.1.83"
+async-trait = "0.1.89"
 async-std = "1.12.0"
 
 # reading index files

@@ -32,7 +32,7 @@ impl Plugin for DisksPlugin {
     }
 
     fn update_entries(&mut self) -> anyhow::Result<()> {
-        self.disks.refresh_list();
+        self.disks.refresh(true);
         self.entries.clear();
 
         for disk in &self.disks {

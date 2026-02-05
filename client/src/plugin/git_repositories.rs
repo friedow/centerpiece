@@ -68,7 +68,7 @@ impl Plugin for GitRepositoriesPlugin {
     fn activate(
         &mut self,
         entry: crate::model::Entry,
-        plugin_channel_out: &mut async_std::channel::Sender<crate::Message>,
+        plugin_channel_out: &mut async_channel::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
         for command in self.settings.plugin.git_repositories.commands.clone() {
             let parsed_command: Vec<String> = command

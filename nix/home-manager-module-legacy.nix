@@ -14,6 +14,7 @@ in
     enable = lib.mkEnableOption (lib.mdDoc "Centerpiece");
 
     config = {
+
       color = {
         text = lib.mkOption {
           default = "#ffffff";
@@ -225,6 +226,7 @@ in
   };
 
   config = lib.mkMerge [
+    {warnings = ["This home-manager module is deprecated."];}
     (lib.mkIf cfg.enable { home.packages = [ centerpiece ]; })
 
     (lib.mkIf cfg.enable {

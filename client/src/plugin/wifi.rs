@@ -133,7 +133,7 @@ impl Plugin for WifiPlugin {
     fn activate(
         &mut self,
         entry: crate::model::Entry,
-        plugin_channel_out: &mut async_std::channel::Sender<crate::Message>,
+        plugin_channel_out: &mut async_channel::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
         let command = entry.command.context(format!(
             "Failed to unpack command while activating entry with id '{}'.",

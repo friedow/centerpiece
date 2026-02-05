@@ -4,7 +4,7 @@ pub struct Plugin {
     pub priority: u32,
     pub title: String,
     pub entries: Vec<Entry>,
-    pub app_channel_out: async_std::channel::Sender<PluginRequest>,
+    pub app_channel_out: async_channel::Sender<PluginRequest>,
 }
 
 #[derive(Debug, Clone, Ord, PartialOrd)]

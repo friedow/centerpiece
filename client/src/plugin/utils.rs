@@ -1,5 +1,4 @@
 use anyhow::Context;
-use async_std::stream::StreamExt;
 use nucleo_matcher::{
     Matcher, Utf32Str,
     pattern::{Atom, AtomKind, CaseMatching, Normalization},
@@ -7,20 +6,22 @@ use nucleo_matcher::{
 use std::cmp::Reverse;
 
 pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>()
--> async_std::channel::Receiver<crate::Message> {
-    let (plugin_channel_out, app_channel_in) = async_std::channel::bounded(100);
+-> async_channel::Receiver<crate::Message> {
+    let (plugin_channel_out, app_channel_in) = async_channel::bounded(100);
 
-    async_std::task::spawn(async {
-        let mut plugin = PluginType::new();
+    std::thread::spawn(move || {
+        smol::block_on(async {
+            let mut plugin = PluginType::new();
 
-        let main_loop_result = plugin.main(plugin_channel_out).await;
-        if let Err(error) = main_loop_result {
-            log::error!(
-                target: PluginType::id(),
-                "{:?}", error,
-            );
-            panic!();
-        }
+            let main_loop_result = plugin.main(plugin_channel_out).await;
+            if let Err(error) = main_loop_result {
+                log::error!(
+                    target: PluginType::id(),
+                    "{:?}", error,
+                );
+                panic!();
+            }
+        });
     });
 
     return app_channel_in;
@@ -101,7 +102,7 @@ pub trait Plugin {
 
     fn plugin(
         &self,
-        app_channel_out: &mut async_std::channel::Sender<crate::model::PluginRequest>,
+        app_channel_out: &mut async_channel::Sender<crate::model::PluginRequest>,
     ) -> crate::model::Plugin {
         crate::model::Plugin {
             id: String::from(Self::id()),
@@ -114,11 +115,11 @@ pub trait Plugin {
 
     async fn main(
         &mut self,
-        mut plugin_channel_out: async_std::channel::Sender<crate::Message>,
+        mut plugin_channel_out: async_channel::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
         self.update_entries()?;
 
-        let (mut app_channel_out, mut plugin_channel_in) = async_std::channel::bounded(100);
+        let (mut app_channel_out, mut plugin_channel_in) = async_channel::bounded(100);
         self.register_plugin(&mut plugin_channel_out, &mut app_channel_out)?;
         let mut last_query = String::from("");
 
@@ -134,8 +135,8 @@ pub trait Plugin {
 
     fn register_plugin(
         &mut self,
-        plugin_channel_out: &mut async_std::channel::Sender<crate::Message>,
-        app_channel_out: &mut async_std::channel::Sender<crate::model::PluginRequest>,
+        plugin_channel_out: &mut async_channel::Sender<crate::Message>,
+        app_channel_out: &mut async_channel::Sender<crate::model::PluginRequest>,
     ) -> anyhow::Result<()> {
         plugin_channel_out
             .send_blocking(crate::Message::RegisterPlugin(self.plugin(app_channel_out)))
@@ -146,18 +147,19 @@ pub trait Plugin {
 
     async fn update(
         &mut self,
-        plugin_channel_out: &mut async_std::channel::Sender<crate::Message>,
-        plugin_channel_in: &mut async_std::channel::Receiver<crate::model::PluginRequest>,
+        plugin_channel_out: &mut async_channel::Sender<crate::Message>,
+        plugin_channel_in: &mut async_channel::Receiver<crate::model::PluginRequest>,
         last_query: &mut String,
     ) -> anyhow::Result<()> {
-        let plugin_request_future = plugin_channel_in.next();
         let plugin_request_option = match Self::update_timeout() {
             Some(update_timeout) => {
-                async_std::future::timeout(update_timeout, plugin_request_future)
-                    .await
-                    .unwrap_or(Some(crate::model::PluginRequest::Timeout))
+                futures_lite::future::or(async { plugin_channel_in.recv().await.ok() }, async {
+                    smol::Timer::after(update_timeout).await;
+                    Some(crate::model::PluginRequest::Timeout)
+                })
+                .await
             }
-            None => plugin_request_future.await,
+            None => plugin_channel_in.recv().await.ok(),
         };
         if plugin_request_option.is_none() {
             return Ok(());
@@ -190,7 +192,7 @@ pub trait Plugin {
     fn search(
         &mut self,
         query: &str,
-        plugin_channel_out: &mut async_std::channel::Sender<crate::Message>,
+        plugin_channel_out: &mut async_channel::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
         let filtered_entries = fuzzy_match(query, self.entries());
 
@@ -210,7 +212,7 @@ pub trait Plugin {
     fn activate(
         &mut self,
         _entry: crate::model::Entry,
-        _plugin_channel_out: &mut async_std::channel::Sender<crate::Message>,
+        _plugin_channel_out: &mut async_channel::Sender<crate::Message>,
     ) -> anyhow::Result<()> {
         Ok(())
     }

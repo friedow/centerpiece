@@ -24,7 +24,7 @@ pub fn spawn<PluginType: Plugin + std::marker::Send + 'static>()
         });
     });
 
-    return app_channel_in;
+    app_channel_in
 }
 
 /// Fuzzy matches against the title of the entry, falling back to substring matching

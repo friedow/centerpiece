@@ -111,8 +111,8 @@ impl eframe::App for Centerpiece {
                                 continue;
                             }
 
-                            if !header_added && plugin_to_add.is_some() {
-                                component::plugin_header::view(ui, plugin_to_add.unwrap());
+                            if !header_added && let Some(plugin) = plugin_to_add {
+                                component::plugin_header::view(ui, plugin);
                                 header_added = true;
                                 lines_added += 1;
                                 continue;
@@ -198,7 +198,7 @@ impl Centerpiece {
         let mut centerpiece = Self::default();
         println!("creating centerpiece");
         centerpiece.launch_plugins();
-        return centerpiece;
+        centerpiece
     }
 
     fn launch_plugins(self: &mut Centerpiece) {
@@ -343,11 +343,10 @@ impl Centerpiece {
     }
 
     fn entries(&self) -> Vec<&model::Entry> {
-        return self
-            .plugins
+        self.plugins
             .iter()
             .flat_map(|plugin| &plugin.entries)
-            .collect();
+            .collect()
     }
 
     fn active_entry_id(&self) -> Option<&String> {
@@ -434,9 +433,11 @@ impl Centerpiece {
     }
 
     fn register_plugin(&mut self, plugin: crate::model::Plugin) {
-        let _ = plugin
-            .app_channel_out
-            .send(crate::model::PluginRequest::Search(self.query.clone()));
+        drop(
+            plugin
+                .app_channel_out
+                .send(crate::model::PluginRequest::Search(self.query.clone())),
+        );
         self.plugins.push(plugin);
         self.plugins.sort_by(|a, b| b.priority.cmp(&a.priority));
     }

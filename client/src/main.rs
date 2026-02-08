@@ -1,5 +1,3 @@
-use std::process::exit;
-
 use clap::Parser;
 use eframe::egui::{self, Separator};
 
@@ -303,6 +301,11 @@ impl Centerpiece {
         }
     }
 
+    fn exit(&self) -> ! {
+        lock::LockFile::unlock();
+        std::process::exit(0);
+    }
+
     fn handle_input(&mut self, ctx: &eframe::egui::Context) {
         if ctx.input(|i| i.key_pressed(eframe::egui::Key::ArrowUp)) {
             self.select_previous_entry();
@@ -314,8 +317,7 @@ impl Centerpiece {
             self.activate_selected_entry();
         }
         if ctx.input(|i| i.key_pressed(eframe::egui::Key::Escape)) {
-            lock::LockFile::unlock();
-            exit(0);
+            self.exit();
         }
 
         if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(eframe::egui::Key::J)) {
@@ -342,8 +344,7 @@ impl Centerpiece {
                 }
 
                 Message::Exit => {
-                    lock::LockFile::unlock();
-                    exit(0);
+                    self.exit();
                 }
             }
         }

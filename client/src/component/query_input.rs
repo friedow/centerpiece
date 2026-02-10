@@ -1,5 +1,5 @@
 pub fn view(ui: &mut eframe::egui::Ui, query: &mut String) -> eframe::egui::Response {
-    return ui.add(
+    ui.add(
         eframe::egui::TextEdit::singleline(query)
             .hint_text("Search")
             .lock_focus(true)
@@ -11,5 +11,5 @@ pub fn view(ui: &mut eframe::egui::Ui, query: &mut String) -> eframe::egui::Resp
                 top: 1. * crate::REM,
                 bottom: 0.75 * crate::REM,
             }),
-    );
+    )
 }

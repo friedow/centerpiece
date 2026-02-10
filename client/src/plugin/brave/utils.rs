@@ -79,11 +79,11 @@ impl Bookmark {
                 if exclude_folders.contains(&folder.name) {
                     return vec![];
                 }
-                return folder
+                folder
                     .children
                     .iter()
                     .flat_map(|b| b.get_bookmarks_recursive(exclude_folders))
-                    .collect();
+                    .collect()
             }
 
             Bookmark::Url(url_bookmark) => vec![url_bookmark],

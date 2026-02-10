@@ -78,39 +78,34 @@ fn is_visible(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> bool {
     }
 
     // filter entries where Exec == false
-    if let Some(exec) = desktop_entry.exec() {
-        if exec.to_ascii_lowercase() == "false" {
-            return false;
-        }
+    if let Some(exec) = desktop_entry.exec()
+        && exec.eq_ignore_ascii_case("false")
+    {
+        return false;
     }
 
     let desktop = current_desktop();
     // filter entries where NotShowIn == current desktop
-    if let Some(not_show_in) = desktop_entry.desktop_entry("NotShowIn") {
-        if not_show_in
+    if let Some(not_show_in) = desktop_entry.desktop_entry("NotShowIn")
+        && not_show_in
             .split(';')
             .any(|d| d.eq_ignore_ascii_case(desktop))
-        {
-            return false;
-        }
+    {
+        return false;
     }
 
     // filter entries where OnlyShowIn != current desktop
-    if let Some(only_show_in) = desktop_entry.only_show_in() {
-        if !only_show_in.iter().any(|d| d.eq_ignore_ascii_case(desktop)) {
-            return false;
-        }
+    if let Some(only_show_in) = desktop_entry.only_show_in()
+        && !only_show_in.iter().any(|d| d.eq_ignore_ascii_case(desktop))
+    {
+        return false;
     }
 
     true
 }
 
 fn terminal_command(desktop_entry: &freedesktop_desktop_entry::DesktopEntry) -> Option<String> {
-    if !desktop_entry
-        .categories()?
-        .iter()
-        .any(|category| *category == "TerminalEmulator")
-    {
+    if !desktop_entry.categories()?.contains(&"TerminalEmulator") {
         return None;
     }
     desktop_entry

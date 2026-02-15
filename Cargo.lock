@@ -512,6 +512,7 @@ dependencies = [
  "dbus",
  "eframe",
  "freedesktop-desktop-entry",
+ "libc",
  "log",
  "networkmanager",
  "nucleo-matcher",

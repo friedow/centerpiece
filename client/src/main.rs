@@ -15,7 +15,7 @@ pub fn main() {
 
     simple_logger::init_with_level(log::Level::Info).unwrap();
 
-    let _lock = lock::LockFile::run_exclusive();
+    let _lock = lock::LockFile::acquire();
 
     eframe::run_native(
         "centerpiece",
@@ -301,8 +301,8 @@ impl Centerpiece {
         }
     }
 
-    fn exit(&self) -> ! {
-        lock::LockFile::unlock();
+    fn exit() -> ! {
+        lock::LockFile::cleanup();
         std::process::exit(0);
     }
 
@@ -317,7 +317,7 @@ impl Centerpiece {
             self.activate_selected_entry();
         }
         if ctx.input(|i| i.key_pressed(eframe::egui::Key::Escape)) {
-            self.exit();
+            Self::exit();
         }
 
         if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(eframe::egui::Key::J)) {
@@ -344,7 +344,7 @@ impl Centerpiece {
                 }
 
                 Message::Exit => {
-                    self.exit();
+                    Self::exit();
                 }
             }
         }

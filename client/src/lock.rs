@@ -1,140 +1,88 @@
 use std::env;
-use std::fmt;
-use std::fs::File;
-use std::fs::TryLockError;
+use std::fs::{File, TryLockError};
+use std::io::{Read, Seek, Write};
 use std::path::{Path, PathBuf};
 
 const LOCK_FILE_NAME: &str = "centerpiece.lock";
-const XDG_RUNTIME_DIR_ENV: &str = "XDG_RUNTIME_DIR";
 
-#[derive(Debug)]
-pub enum LockFileError {
-    AlreadyLocked(PathBuf),
-    IoError(std::io::Error),
-    UnlockError(PathBuf, std::io::Error),
-}
-
-type LockFileResult<T> = Result<T, LockFileError>;
-
-impl fmt::Display for LockFileError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let display_path = |path: &PathBuf| path.to_string_lossy().to_string();
-        match self {
-            LockFileError::AlreadyLocked(path) => {
-                write!(
-                    f,
-                    "Another instance is already running (lock: {})\n\
-                    If you think this is an error, please remove the lockfile manually",
-                    display_path(path)
-                )
-            }
-            LockFileError::IoError(err) => write!(f, "IoError: {}", err),
-            LockFileError::UnlockError(path, err) => {
-                write!(
-                    f,
-                    "Failed to remove the lockfile: {} - IoError: {}",
-                    display_path(path),
-                    err
-                )
-            }
-        }
-    }
-}
-
-impl From<std::io::Error> for LockFileError {
-    fn from(err: std::io::Error) -> Self {
-        LockFileError::IoError(err)
-    }
-}
-
-fn get_xdg_runtime_dir() -> Option<String> {
-    env::var(XDG_RUNTIME_DIR_ENV).ok()
-}
-
-#[derive(Debug)]
 pub struct LockFile {
-    path: PathBuf,
-    file: Option<File>,
+    _file: File,
 }
 
 impl LockFile {
-    fn new() -> Option<Self> {
-        Some(Self {
-            path: Self::get_lock_file_path()?,
-            file: None,
-        })
-    }
-
-    fn path(&self) -> &Path {
-        self.path.as_ref()
-    }
-
-    fn path_buf(&self) -> PathBuf {
-        self.path().to_path_buf()
-    }
-
-    fn get_lock_file_path() -> Option<PathBuf> {
-        let xdg_runtime_dir = get_xdg_runtime_dir()?;
-        Some(Path::new(&xdg_runtime_dir).join(LOCK_FILE_NAME))
-    }
-
-    fn try_lock(&mut self) -> LockFileResult<()> {
-        let file = std::fs::File::options()
-            .write(true)
-            .create(true)
-            .truncate(false)
-            .open(self.path())?;
+    pub fn acquire() -> Option<Self> {
+        let path = lock_file_path()?;
+        let mut file = open_lock_file(&path)?;
 
         match file.try_lock() {
             Ok(()) => {
-                self.file = Some(file);
-                Ok(())
+                write_pid(&mut file);
+                log::info!("Acquired exclusive lock");
+                Some(Self { _file: file })
             }
-            Err(TryLockError::WouldBlock) => Err(LockFileError::AlreadyLocked(self.path_buf())),
-            Err(TryLockError::Error(e)) => Err(LockFileError::IoError(e)),
-        }
-    }
-
-    fn remove_lockfile() -> LockFileResult<()> {
-        if let Some(lock_file) = Self::new() {
-            std::fs::remove_file(lock_file.path())
-                .map_err(|err| LockFileError::UnlockError(lock_file.path_buf(), err))?
-        }
-        Ok(())
-    }
-
-    pub fn unlock() {
-        if let Err(err) = Self::remove_lockfile() {
-            log::error!("{err}");
-        }
-    }
-
-    pub fn acquire_exclusive_lock() -> LockFileResult<Self> {
-        match Self::new() {
-            Some(mut lock_file) => {
-                lock_file.try_lock()?;
-                Ok(lock_file)
+            Err(TryLockError::WouldBlock) => {
+                kill_existing_instance(&mut file);
+                // Blocks until the old process exits and releases the lock
+                file.lock().ok()?;
+                write_pid(&mut file);
+                log::info!("Acquired exclusive lock after killing previous instance");
+                Some(Self { _file: file })
             }
-            None => {
-                log::warn!("XDG_RUNTIME_DIR not found, running without file lock");
-                Err(LockFileError::IoError(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "XDG_RUNTIME_DIR environment variable not set",
-                )))
+            Err(TryLockError::Error(e)) => {
+                log::error!("Failed to acquire lock: {e}");
+                None
             }
         }
     }
 
-    pub fn run_exclusive() -> Self {
-        match Self::acquire_exclusive_lock() {
-            Ok(lock_file) => {
-                log::info!("Successfully acquired exclusive lock");
-                lock_file
-            }
-            Err(err) => {
-                log::warn!("{err}");
-                std::process::exit(0);
-            }
+    pub fn cleanup() {
+        if let Some(path) = lock_file_path() {
+            let _ = std::fs::remove_file(path);
         }
+    }
+}
+
+fn lock_file_path() -> Option<PathBuf> {
+    let dir = env::var("XDG_RUNTIME_DIR").ok();
+    if dir.is_none() {
+        log::warn!("XDG_RUNTIME_DIR not set, running without file lock");
+    }
+    Some(Path::new(&dir?).join(LOCK_FILE_NAME))
+}
+
+fn open_lock_file(path: &Path) -> Option<File> {
+    File::options()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(path)
+        .map_err(|e| log::error!("Failed to open lock file: {e}"))
+        .ok()
+}
+
+fn write_pid(file: &mut File) {
+    let _ = file.set_len(0);
+    let _ = file.seek(std::io::SeekFrom::Start(0));
+    let _ = write!(file, "{}", std::process::id());
+    let _ = file.flush();
+}
+
+fn read_pid(file: &mut File) -> Option<u32> {
+    let mut contents = String::new();
+    file.seek(std::io::SeekFrom::Start(0)).ok()?;
+    file.read_to_string(&mut contents).ok()?;
+    contents.trim().parse().ok()
+}
+
+fn kill_existing_instance(file: &mut File) {
+    let Some(pid) = read_pid(file) else {
+        log::warn!("Lock held but no PID in lock file");
+        return;
+    };
+    log::info!("Killing existing instance with PID {pid}");
+    // SAFETY: sending SIGTERM to a known PID
+    unsafe {
+        libc::kill(pid as i32, libc::SIGTERM);
     }
 }

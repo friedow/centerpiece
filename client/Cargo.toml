@@ -31,7 +31,6 @@ eframe = { version = "0.31.1", default-features = false, features = [
 ] }
 
 # plugins
-async-trait = "0.1.89"
 smol = "2"
 async-channel = "2"
 futures-lite = "2"

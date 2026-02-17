@@ -25,10 +25,9 @@ serde = { version = "1.0.217", features = ["derive"] }
 serde_yaml = "0.9.34"
 
 # application window
-eframe = { version = "0.31.1", default-features = false, features = [
-  "glow",
-  "wayland",
-] }
+egui = { version = "0.33.3", features = ["color-hex"] }
+wayapp = "0.2.1"
+smithay-client-toolkit = "0.20.0"
 
 # plugins
 async-trait = "0.1.89"

@@ -1,11 +1,13 @@
 use std::process::exit;
 
 use clap::Parser;
-use eframe::egui::{self, Separator};
+use egui::{self, Separator};
 
 mod component;
 mod model;
 mod plugin;
+
+use smithay_client_toolkit::{reexports::client::protocol::wl_region::WlRegion, shell::WaylandSurface};
 
 pub fn main() {
     let args = settings::cli::CliArgs::parse();
@@ -16,15 +18,47 @@ pub fn main() {
 
     simple_logger::init_with_level(log::Level::Info).unwrap();
 
-    eframe::run_native(
-        "centerpiece",
-        settings(),
-        Box::new(|cc| Ok(Box::new(Centerpiece::new(cc)))),
-    )
-    .unwrap_or_else(|_| {
-        eprintln!("There was an issue creating the centerpiece window.");
-        std::process::exit(1);
+    // Create channel for external events
+    let (tx, rx) = std::sync::mpsc::channel::<AppEvent>();
+
+    let mut app = wayapp::Application::new(move |t| {
+        let _ = tx.send(AppEvent::WaylandDispatch(t));
     });
+
+    // Example layer surface --------------------------
+    let layer_surface = app.layer_shell.create_layer_surface(
+        &app.qh,
+        app.compositor_state.create_surface(&app.qh),
+        smithay_client_toolkit::shell::wlr_layer::Layer::Top,
+        Some("centerpiece"),
+        None,
+    );
+    layer_surface.set_keyboard_interactivity(smithay_client_toolkit::shell::wlr_layer::KeyboardInteractivity::Exclusive);
+    layer_surface.set_margin(0, 0, 0, 0);
+    layer_surface.set_size(800, 600);
+    layer_surface.commit();
+
+    let mut my_app = Centerpiece::new(&layer_surface);
+    let mut egui_surface = wayapp::EguiSurfaceState::new(&app, &layer_surface, 800, 600);
+
+    // Run the Wayland event loop
+    app.run_dispatcher();
+
+    loop {
+        if let Ok(event) = rx.recv() {
+            match event {
+                AppEvent::WaylandDispatch(token) => {
+                    let events = app.dispatch_pending(token);
+                    egui_surface.handle_events(&mut app, &events, &mut |ctx| my_app.update(ctx));
+                } // Handle other events here
+            }
+        }
+    }
+}
+
+enum AppEvent {
+    WaylandDispatch(wayapp::DispatchToken),
+    // Other events can be added here
 }
 
 #[derive(Debug, Clone)]
@@ -42,159 +76,8 @@ struct Centerpiece {
     plugin_channels: Vec<async_channel::Receiver<Message>>,
 }
 
-impl eframe::App for Centerpiece {
-    fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
-        egui::Rgba::TRANSPARENT.to_array()
-    }
-
-    fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
-        self.handle_input(ctx);
-
-        let mut messages = vec![];
-
-        for plugin_channel in &self.plugin_channels {
-            let message_result = plugin_channel.try_recv();
-            if message_result.is_err() {
-                continue;
-            }
-            messages.push(message_result.unwrap());
-        }
-
-        self.handle_messages(messages);
-
-        let settings = settings::Settings::get_or_init();
-
-        eframe::egui::CentralPanel::default()
-            .frame(eframe::egui::Frame::new())
-            .show(ctx, |ui| {
-                eframe::egui::Frame::new()
-                    .inner_margin(eframe::egui::epaint::Marginf {
-                        bottom: 1. * crate::REM,
-                        ..Default::default()
-                    })
-                    .fill(settings::hexcolor(&settings.color.background))
-                    .show(ui, |ui| {
-                        let response = component::query_input::view(ui, &mut self.query);
-                        response.request_focus();
-                        if response.changed() {
-                            self.search();
-                        }
-
-                        let entries = self.entries();
-                        if !entries.is_empty() {
-                            ui.add(Separator::default().spacing(0.));
-                        }
-
-                        let mut divider_added = true;
-                        let mut header_added = false;
-                        let mut next_entry_index_to_add = self.active_entry_index;
-                        let mut lines_added = 0;
-
-                        while ui.available_height() > 0. {
-                            if next_entry_index_to_add >= entries.len() {
-                                break;
-                            }
-
-                            let mut plugin_to_add = None;
-                            let mut last_plugin_start_index = 0;
-                            for plugin in self.plugins.iter() {
-                                if last_plugin_start_index == next_entry_index_to_add {
-                                    plugin_to_add = Some(plugin);
-                                }
-                                last_plugin_start_index += plugin.entries.len();
-                            }
-
-                            if !divider_added && plugin_to_add.is_some() {
-                                ui.separator();
-                                divider_added = true;
-                                lines_added += 1;
-                                continue;
-                            }
-
-                            if !header_added && let Some(plugin) = plugin_to_add {
-                                component::plugin_header::view(ui, plugin);
-                                header_added = true;
-                                lines_added += 1;
-                                continue;
-                            } else if lines_added == 0 {
-                                component::entry::view(
-                                    ui,
-                                    entries[next_entry_index_to_add - 1],
-                                    false,
-                                );
-                            }
-
-                            component::entry::view(
-                                ui,
-                                entries[next_entry_index_to_add],
-                                next_entry_index_to_add == self.active_entry_index,
-                            );
-                            divider_added = false;
-                            header_added = false;
-                            next_entry_index_to_add += 1;
-                            lines_added += 1;
-                        }
-                    });
-            });
-    }
-}
-
-fn settings() -> eframe::NativeOptions {
-    eframe::NativeOptions {
-        viewport: eframe::egui::ViewportBuilder {
-            window_level: Some(eframe::egui::WindowLevel::AlwaysOnTop),
-            transparent: Some(true),
-            ..Default::default()
-        },
-        centered: true,
-        ..Default::default()
-    }
-}
-
 impl Centerpiece {
-    fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        let mut fonts = eframe::egui::FontDefinitions::default();
-        fonts.font_data.insert(
-            "NerdFontSymbols".to_owned(),
-            std::sync::Arc::new(eframe::egui::FontData::from_static(include_bytes!(
-                "../assets/SymbolsNerdFontMono-Regular.ttf"
-            ))),
-        );
-        fonts
-            .families
-            .entry(eframe::egui::FontFamily::Monospace)
-            .or_default()
-            .push("NerdFontSymbols".to_owned());
-        cc.egui_ctx.set_fonts(fonts);
-
-        let text_styles: std::collections::BTreeMap<_, _> = [
-            (
-                eframe::egui::TextStyle::Heading,
-                eframe::egui::FontId::new(0.75 * crate::REM, eframe::egui::FontFamily::Monospace),
-            ),
-            (
-                eframe::egui::TextStyle::Body,
-                eframe::egui::FontId::new(1. * crate::REM, eframe::egui::FontFamily::Monospace),
-            ),
-        ]
-        .into();
-        cc.egui_ctx
-            .all_styles_mut(move |style| style.text_styles = text_styles.clone());
-
-        let settings = settings::Settings::get_or_init();
-        cc.egui_ctx.set_visuals_of(
-            eframe::egui::Theme::Dark,
-            eframe::egui::Visuals {
-                override_text_color: Some(settings::hexcolor(&settings.color.text)),
-                panel_fill: eframe::egui::Color32::TRANSPARENT,
-                extreme_bg_color: eframe::egui::Color32::TRANSPARENT,
-                code_bg_color: eframe::egui::Color32::TRANSPARENT,
-                faint_bg_color: eframe::egui::Color32::TRANSPARENT,
-                window_fill: eframe::egui::Color32::TRANSPARENT,
-                ..Default::default()
-            },
-        );
-
+    fn new(_cc: &smithay_client_toolkit::shell::wlr_layer::LayerSurface) -> Self {
         let mut centerpiece = Self::default();
         println!("creating centerpiece");
         centerpiece.launch_plugins();
@@ -300,30 +183,30 @@ impl Centerpiece {
         }
     }
 
-    fn handle_input(&mut self, ctx: &eframe::egui::Context) {
-        if ctx.input(|i| i.key_pressed(eframe::egui::Key::ArrowUp)) {
+    fn handle_input(&mut self, ctx: &egui::Context) {
+        if ctx.input(|i| i.key_pressed(egui::Key::ArrowUp)) {
             self.select_previous_entry();
         }
-        if ctx.input(|i| i.key_pressed(eframe::egui::Key::ArrowDown)) {
+        if ctx.input(|i| i.key_pressed(egui::Key::ArrowDown)) {
             self.select_next_entry();
         }
-        if ctx.input(|i| i.key_pressed(eframe::egui::Key::Enter)) {
+        if ctx.input(|i| i.key_pressed(egui::Key::Enter)) {
             self.activate_selected_entry();
         }
-        if ctx.input(|i| i.key_pressed(eframe::egui::Key::Escape)) {
+        if ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
             exit(0);
         }
 
-        if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(eframe::egui::Key::J)) {
+        if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(egui::Key::J)) {
             self.select_next_entry();
         }
-        if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(eframe::egui::Key::K)) {
+        if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(egui::Key::K)) {
             self.select_previous_entry();
         }
-        if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(eframe::egui::Key::P)) {
+        if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(egui::Key::P)) {
             self.select_previous_plugin();
         }
-        if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(eframe::egui::Key::N)) {
+        if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(egui::Key::N)) {
             self.select_next_plugin();
         }
     }
@@ -480,6 +363,158 @@ impl Centerpiece {
             .send_blocking(model::PluginRequest::Activate(entry))
             .ok()
     }
+
+    // TODO: Background transparency does not work anymore.
+    fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
+        egui::Rgba::TRANSPARENT.to_array()
+    }
+
+    fn update(&mut self, ctx: &egui::Context) {
+        let mut fonts = egui::FontDefinitions::default();
+        fonts.font_data.insert(
+            "NerdFontSymbols".to_owned(),
+            std::sync::Arc::new(egui::FontData::from_static(include_bytes!(
+                "../assets/SymbolsNerdFontMono-Regular.ttf"
+            ))),
+        );
+        fonts
+            .families
+            .entry(egui::FontFamily::Monospace)
+            .or_default()
+            .push("NerdFontSymbols".to_owned());
+        ctx.set_fonts(fonts);
+
+        let text_styles: std::collections::BTreeMap<_, _> = [
+            (
+                egui::TextStyle::Heading,
+                egui::FontId::new(0.75 * crate::REM, egui::FontFamily::Monospace),
+            ),
+            (
+                egui::TextStyle::Body,
+                egui::FontId::new(1. * crate::REM, egui::FontFamily::Monospace),
+            ),
+        ]
+        .into();
+        ctx.all_styles_mut(move |style| style.text_styles = text_styles.clone());
+
+        let settings = settings::Settings::get_or_init();
+        ctx.set_visuals_of(
+            egui::Theme::Dark,
+            egui::Visuals {
+                override_text_color: Some(settings::hexcolor(&settings.color.text)),
+                panel_fill: egui::Color32::TRANSPARENT,
+                extreme_bg_color: egui::Color32::TRANSPARENT,
+                code_bg_color: egui::Color32::TRANSPARENT,
+                faint_bg_color: egui::Color32::TRANSPARENT,
+                window_fill: egui::Color32::TRANSPARENT,
+                ..Default::default()
+            },
+        );
+
+        self.handle_input(ctx);
+
+        let mut messages = vec![];
+
+        for plugin_channel in &self.plugin_channels {
+            let message_result = plugin_channel.try_recv();
+            if message_result.is_err() {
+                continue;
+            }
+            messages.push(message_result.unwrap());
+        }
+
+        self.handle_messages(messages);
+
+        let settings = settings::Settings::get_or_init();
+
+        egui::CentralPanel::default()
+            .frame(egui::Frame::new())
+            .show(ctx, |ui| {
+                egui::Frame::new()
+                    .inner_margin(egui::epaint::Marginf {
+                        bottom: 1. * crate::REM,
+                        ..Default::default()
+                    })
+                    .fill(settings::hexcolor(&settings.color.background))
+                    .show(ui, |ui| {
+                        let response = component::query_input::view(ui, &mut self.query);
+                        response.request_focus();
+                        if response.changed() {
+                            self.search();
+                        }
+
+                        let entries = self.entries();
+                        if !entries.is_empty() {
+                            ui.add(Separator::default().spacing(0.));
+                        }
+
+                        let mut divider_added = true;
+                        let mut header_added = false;
+                        let mut next_entry_index_to_add = self.active_entry_index;
+                        let mut lines_added = 0;
+
+                        while ui.available_height() > 0. {
+                            if next_entry_index_to_add >= entries.len() {
+                                break;
+                            }
+
+                            let mut plugin_to_add = None;
+                            let mut last_plugin_start_index = 0;
+                            for plugin in self.plugins.iter() {
+                                if last_plugin_start_index == next_entry_index_to_add {
+                                    plugin_to_add = Some(plugin);
+                                }
+                                last_plugin_start_index += plugin.entries.len();
+                            }
+
+                            if !divider_added && plugin_to_add.is_some() {
+                                ui.separator();
+                                divider_added = true;
+                                lines_added += 1;
+                                continue;
+                            }
+
+                            if !header_added && let Some(plugin) = plugin_to_add {
+                                component::plugin_header::view(ui, plugin);
+                                header_added = true;
+                                lines_added += 1;
+                                continue;
+                            } else if lines_added == 0 {
+                                component::entry::view(
+                                    ui,
+                                    entries[next_entry_index_to_add - 1],
+                                    false,
+                                );
+                            }
+
+                            component::entry::view(
+                                ui,
+                                entries[next_entry_index_to_add],
+                                next_entry_index_to_add == self.active_entry_index,
+                            );
+                            divider_added = false;
+                            header_added = false;
+                            next_entry_index_to_add += 1;
+                            lines_added += 1;
+                        }
+                    });
+            });
+    }
+}
+
+// fn settings() -> eframe::NativeOptions {
+//     eframe::NativeOptions {
+//         viewport: egui::ViewportBuilder {
+//             window_level: Some(egui::WindowLevel::AlwaysOnTop),
+//             transparent: Some(true),
+//             ..Default::default()
+//         },
+//         centered: true,
+//         ..Default::default()
+//     }
+// }
+
+impl Centerpiece {
 }
 
 pub const REM: f32 = 14.0;

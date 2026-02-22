@@ -9,5 +9,5 @@ anyhow = "1.0.100"
 
 serde = { version = "1.0.210", features = ["derive"] }
 serde_yaml = "0.9.34"
-egui = { version = "0.31.1", features = ["color-hex"] }
+egui = { version = "0.33.3", features = ["color-hex"] }
 clap = { version = "4.5.18", features = ["derive", "env"] }

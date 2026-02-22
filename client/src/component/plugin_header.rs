@@ -1,6 +1,6 @@
-pub fn view(ui: &mut eframe::egui::Ui, plugin: &crate::model::Plugin) {
-    eframe::egui::Frame::NONE
-        .outer_margin(eframe::egui::epaint::Marginf {
+pub fn view(ui: &mut egui::Ui, plugin: &crate::model::Plugin) {
+    egui::Frame::NONE
+        .outer_margin(egui::epaint::Marginf {
             left: 1.25 * crate::REM,
             right: 1.25 * crate::REM,
             top: 1. * crate::REM,

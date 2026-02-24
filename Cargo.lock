@@ -519,6 +519,7 @@ dependencies = [
  "eframe",
  "freedesktop-desktop-entry",
  "futures-lite",
+ "libc",
  "log",
  "networkmanager",
  "nucleo-matcher",

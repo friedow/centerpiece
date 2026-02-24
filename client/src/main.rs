@@ -1,9 +1,8 @@
-use std::process::exit;
-
 use clap::Parser;
 use eframe::egui::{self, Separator};
 
 mod component;
+mod lock;
 mod model;
 mod plugin;
 
@@ -15,6 +14,8 @@ pub fn main() {
     });
 
     simple_logger::init_with_level(log::Level::Info).unwrap();
+
+    let _lock = lock::LockFile::acquire();
 
     eframe::run_native(
         "centerpiece",
@@ -300,6 +301,11 @@ impl Centerpiece {
         }
     }
 
+    fn exit() -> ! {
+        lock::LockFile::cleanup();
+        std::process::exit(0);
+    }
+
     fn handle_input(&mut self, ctx: &eframe::egui::Context) {
         if ctx.input(|i| i.key_pressed(eframe::egui::Key::ArrowUp)) {
             self.select_previous_entry();
@@ -311,7 +317,7 @@ impl Centerpiece {
             self.activate_selected_entry();
         }
         if ctx.input(|i| i.key_pressed(eframe::egui::Key::Escape)) {
-            exit(0);
+            Self::exit();
         }
 
         if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(eframe::egui::Key::J)) {
@@ -337,7 +343,9 @@ impl Centerpiece {
                     self.update_entries(plugin_id, entries)
                 }
 
-                Message::Exit => exit(0),
+                Message::Exit => {
+                    Self::exit();
+                }
             }
         }
     }

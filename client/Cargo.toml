@@ -57,7 +57,7 @@ battery = "0.7.8"
 sqlite = "0.36.1"
 
 # wifi
-networkmanager = "0.4.1"
+networkmanager = "0.5.0"
 dbus = "0.9.7"
 
 # firefox bookmarks

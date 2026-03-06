@@ -37,7 +37,7 @@
         makeWrapper
         # wifi plugin
         # cargo networkmanager dependency
-        pkgconf
+        pkg-config
         dbus
       ];
 

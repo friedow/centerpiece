@@ -49,6 +49,9 @@ freedesktop-desktop-entry = "0.7.18"
 # sway_windows plugin
 swayipc = "3.0.3"
 
+# niri_windows plugin
+niri-ipc = "0.1"
+
 # system monitor plugin
 sysinfo = "0.38.2"
 battery = "0.7.8"

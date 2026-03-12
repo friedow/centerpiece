@@ -284,6 +284,18 @@ impl Default for WifiPluginSettings {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct NiriWindowsPluginSettings {
+    #[serde(default = "default_true")]
+    pub enable: bool,
+}
+
+impl Default for NiriWindowsPluginSettings {
+    fn default() -> Self {
+        Self { enable: true }
+    }
+}
+
+#[derive(Debug, Deserialize)]
 pub struct SwayWindowsPluginSettings {
     #[serde(default = "default_true")]
     pub enable: bool,
@@ -323,6 +335,8 @@ pub struct PluginSettings {
     pub resource_monitor_disks: ResourceMonitorDisksSettings,
     #[serde(default)]
     pub resource_monitor_memory: ResourceMonitorMemoryPluginSettings,
+    #[serde(default)]
+    pub niri_windows: NiriWindowsPluginSettings,
     #[serde(default)]
     pub sway_windows: SwayWindowsPluginSettings,
     #[serde(default)]

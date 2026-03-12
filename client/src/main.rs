@@ -294,6 +294,12 @@ impl Centerpiece {
                 .push(crate::plugin::utils::spawn::<crate::plugin::wifi::WifiPlugin>());
         }
 
+        if settings.plugin.niri_windows.enable {
+            self.plugin_channels.push(crate::plugin::utils::spawn::<
+                crate::plugin::niri_windows::NiriWindowsPlugin,
+            >());
+        }
+
         if settings.plugin.sway_windows.enable {
             self.plugin_channels.push(crate::plugin::utils::spawn::<
                 crate::plugin::sway_windows::SwayWindowsPlugin,

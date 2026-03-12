@@ -1896,13 +1896,14 @@ dependencies = [
 
 [[package]]
 name = "networkmanager"
-version = "0.4.1"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36c7a94a505f4bdf5c605ade8a131f7487bbb80170ac27051ba569aa21598cd8"
+checksum = "857dbc5178d729db7d1277111c7a8b234a28c87ecfc9ce284c32a7afb5b00f2a"
 dependencies = [
  "dbus",
  "num-derive",
  "num-traits",
+ "thiserror 2.0.12",
 ]
 
 [[package]]

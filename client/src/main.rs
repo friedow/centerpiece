@@ -6,6 +6,8 @@ mod lock;
 mod model;
 mod plugin;
 
+const APP_ID: &str = "centerpiece";
+
 pub fn main() {
     let args = settings::cli::CliArgs::parse();
     settings::Settings::try_from(args).unwrap_or_else(|_| {
@@ -18,7 +20,7 @@ pub fn main() {
     let _lock = lock::LockFile::acquire();
 
     eframe::run_native(
-        "centerpiece",
+        APP_ID,
         settings(),
         Box::new(|cc| Ok(Box::new(Centerpiece::new(cc)))),
     )
@@ -143,6 +145,7 @@ impl eframe::App for Centerpiece {
 fn settings() -> eframe::NativeOptions {
     eframe::NativeOptions {
         viewport: eframe::egui::ViewportBuilder {
+            app_id: Some(APP_ID.to_string()),
             window_level: Some(eframe::egui::WindowLevel::AlwaysOnTop),
             transparent: Some(true),
             ..Default::default()

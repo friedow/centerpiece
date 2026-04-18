@@ -268,7 +268,7 @@ in
               WantedBy = [ "timers.target" ];
             };
             Timer = {
-              OnUnitActiveSec = cfg.services.index-git-repositories.interval;
+              OnUnitInactiveSec = cfg.services.index-git-repositories.interval;
               OnBootSec = "0min";
               Persistent = true;
               Unit = "${git-index-name}-service.service";

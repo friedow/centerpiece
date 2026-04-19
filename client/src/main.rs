@@ -1,5 +1,5 @@
 use clap::Parser;
-use egui::{self, Separator};
+use egui::{self};
 
 mod component;
 mod lock;
@@ -77,7 +77,6 @@ struct Centerpiece {
     query: String,
     active_plugin_id: Option<String>,
     active_entry_id: Option<String>,
-    active_entry_index: usize,
     plugins: Vec<model::Plugin>,
     plugin_channels: Vec<async_channel::Receiver<Message>>,
 }
@@ -225,7 +224,17 @@ impl Centerpiece {
         }
     }
 
-    fn handle_messages(&mut self, messages: Vec<Message>) {
+    fn handle_messages(&mut self) {
+        let mut messages = vec![];
+
+        for plugin_channel in &self.plugin_channels {
+            let message_result = plugin_channel.try_recv();
+            if message_result.is_err() {
+                continue;
+            }
+            messages.push(message_result.unwrap());
+        }
+
         for message in messages {
             match message {
                 Message::RegisterPlugin(plugin) => self.register_plugin(plugin),
@@ -248,21 +257,96 @@ impl Centerpiece {
             .collect()
     }
 
-    // TODO: can probably be removed
-    fn active_entry_id(&self) -> Option<&String> {
-        self.active_entry_id.as_ref()
-    }
-
     fn active_plugin(&self) -> Option<&model::Plugin> {
-        self.active_plugin_id.clone().map_or(self.plugins.first(), |active_plugin_id| self.plugins.iter().find(|plugin| plugin.id == active_plugin_id))
+        self.active_plugin_id
+            .clone()
+            .map_or(self.plugins.first(), |active_plugin_id| {
+                self.plugins
+                    .iter()
+                    .find(|plugin| plugin.id == active_plugin_id)
+            })
     }
 
     fn active_plugin_index(&self) -> usize {
-        self.active_plugin().map_or(0, |active_plugin| self.plugins.iter().position(|plugin| plugin.id == active_plugin.id).unwrap_or(0))
+        self.active_plugin().map_or(0, |active_plugin| {
+            self.plugins
+                .iter()
+                .position(|plugin| plugin == active_plugin)
+                .unwrap_or(0)
+        })
     }
 
     fn previous_plugin(&self) -> Option<&model::Plugin> {
-        self.plugins.iter().find(|plugin| plugin.id == self.active_plugin_id).or(self.plugins.first())
+        if self.active_plugin() == self.plugins.first() {
+            return self.plugins.last();
+        }
+        self.plugins.get(self.active_plugin_index() - 1)
+    }
+
+    fn next_plugin(&self) -> Option<&model::Plugin> {
+        if self.active_plugin() == self.plugins.last() {
+            return self.plugins.first();
+        }
+        self.plugins.get(self.active_plugin_index() + 1)
+    }
+
+    fn active_entry(&self) -> Option<&model::Entry> {
+        self.active_plugin().map_or(None, |active_plugin| {
+            self.active_entry_id
+                .clone()
+                .map_or(active_plugin.entries.first(), |active_entry_id| {
+                    active_plugin
+                        .entries
+                        .iter()
+                        .find(|entry| entry.id == active_entry_id)
+                })
+        })
+    }
+
+    fn active_entry_index(&self) -> usize {
+        self.active_plugin().map_or(0, |active_plugin| {
+            self.active_entry().map_or(0, |active_entry| {
+                active_plugin
+                    .entries
+                    .iter()
+                    .position(|entry| entry == active_entry)
+                    .unwrap_or(0)
+            })
+        })
+    }
+
+    fn active_entry_is_first_entry_in_plugin(&self) -> bool {
+        self.active_plugin().map_or(false, |active_plugin| {
+            active_plugin.entries.first() == self.active_entry()
+        })
+    }
+
+    fn active_entry_is_last_entry_in_plugin(&self) -> bool {
+        self.active_plugin().map_or(false, |active_plugin| {
+            active_plugin.entries.last() == self.active_entry()
+        })
+    }
+
+    fn previous_entry(&self) -> Option<&model::Entry> {
+        if self.active_entry_is_first_entry_in_plugin() {
+            return self
+                .previous_plugin()
+                .map_or(None, |previous_plugin| previous_plugin.entries.last());
+        }
+        return self.active_plugin().map_or(None, |active_plugin| {
+            active_plugin.entries.get(self.active_entry_index() - 1)
+        });
+    }
+
+    fn next_entry(&self) -> Option<&model::Entry> {
+        if self.active_entry_is_last_entry_in_plugin() {
+            return self
+                .next_plugin()
+                .map_or(None, |next_plugin| next_plugin.entries.first());
+        }
+        return self.active_plugin().map_or(None, |active_plugin| {
+            active_plugin.entries.get(self.active_entry_index() + 1)
+        });
     }
 
     fn search(&mut self) {
@@ -276,68 +360,60 @@ impl Centerpiece {
     }
 
     fn select_first_entry(&mut self) {
-        self.active_plugin_id = "".to_string();
-        self.active_entry_id = "".to_string();
+        self.active_plugin_id = None;
+        self.active_entry_id = None;
     }
 
     fn select_previous_entry(&mut self) {
-        let entries = self.entries();
-        if entries.is_empty() {
-            return self.select_first_entry();
-        }
+        let mut future_plugin_id = self.active_plugin().map(|active_plugin| active_plugin.id.clone());
 
-        if self.active_entry_index == 0 {
-            self.active_entry_index = entries.len() - 1;
-            return;
+        if self.active_entry_is_first_entry_in_plugin() {
+            future_plugin_id = self
+                .previous_plugin()
+                .map(|previous_plugin| previous_plugin.id.clone());
         }
+        let future_entry_id = self
+            .previous_entry()
+            .map(|previous_entry| previous_entry.id.clone());
 
-        self.active_entry_index -= 1;
+        self.active_plugin_id = future_plugin_id;
+        self.active_entry_id = future_entry_id;
     }
 
     fn select_next_entry(&mut self) {
-        let entries = self.entries();
-        if entries.is_empty() || self.active_entry_index == entries.len() - 1 {
-            return self.select_first_entry();
+        let mut future_plugin_id = self.active_plugin().map(|active_plugin| active_plugin.id.clone());
+
+        if self.active_entry_is_last_entry_in_plugin() {
+            future_plugin_id = self.next_plugin().map(|next_plugin| next_plugin.id.clone());
         }
+        let future_entry_id = self.next_entry().map(|next_entry| next_entry.id.clone());
 
-        self.active_entry_index += 1;
-    }
-
-    fn select_next_plugin(&mut self) {
-        let accumulated_entries = self
-            .plugins
-            .iter()
-            .map(|plugin| plugin.entries.len())
-            .scan(0, |acc, len| {
-                let prev = *acc;
-                *acc += len;
-                Some(prev)
-            })
-            .find(|&total| total > self.active_entry_index)
-            .unwrap_or(self.active_entry_index);
-
-        self.active_entry_index = accumulated_entries;
+        self.active_plugin_id = future_plugin_id;
+        self.active_entry_id = future_entry_id;
     }
 
     fn select_previous_plugin(&mut self) {
-        if self.plugins.is_empty() || self.active_entry_index == 0 {
-            return self.select_first_entry();
-        }
+        let future_plugin_id = self
+            .previous_plugin()
+            .map(|previous_plugin| previous_plugin.id.clone());
+        let future_entry_id = self
+            .previous_plugin()
+            .map_or(None, |previous_plugin| previous_plugin.entries.first())
+            .map(|entry| entry.id.clone());
 
-        let accumulated_entries = self
-            .plugins
-            .iter()
-            .map(|plugin| plugin.entries.len())
-            .scan(0, |acc, len| {
-                let prev = *acc;
-                *acc += len;
-                Some(prev)
-            })
-            .take_while(|&total| total < self.active_entry_index)
-            .last()
-            .unwrap_or(0);
+        self.active_plugin_id = future_plugin_id;
+        self.active_entry_id = future_entry_id;
+    }
 
-        self.active_entry_index = accumulated_entries;
+    fn select_next_plugin(&mut self) {
+        let future_plugin_id = self.next_plugin().map(|next_plugin| next_plugin.id.clone());
+        let future_entry_id = self
+            .next_plugin()
+            .map_or(None, |next_plugin| next_plugin.entries.first())
+            .map(|entry| entry.id.clone());
+
+        self.active_plugin_id = future_plugin_id;
+        self.active_entry_id = future_entry_id;
     }
 
     fn register_plugin(&mut self, plugin: crate::model::Plugin) {
@@ -368,24 +444,9 @@ impl Centerpiece {
     }
 
     fn activate_selected_entry(&mut self) -> Option<()> {
-        let active_entry_id = self.active_entry_id()?.clone();
-
-        let entry = self
-            .entries()
-            .into_iter()
-            .find(|entry| entry.id == *active_entry_id)?
-            .clone();
-
-        let plugin = self.plugins.iter_mut().find(|plugin| {
-            plugin
-                .entries
-                .iter()
-                .any(|entry| entry.id == *active_entry_id)
-        })?;
-
-        plugin
+        self.active_plugin()?
             .app_channel_out
-            .send_blocking(model::PluginRequest::Activate(entry))
+            .send_blocking(model::PluginRequest::Activate(self.active_entry()?.clone()))
             .ok()
     }
 
@@ -433,18 +494,7 @@ impl Centerpiece {
         self.set_fonts(ctx);
         self.set_theme(ctx);
         self.handle_input(ctx);
-
-        let mut messages = vec![];
-
-        for plugin_channel in &self.plugin_channels {
-            let message_result = plugin_channel.try_recv();
-            if message_result.is_err() {
-                continue;
-            }
-            messages.push(message_result.unwrap());
-        }
-
-        self.handle_messages(messages);
+        self.handle_messages();
 
         let settings = settings::Settings::get_or_init();
 
@@ -459,66 +509,116 @@ impl Centerpiece {
                     .corner_radius(0.5 * crate::REM)
                     .fill(settings::hexcolor(&settings.color.background))
                     .show(ui, |ui| {
-                        let response = component::query_input::view(ui, &mut self.query);
-                        response.request_focus();
-                        if response.changed() {
+                        let searchbar = component::query_input::view(ui, &mut self.query);
+                        searchbar.request_focus();
+                        if searchbar.changed() {
                             self.search();
                         }
+                        ui.separator();
 
-                        let entries = self.entries();
-                        if !entries.is_empty() {
-                            ui.add(Separator::default().spacing(0.));
+                        if !self.active_entry_is_first_entry_in_plugin()
+                            && let Some(previous_entry) = self.previous_entry()
+                        {
+                            component::entry::view(ui, previous_entry, false);
                         }
 
-                        let mut divider_added = true;
-                        let mut header_added = false;
-                        let mut next_entry_index_to_add = self.active_entry_index;
-                        let mut lines_added = 0;
-
-                        while ui.available_height() > ENTRY_HEIGHT {
-                            if next_entry_index_to_add >= entries.len() {
+                        for plugin in self
+                            .plugins
+                            .get(self.active_plugin_index()..)
+                            .unwrap_or_default()
+                        {
+                            if ui.available_height() < ENTRY_HEIGHT {
                                 break;
                             }
 
-                            let mut plugin_to_add = None;
-                            let mut last_plugin_start_index = 0;
-                            for plugin in self.plugins.iter() {
-                                if last_plugin_start_index == next_entry_index_to_add {
-                                    plugin_to_add = Some(plugin);
-                                }
-                                last_plugin_start_index += plugin.entries.len();
-                            }
-
-                            if !divider_added && plugin_to_add.is_some() {
+                            if plugin != self.active_plugin().unwrap() {
                                 ui.separator();
-                                divider_added = true;
-                                lines_added += 1;
-                                continue;
                             }
 
-                            if !header_added && let Some(plugin) = plugin_to_add {
+                            if plugin != self.active_plugin().unwrap()
+                                || (plugin == self.active_plugin().unwrap()
+                                    && self.active_entry_is_first_entry_in_plugin())
+                            {
                                 component::plugin_header::view(ui, plugin);
-                                header_added = true;
-                                lines_added += 1;
-                                continue;
-                            } else if lines_added == 0 {
+                            }
+
+                            let entries: std::vec::Vec<&model::Entry> =
+                                if plugin == self.active_plugin().unwrap() {
+                                    plugin
+                                        .entries
+                                        .get(self.active_entry_index()..)
+                                        .unwrap_or_default()
+                                        .iter()
+                                        .collect()
+                                } else {
+                                    plugin.entries.iter().collect()
+                                };
+
+                            for entry in entries {
+                                if ui.available_height() < ENTRY_HEIGHT {
+                                    break;
+                                }
+
                                 component::entry::view(
                                     ui,
-                                    entries[next_entry_index_to_add - 1],
-                                    false,
+                                    entry,
+                                    entry == self.active_entry().unwrap(),
                                 );
                             }
 
-                            component::entry::view(
-                                ui,
-                                entries[next_entry_index_to_add],
-                                next_entry_index_to_add == self.active_entry_index,
-                            );
-                            divider_added = false;
-                            header_added = false;
-                            next_entry_index_to_add += 1;
-                            lines_added += 1;
+                            // ui.separator();
                         }
+
+                        // while ui.available_height() > ENTRY_HEIGHT {
+                        //
+                        // let entries = self.entries();
+                        // if !entries.is_empty() {
+                        //     ui.add(Separator::default().spacing(0.));
+                        // }
+                        //
+                        // let mut divider_added = true;
+                        // let mut header_added = false;
+                        // let mut lines_added = 0;
+                        //
+                        // while ui.available_height() > ENTRY_HEIGHT {
+                        //     if next_entry_index_to_add >= entries.len() {
+                        //         break;
+                        //     }
+                        //
+                        //     let mut plugin_to_add = None;
+                        //     let mut last_plugin_start_index = 0;
+                        //     for plugin in self.plugins.iter() {
+                        //         if last_plugin_start_index == next_entry_index_to_add {
+                        //             plugin_to_add = Some(plugin);
+                        //         }
+                        //         last_plugin_start_index += plugin.entries.len();
+                        //     }
+                        //
+                        //     if !divider_added && plugin_to_add.is_some() {
+                        //         divider_added = true;
+                        //         lines_added += 1;
+                        //         continue;
+                        //     }
+                        //
+                        //     if !header_added && let Some(plugin) = plugin_to_add {
+                        //         component::plugin_header::view(ui, plugin);
+                        //         header_added = true;
+                        //         lines_added += 1;
+                        //         continue;
+                        //     } else if lines_added == 0 {
+                        //         component::entry::view(ui, self.previous_entry().unwrap(), false);
+                        //     }
+                        //
+                        //     component::entry::view(
+                        //         ui,
+                        //         entries[next_entry_index_to_add],
+                        //         next_entry_index_to_add == self.active_entry_index,
+                        //     );
+                        //     divider_added = false;
+                        //     header_added = false;
+                        //     next_entry_index_to_add += 1;
+                        //     lines_added += 1;
+                        // }
                     });
             });
     }

@@ -75,6 +75,8 @@ pub enum Message {
 #[derive(Default)]
 struct Centerpiece {
     query: String,
+    active_plugin_id: Option<String>,
+    active_entry_id: Option<String>,
     active_entry_index: usize,
     plugins: Vec<model::Plugin>,
     plugin_channels: Vec<async_channel::Receiver<Message>>,
@@ -246,13 +248,21 @@ impl Centerpiece {
             .collect()
     }
 
+    // TODO: can probably be removed
     fn active_entry_id(&self) -> Option<&String> {
-        let entries = self.entries();
-        let active_entry = entries.get(self.active_entry_index);
-        match active_entry {
-            Some(entry) => Some(&entry.id),
-            None => None,
-        }
+        self.active_entry_id.as_ref()
+    }
+
+    fn active_plugin(&self) -> Option<&model::Plugin> {
+        self.active_plugin_id.clone().map_or(self.plugins.first(), |active_plugin_id| self.plugins.iter().find(|plugin| plugin.id == active_plugin_id))
+    }
+
+    fn active_plugin_index(&self) -> usize {
+        self.active_plugin().map_or(0, |active_plugin| self.plugins.iter().position(|plugin| plugin.id == active_plugin.id).unwrap_or(0))
+    }
+
+    fn previous_plugin(&self) -> Option<&model::Plugin> {
+        self.plugins.iter().find(|plugin| plugin.id == self.active_plugin_id).or(self.plugins.first())
     }
 
     fn search(&mut self) {
@@ -266,7 +276,8 @@ impl Centerpiece {
     }
 
     fn select_first_entry(&mut self) {
-        self.active_entry_index = 0;
+        self.active_plugin_id = "".to_string();
+        self.active_entry_id = "".to_string();
     }
 
     fn select_previous_entry(&mut self) {
@@ -464,7 +475,7 @@ impl Centerpiece {
                         let mut next_entry_index_to_add = self.active_entry_index;
                         let mut lines_added = 0;
 
-                        while ui.available_height() > 0. {
+                        while ui.available_height() > ENTRY_HEIGHT {
                             if next_entry_index_to_add >= entries.len() {
                                 break;
                             }

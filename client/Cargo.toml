@@ -38,7 +38,7 @@ async-channel = "2"
 futures-lite = "2"
 
 # reading index files
-serde_json = "1.0.139"
+serde_json = "1.0.149"
 
 # clock plugin
 chrono = "0.4.43"

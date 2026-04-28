@@ -41,7 +41,10 @@
         dbus
       ];
 
-      buildInputs = with pkgs; [ dbus ];
+      buildInputs = with pkgs; [
+        dbus
+        libxkbcommon
+      ];
 
       cargoTOML = builtins.fromTOML (builtins.readFile (./. + "/Cargo.toml"));
 

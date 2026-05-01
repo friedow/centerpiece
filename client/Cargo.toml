@@ -46,7 +46,7 @@ chrono = "0.4.43"
 freedesktop-desktop-entry = "0.7.18"
 
 # sway_windows plugin
-swayipc = "3.0.3"
+swayipc = "4.0.0"
 
 # niri_windows plugin
 niri-ipc = "0.1"

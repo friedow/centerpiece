@@ -7,6 +7,20 @@ pub struct Plugin {
     pub app_channel_out: async_channel::Sender<PluginRequest>,
 }
 
+impl Eq for Plugin {}
+
+impl PartialEq for Plugin {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl std::hash::Hash for Plugin {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
+}
+
 #[derive(Debug, Clone, Ord, PartialOrd)]
 pub struct Entry {
     pub id: String,

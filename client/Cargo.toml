@@ -31,7 +31,6 @@ wayapp = "0.2.2"
 smithay-client-toolkit = "0.20.0"
 
 # plugins
-async-trait = "0.1.89"
 smol = "2"
 async-channel = "2"
 futures-lite = "2"

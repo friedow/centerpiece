@@ -40,7 +40,7 @@ futures-lite = "2"
 serde_json = "1.0.149"
 
 # clock plugin
-chrono = "0.4.43"
+chrono = "0.4.44"
 
 # applications plugin
 freedesktop-desktop-entry = "0.7.18"

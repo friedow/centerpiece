@@ -53,7 +53,7 @@ pub fn main() {
             match event {
                 AppEvent::WaylandDispatch(token) => {
                     let events = app.dispatch_pending(token);
-                    egui_surface.handle_events(&mut app, &events, &mut |ctx| my_app.update(ctx));
+                    egui_surface.handle_events(&mut app, &events, &mut |ui| my_app.update(ui));
                 } // Handle other events here
             }
         }
@@ -418,7 +418,8 @@ impl Centerpiece {
         );
     }
 
-    fn update(&mut self, ctx: &egui::Context) {
+    fn update(&mut self, ui: &mut egui::Ui) {
+        let ctx = ui.ctx();
         self.set_fonts(ctx);
         self.set_theme(ctx);
         self.handle_input(ctx);
@@ -437,78 +438,70 @@ impl Centerpiece {
 
         let settings = settings::Settings::get_or_init();
 
-        egui::CentralPanel::default()
-            .frame(egui::Frame::new())
-            .show(ctx, |ui| {
-                egui::Frame::new()
-                    .inner_margin(egui::epaint::MarginF32 {
-                        bottom: 1. * crate::REM,
-                        ..Default::default()
-                    })
-                    .corner_radius(0.5 * crate::REM)
-                    .fill(settings::hexcolor(&settings.color.background))
-                    .show(ui, |ui| {
-                        let response = component::query_input::view(ui, &mut self.query);
-                        response.request_focus();
-                        if response.changed() {
-                            self.search();
+        egui::Frame::new()
+            .inner_margin(egui::epaint::MarginF32 {
+                bottom: 1. * crate::REM,
+                ..Default::default()
+            })
+            .corner_radius(0.5 * crate::REM)
+            .fill(settings::hexcolor(&settings.color.background))
+            .show(ui, |ui| {
+                let response = component::query_input::view(ui, &mut self.query);
+                response.request_focus();
+                if response.changed() {
+                    self.search();
+                }
+
+                let entries = self.entries();
+                if !entries.is_empty() {
+                    ui.add(Separator::default().spacing(0.));
+                }
+
+                let mut divider_added = true;
+                let mut header_added = false;
+                let mut next_entry_index_to_add = self.active_entry_index;
+                let mut lines_added = 0;
+
+                while ui.available_height() > 0. {
+                    if next_entry_index_to_add >= entries.len() {
+                        break;
+                    }
+
+                    let mut plugin_to_add = None;
+                    let mut last_plugin_start_index = 0;
+                    for plugin in self.plugins.iter() {
+                        if last_plugin_start_index == next_entry_index_to_add {
+                            plugin_to_add = Some(plugin);
                         }
+                        last_plugin_start_index += plugin.entries.len();
+                    }
 
-                        let entries = self.entries();
-                        if !entries.is_empty() {
-                            ui.add(Separator::default().spacing(0.));
-                        }
+                    if !divider_added && plugin_to_add.is_some() {
+                        ui.separator();
+                        divider_added = true;
+                        lines_added += 1;
+                        continue;
+                    }
 
-                        let mut divider_added = true;
-                        let mut header_added = false;
-                        let mut next_entry_index_to_add = self.active_entry_index;
-                        let mut lines_added = 0;
+                    if !header_added && let Some(plugin) = plugin_to_add {
+                        component::plugin_header::view(ui, plugin);
+                        header_added = true;
+                        lines_added += 1;
+                        continue;
+                    } else if lines_added == 0 {
+                        component::entry::view(ui, entries[next_entry_index_to_add - 1], false);
+                    }
 
-                        while ui.available_height() > 0. {
-                            if next_entry_index_to_add >= entries.len() {
-                                break;
-                            }
-
-                            let mut plugin_to_add = None;
-                            let mut last_plugin_start_index = 0;
-                            for plugin in self.plugins.iter() {
-                                if last_plugin_start_index == next_entry_index_to_add {
-                                    plugin_to_add = Some(plugin);
-                                }
-                                last_plugin_start_index += plugin.entries.len();
-                            }
-
-                            if !divider_added && plugin_to_add.is_some() {
-                                ui.separator();
-                                divider_added = true;
-                                lines_added += 1;
-                                continue;
-                            }
-
-                            if !header_added && let Some(plugin) = plugin_to_add {
-                                component::plugin_header::view(ui, plugin);
-                                header_added = true;
-                                lines_added += 1;
-                                continue;
-                            } else if lines_added == 0 {
-                                component::entry::view(
-                                    ui,
-                                    entries[next_entry_index_to_add - 1],
-                                    false,
-                                );
-                            }
-
-                            component::entry::view(
-                                ui,
-                                entries[next_entry_index_to_add],
-                                next_entry_index_to_add == self.active_entry_index,
-                            );
-                            divider_added = false;
-                            header_added = false;
-                            next_entry_index_to_add += 1;
-                            lines_added += 1;
-                        }
-                    });
+                    component::entry::view(
+                        ui,
+                        entries[next_entry_index_to_add],
+                        next_entry_index_to_add == self.active_entry_index,
+                    );
+                    divider_added = false;
+                    header_added = false;
+                    next_entry_index_to_add += 1;
+                    lines_added += 1;
+                }
             });
     }
 }

@@ -4,12 +4,11 @@ pub fn view(ui: &mut egui::Ui, query: &mut String) -> egui::Response {
             .hint_text("Search")
             .lock_focus(true)
             .desired_width(f32::INFINITY)
-            .frame(false)
-            .margin(egui::epaint::MarginF32 {
+            .frame(egui::Frame::new().outer_margin(egui::epaint::MarginF32 {
                 left: 1. * crate::REM,
                 right: 1. * crate::REM,
                 top: 1. * crate::REM,
                 bottom: 0.75 * crate::REM,
-            }),
+            })),
     )
 }

@@ -81,7 +81,6 @@ fn fuzzy_match(query: &str, entries: Vec<crate::model::Entry>) -> Vec<crate::mod
         .collect::<Vec<_>>()
 }
 
-#[async_trait::async_trait]
 pub trait Plugin {
     fn id() -> &'static str;
     fn priority() -> u32;
@@ -113,23 +112,28 @@ pub trait Plugin {
         }
     }
 
-    async fn main(
+    fn main(
         &mut self,
         mut plugin_channel_out: async_channel::Sender<crate::Message>,
-    ) -> anyhow::Result<()> {
-        self.update_entries()?;
+    ) -> impl std::future::Future<Output = anyhow::Result<()>> + Send + '_
+    where
+        Self: Send,
+    {
+        async move {
+            self.update_entries()?;
 
-        let (mut app_channel_out, mut plugin_channel_in) = async_channel::bounded(100);
-        self.register_plugin(&mut plugin_channel_out, &mut app_channel_out)?;
-        let mut last_query = String::from("");
+            let (mut app_channel_out, mut plugin_channel_in) = async_channel::bounded(100);
+            self.register_plugin(&mut plugin_channel_out, &mut app_channel_out)?;
+            let mut last_query = String::from("");
 
-        loop {
-            self.update(
-                &mut plugin_channel_out,
-                &mut plugin_channel_in,
-                &mut last_query,
-            )
-            .await?;
+            loop {
+                self.update(
+                    &mut plugin_channel_out,
+                    &mut plugin_channel_in,
+                    &mut last_query,
+                )
+                .await?;
+            }
         }
     }
 
@@ -145,42 +149,47 @@ pub trait Plugin {
         Ok(())
     }
 
-    async fn update(
-        &mut self,
-        plugin_channel_out: &mut async_channel::Sender<crate::Message>,
-        plugin_channel_in: &mut async_channel::Receiver<crate::model::PluginRequest>,
-        last_query: &mut String,
-    ) -> anyhow::Result<()> {
-        let plugin_request_option = match Self::update_timeout() {
-            Some(update_timeout) => {
-                futures_lite::future::or(async { plugin_channel_in.recv().await.ok() }, async {
-                    smol::Timer::after(update_timeout).await;
-                    Some(crate::model::PluginRequest::Timeout)
-                })
-                .await
+    fn update<'a>(
+        &'a mut self,
+        plugin_channel_out: &'a mut async_channel::Sender<crate::Message>,
+        plugin_channel_in: &'a mut async_channel::Receiver<crate::model::PluginRequest>,
+        last_query: &'a mut String,
+    ) -> impl std::future::Future<Output = anyhow::Result<()>> + Send + 'a
+    where
+        Self: Send,
+    {
+        async move {
+            let plugin_request_option = match Self::update_timeout() {
+                Some(update_timeout) => {
+                    futures_lite::future::or(async { plugin_channel_in.recv().await.ok() }, async {
+                        smol::Timer::after(update_timeout).await;
+                        Some(crate::model::PluginRequest::Timeout)
+                    })
+                    .await
+                }
+                None => plugin_channel_in.recv().await.ok(),
+            };
+            if plugin_request_option.is_none() {
+                return Ok(());
             }
-            None => plugin_channel_in.recv().await.ok(),
-        };
-        if plugin_request_option.is_none() {
-            return Ok(());
-        }
-        let plugin_request = plugin_request_option.unwrap();
+            let plugin_request = plugin_request_option.unwrap();
 
-        match plugin_request {
-            crate::model::PluginRequest::Search(query) => {
-                self.search(&query, plugin_channel_out)?;
-                *last_query = query;
+            match plugin_request {
+                crate::model::PluginRequest::Search(query) => {
+                    self.search(&query, plugin_channel_out)?;
+                    *last_query = query;
+                }
+                crate::model::PluginRequest::Timeout => {
+                    self.update_entries()?;
+                    self.search(last_query, plugin_channel_out)?;
+                }
+                crate::model::PluginRequest::Activate(entry) => {
+                    self.activate(entry, plugin_channel_out)?
+                }
             }
-            crate::model::PluginRequest::Timeout => {
-                self.update_entries()?;
-                self.search(last_query, plugin_channel_out)?;
-            }
-            crate::model::PluginRequest::Activate(entry) => {
-                self.activate(entry, plugin_channel_out)?
-            }
-        }
 
-        return Ok(());
+            Ok(())
+        }
     }
 
     fn sort(&mut self) {

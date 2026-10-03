@@ -142,6 +142,9 @@
         inherit (self.outputs.packages.${system}) default index-git-repositories;
         shell = self.outputs.devShells.${system}.default;
         treefmt = treefmt.check self;
+        nixosTest = pkgs.callPackage ./check.nix {
+          nixosModule = self.outputs.nixosModules.${system}.default;
+        };
         inherit cargoClippy;
         hmModule =
           (nixpkgs.lib.nixosSystem {
@@ -175,5 +178,9 @@
         inherit (self.outputs.packages.${system}) index-git-repositories;
       };
       formatter.${system} = treefmt.wrapper;
+      nixosModules.${system}.default = import ./nixos-module.nix {
+        centerpiece = self.outputs.packages.${system}.default;
+        inherit (self.outputs.packages.${system}) index-git-repositories;
+      };
     };
 }

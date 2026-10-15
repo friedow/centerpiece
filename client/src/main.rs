@@ -27,11 +27,10 @@ pub fn main() {
         let _ = tx.send(AppEvent::WaylandDispatch(t));
     });
 
-    // Example layer surface
     let layer_surface = app.layer_shell.create_layer_surface(
         &app.qh,
         app.compositor_state.create_surface(&app.qh),
-        smithay_client_toolkit::shell::wlr_layer::Layer::Top,
+        smithay_client_toolkit::shell::wlr_layer::Layer::Overlay,
         Some(APP_ID),
         None,
     );

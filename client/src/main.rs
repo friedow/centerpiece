@@ -1,5 +1,5 @@
 use clap::Parser;
-use egui::{self, Separator};
+use egui::{self};
 
 mod component;
 mod lock;
@@ -74,7 +74,8 @@ pub enum Message {
 #[derive(Default)]
 struct Centerpiece {
     query: String,
-    active_entry_index: usize,
+    active_plugin_id: Option<String>,
+    active_entry_id: Option<String>,
     plugins: Vec<model::Plugin>,
     plugin_channels: Vec<async_channel::Receiver<Message>>,
 }
@@ -222,7 +223,17 @@ impl Centerpiece {
         }
     }
 
-    fn handle_messages(&mut self, messages: Vec<Message>) {
+    fn handle_messages(&mut self) {
+        let mut messages = vec![];
+
+        for plugin_channel in &self.plugin_channels {
+            let message_result = plugin_channel.try_recv();
+            if message_result.is_err() {
+                continue;
+            }
+            messages.push(message_result.unwrap());
+        }
+
         for message in messages {
             match message {
                 Message::RegisterPlugin(plugin) => self.register_plugin(plugin),
@@ -238,20 +249,77 @@ impl Centerpiece {
         }
     }
 
-    fn entries(&self) -> Vec<&model::Entry> {
+    fn non_empty_plugins(&self) -> Vec<&model::Plugin> {
         self.plugins
             .iter()
-            .flat_map(|plugin| &plugin.entries)
+            .filter(|plugin| !plugin.entries.is_empty())
             .collect()
     }
 
-    fn active_entry_id(&self) -> Option<&String> {
-        let entries = self.entries();
-        let active_entry = entries.get(self.active_entry_index);
-        match active_entry {
-            Some(entry) => Some(&entry.id),
-            None => None,
+    /// Resolves the selection to (plugin index, entry index) within `plugins`.
+    /// Ids that no longer resolve fall back to the first plugin or entry.
+    fn active_position(&self, plugins: &[&model::Plugin]) -> Option<(usize, usize)> {
+        let plugin_index = self
+            .active_plugin_id
+            .as_ref()
+            .and_then(|id| plugins.iter().position(|plugin| &plugin.id == id))
+            .unwrap_or(0);
+        let plugin = plugins.get(plugin_index)?;
+        let entry_index = self
+            .active_entry_id
+            .as_ref()
+            .and_then(|id| plugin.entries.iter().position(|entry| &entry.id == id))
+            .unwrap_or(0);
+        Some((plugin_index, entry_index))
+    }
+
+    fn active_entry(&self) -> Option<(&model::Plugin, &model::Entry)> {
+        let plugins = self.non_empty_plugins();
+        let (plugin_index, entry_index) = self.active_position(&plugins)?;
+        let plugin = plugins[plugin_index];
+        Some((plugin, &plugin.entries[entry_index]))
+    }
+
+    /// Drops selection ids that no longer resolve, so the stored selection
+    /// matches the entry rendered as active.
+    fn normalize_selection(&mut self) {
+        let plugins = self.non_empty_plugins();
+        let plugin = self
+            .active_plugin_id
+            .as_ref()
+            .and_then(|id| plugins.iter().find(|plugin| &plugin.id == id));
+        let plugin_exists = plugin.is_some();
+        let entry_exists = plugin.is_some_and(|plugin| {
+            self.active_entry_id
+                .as_ref()
+                .is_some_and(|id| plugin.entries.iter().any(|entry| &entry.id == id))
+        });
+
+        if !plugin_exists {
+            self.active_plugin_id = None;
         }
+        if !entry_exists {
+            self.active_entry_id = None;
+        }
+    }
+
+    /// Moves the selection to the position returned by `next_position`,
+    /// which receives the non-empty plugins and the current position.
+    fn select_position(
+        &mut self,
+        next_position: impl FnOnce(&[&model::Plugin], usize, usize) -> (usize, usize),
+    ) {
+        let plugins = self.non_empty_plugins();
+        let Some((plugin_index, entry_index)) = self.active_position(&plugins) else {
+            return;
+        };
+        let (plugin_index, entry_index) = next_position(&plugins, plugin_index, entry_index);
+        let plugin = plugins[plugin_index];
+        let plugin_id = plugin.id.clone();
+        let entry_id = plugin.entries[entry_index].id.clone();
+
+        self.active_plugin_id = Some(plugin_id);
+        self.active_entry_id = Some(entry_id);
     }
 
     fn search(&mut self) {
@@ -265,67 +333,45 @@ impl Centerpiece {
     }
 
     fn select_first_entry(&mut self) {
-        self.active_entry_index = 0;
+        self.active_plugin_id = None;
+        self.active_entry_id = None;
     }
 
     fn select_previous_entry(&mut self) {
-        let entries = self.entries();
-        if entries.is_empty() {
-            return self.select_first_entry();
-        }
-
-        if self.active_entry_index == 0 {
-            self.active_entry_index = entries.len() - 1;
-            return;
-        }
-
-        self.active_entry_index -= 1;
+        self.select_position(|plugins, plugin_index, entry_index| {
+            if entry_index > 0 {
+                return (plugin_index, entry_index - 1);
+            }
+            let previous_plugin_index = (plugin_index + plugins.len() - 1) % plugins.len();
+            (
+                previous_plugin_index,
+                plugins[previous_plugin_index].entries.len() - 1,
+            )
+        });
     }
 
     fn select_next_entry(&mut self) {
-        let entries = self.entries();
-        if entries.is_empty() || self.active_entry_index == entries.len() - 1 {
-            return self.select_first_entry();
-        }
+        self.select_position(|plugins, plugin_index, entry_index| {
+            if entry_index + 1 < plugins[plugin_index].entries.len() {
+                return (plugin_index, entry_index + 1);
+            }
+            ((plugin_index + 1) % plugins.len(), 0)
+        });
+    }
 
-        self.active_entry_index += 1;
+    /// Jumps to the first entry of the active plugin, or to the first entry
+    /// of the previous plugin when already there.
+    fn select_previous_plugin(&mut self) {
+        self.select_position(|_, plugin_index, entry_index| {
+            if entry_index > 0 {
+                return (plugin_index, 0);
+            }
+            (plugin_index.saturating_sub(1), 0)
+        });
     }
 
     fn select_next_plugin(&mut self) {
-        let accumulated_entries = self
-            .plugins
-            .iter()
-            .map(|plugin| plugin.entries.len())
-            .scan(0, |acc, len| {
-                let prev = *acc;
-                *acc += len;
-                Some(prev)
-            })
-            .find(|&total| total > self.active_entry_index)
-            .unwrap_or(self.active_entry_index);
-
-        self.active_entry_index = accumulated_entries;
-    }
-
-    fn select_previous_plugin(&mut self) {
-        if self.plugins.is_empty() || self.active_entry_index == 0 {
-            return self.select_first_entry();
-        }
-
-        let accumulated_entries = self
-            .plugins
-            .iter()
-            .map(|plugin| plugin.entries.len())
-            .scan(0, |acc, len| {
-                let prev = *acc;
-                *acc += len;
-                Some(prev)
-            })
-            .take_while(|&total| total < self.active_entry_index)
-            .last()
-            .unwrap_or(0);
-
-        self.active_entry_index = accumulated_entries;
+        self.select_position(|plugins, plugin_index, _| ((plugin_index + 1) % plugins.len(), 0));
     }
 
     fn register_plugin(&mut self, plugin: crate::model::Plugin) {
@@ -353,27 +399,14 @@ impl Centerpiece {
 
         let plugin = plugin.unwrap();
         plugin.entries = entries;
+        self.normalize_selection();
     }
 
     fn activate_selected_entry(&mut self) -> Option<()> {
-        let active_entry_id = self.active_entry_id()?.clone();
-
-        let entry = self
-            .entries()
-            .into_iter()
-            .find(|entry| entry.id == *active_entry_id)?
-            .clone();
-
-        let plugin = self.plugins.iter_mut().find(|plugin| {
-            plugin
-                .entries
-                .iter()
-                .any(|entry| entry.id == *active_entry_id)
-        })?;
-
+        let (plugin, entry) = self.active_entry()?;
         plugin
             .app_channel_out
-            .send_blocking(model::PluginRequest::Activate(entry))
+            .send_blocking(model::PluginRequest::Activate(entry.clone()))
             .ok()
     }
 
@@ -422,18 +455,7 @@ impl Centerpiece {
         self.set_fonts(ctx);
         self.set_theme(ctx);
         self.handle_input(ctx);
-
-        let mut messages = vec![];
-
-        for plugin_channel in &self.plugin_channels {
-            let message_result = plugin_channel.try_recv();
-            if message_result.is_err() {
-                continue;
-            }
-            messages.push(message_result.unwrap());
-        }
-
-        self.handle_messages(messages);
+        self.handle_messages();
 
         let settings = settings::Settings::get_or_init();
 
@@ -445,61 +467,55 @@ impl Centerpiece {
             .corner_radius(0.5 * crate::REM)
             .fill(settings::hexcolor(&settings.color.background))
             .show(ui, |ui| {
-                let response = component::query_input::view(ui, &mut self.query);
-                response.request_focus();
-                if response.changed() {
+                let searchbar = component::query_input::view(ui, &mut self.query);
+                searchbar.request_focus();
+                if searchbar.changed() {
                     self.search();
                 }
+                ui.separator();
 
-                let entries = self.entries();
-                if !entries.is_empty() {
-                    ui.add(Separator::default().spacing(0.));
+                let plugins = self.non_empty_plugins();
+                let Some((active_plugin_index, active_entry_index)) =
+                    self.active_position(&plugins)
+                else {
+                    return;
+                };
+
+                if active_entry_index > 0 {
+                    let previous_entry =
+                        &plugins[active_plugin_index].entries[active_entry_index - 1];
+                    component::entry::view(ui, previous_entry, false);
                 }
 
-                let mut divider_added = true;
-                let mut header_added = false;
-                let mut next_entry_index_to_add = self.active_entry_index;
-                let mut lines_added = 0;
-
-                while ui.available_height() > 0. {
-                    if next_entry_index_to_add >= entries.len() {
+                for (plugin_index, plugin) in plugins.iter().enumerate().skip(active_plugin_index) {
+                    if ui.available_height() < ENTRY_HEIGHT {
                         break;
                     }
 
-                    let mut plugin_to_add = None;
-                    let mut last_plugin_start_index = 0;
-                    for plugin in self.plugins.iter() {
-                        if last_plugin_start_index == next_entry_index_to_add {
-                            plugin_to_add = Some(plugin);
+                    let is_active_plugin = plugin_index == active_plugin_index;
+                    let first_entry_index = if is_active_plugin {
+                        active_entry_index
+                    } else {
+                        0
+                    };
+
+                    if first_entry_index == 0 {
+                        component::plugin_header::view(ui, plugin, !is_active_plugin);
+                    }
+
+                    for (entry_index, entry) in
+                        plugin.entries.iter().enumerate().skip(first_entry_index)
+                    {
+                        if ui.available_height() < ENTRY_HEIGHT {
+                            break;
                         }
-                        last_plugin_start_index += plugin.entries.len();
-                    }
 
-                    if !divider_added && plugin_to_add.is_some() {
-                        ui.separator();
-                        divider_added = true;
-                        lines_added += 1;
-                        continue;
+                        component::entry::view(
+                            ui,
+                            entry,
+                            is_active_plugin && entry_index == active_entry_index,
+                        );
                     }
-
-                    if !header_added && let Some(plugin) = plugin_to_add {
-                        component::plugin_header::view(ui, plugin);
-                        header_added = true;
-                        lines_added += 1;
-                        continue;
-                    } else if lines_added == 0 {
-                        component::entry::view(ui, entries[next_entry_index_to_add - 1], false);
-                    }
-
-                    component::entry::view(
-                        ui,
-                        entries[next_entry_index_to_add],
-                        next_entry_index_to_add == self.active_entry_index,
-                    );
-                    divider_added = false;
-                    header_added = false;
-                    next_entry_index_to_add += 1;
-                    lines_added += 1;
                 }
             });
     }
@@ -508,4 +524,4 @@ impl Centerpiece {
 impl Centerpiece {}
 
 pub const REM: f32 = 14.0;
-pub const ENTRY_HEIGHT: f32 = 2.3 * crate::REM;
+pub const ENTRY_HEIGHT: f32 = 2.5 * crate::REM;

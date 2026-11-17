@@ -296,6 +296,18 @@ impl Default for NiriWindowsPluginSettings {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct NiriWorkspacesPluginSettings {
+    #[serde(default = "default_true")]
+    pub enable: bool,
+}
+
+impl Default for NiriWorkspacesPluginSettings {
+    fn default() -> Self {
+        Self { enable: true }
+    }
+}
+
+#[derive(Debug, Deserialize)]
 pub struct SwayWindowsPluginSettings {
     #[serde(default = "default_true")]
     pub enable: bool,
@@ -337,6 +349,8 @@ pub struct PluginSettings {
     pub resource_monitor_memory: ResourceMonitorMemoryPluginSettings,
     #[serde(default)]
     pub niri_windows: NiriWindowsPluginSettings,
+    #[serde(default)]
+    pub niri_workspaces: NiriWorkspacesPluginSettings,
     #[serde(default)]
     pub sway_windows: SwayWindowsPluginSettings,
     #[serde(default)]

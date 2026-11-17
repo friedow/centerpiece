@@ -186,6 +186,12 @@ impl Centerpiece {
             >());
         }
 
+        if settings.plugin.niri_workspaces.enable {
+            self.plugin_channels.push(crate::plugin::utils::spawn::<
+                crate::plugin::niri_workspaces::NiriWorkspacesPlugin,
+            >());
+        }
+
         if settings.plugin.sway_windows.enable {
             self.plugin_channels.push(crate::plugin::utils::spawn::<
                 crate::plugin::sway_windows::SwayWindowsPlugin,

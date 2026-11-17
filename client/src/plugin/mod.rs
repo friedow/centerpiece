@@ -5,6 +5,7 @@ pub mod firefox;
 pub mod git_repositories;
 pub mod gitmoji;
 pub mod niri_windows;
+pub mod niri_workspaces;
 pub mod resource_monitor;
 pub mod sway_windows;
 pub mod system;

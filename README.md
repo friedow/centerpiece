@@ -67,6 +67,19 @@ plugin:
     enable: true
 ```
 
+### Niri Workspace Switcher
+
+_List niri workspaces in order and switch between them._
+
+**Related config keys**
+
+```yml
+# ~/.config/centerpiece/config.yml
+plugin:
+  niri_workspaces:
+    enable: true
+```
+
 ### Sway Window Switcher
 
 _Search for open sway windows and switch between them._
@@ -296,6 +309,8 @@ You can specify alternative configuration locations through:
        enable: true
      niri_windows:
        enable: true
+     niri_workspaces:
+       enable: true
      sway_windows:
        enable: true
      system:
@@ -366,6 +381,9 @@ You can specify alternative configuration locations through:
                            enable = true;
                        };
                        niri_windows = {
+                           enable = true;
+                       };
+                       niri_workspaces = {
                            enable = true;
                        };
                        sway_windows = {
